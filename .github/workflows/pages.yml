@@ -1,0 +1,34 @@
+# Appli en ligne : publie sur GitHub Pages les fichiers de l'appli (pas les outils ni les données de test) à chaque
+# envoi sur main. Réglage du dépôt, une fois : Settings > Pages > Source « GitHub Actions ».
+name: Appli en ligne
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Fichiers de l'appli
+        run: |
+          mkdir _site
+          for f in index.html style.css LICENSE js data icons; do if [ -e "$f" ]; then cp -r "$f" _site/; fi; done
+          # cartes : tirées de la ROM de chaque joueur, jamais publiées
+          rm -f _site/data/maps-data.js
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v5

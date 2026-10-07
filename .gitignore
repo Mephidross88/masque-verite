@@ -1,0 +1,6 @@
+# sources de 2Ship téléchargées par tools/2ship-checks/fetch_sources.mjs
+tools/2ship-checks/src/
+# cartes : tirées de la ROM de chaque joueur, jamais versionnées ni publiées
+data/maps-data.js
+*.jsonl
+dist/

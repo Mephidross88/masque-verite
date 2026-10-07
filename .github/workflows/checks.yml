@@ -1,0 +1,24 @@
+# Vérifications automatiques à chaque envoi (et proposition de modification) : syntaxe de tous les scripts, noms non
+# définis (tools/lint/no_undef.mjs), traductions complètes (tools/i18n/check.mjs).
+name: Vérifications
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Syntaxe
+        run: for f in js/*.js js/pages/*.js data/*.js data/i18n/*.js tools/*/*.mjs; do node --check "$f" || exit 1; done
+      - name: Noms non définis (ESLint no-undef, installé pour la vérification seulement)
+        run: |
+          npm i --silent --no-save --prefix "$RUNNER_TEMP/lint" eslint@9 globals
+          LINT_DIR="$RUNNER_TEMP/lint" node tools/lint/no_undef.mjs
+      - name: Traductions
+        run: node tools/i18n/check.mjs --strict
