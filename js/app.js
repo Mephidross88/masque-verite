@@ -77,12 +77,12 @@ function useShellEnd(ctx){
 }
 
 const App = {
-  components:{ Seg, ProgressCard, ItemTile },
+  components:{ Seg, ProgressCard, ItemTile, MapView },
   setup(){
     // pages assemblées dans l'ordre (chacune reçoit ce que les précédentes ont défini ; les rares appels vers une page
     // suivante passent par ctx, voir « défini plus loin »)
     const ctx = {};
-    for (const use of [useShell, useItemsPanel, useChecksPage, useNotebookPage, useConfigPage, useTracking, useShellEnd])
+    for (const use of [useShell, useItemsPanel, useChecksPage, useNotebookPage, useMapPage, useConfigPage, useTracking, useShellEnd])
       Object.assign(ctx, use(ctx));
     // (noms globaux utilisés par le gabarit)
     return { LANG, LANGS, I18N_LANGS, setLang, removeLang, store, ICONS, CI, saveError, CHECK_CATS, CHECK_CAT, CONFIG_TABS, DUNGEONS,
@@ -184,7 +184,7 @@ ${LINK_MODAL_TPL}
 };
 
 // langue : gabarits traduits au chargement (js/i18n.js), t() et tn() utilisables dans tous les gabarits
-[App, Seg, ProgressCard, ItemTile].forEach(c => { c.template = tpl(c.template); });
+[App, Seg, ProgressCard, ItemTile, MapView].forEach(c => { c.template = tpl(c.template); });
 const app = createApp(App);
 app.config.globalProperties.t = t;
 app.config.globalProperties.tn = tn;

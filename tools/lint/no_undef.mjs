@@ -14,6 +14,8 @@ const { ESLint } = require('eslint'), globals = require('globals');
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const files = [...html.matchAll(/<script src="((?:js|data)\/[^"]+)"/g)].map(m => m[1]);
+// scripts chargés à la demande (pas par index.html : cartes de la page Carte) : leurs noms comptent aussi
+files.push('js/maps-extract.js');
 const g = { Vue:'readonly' };
 for (const f of files){
   const p = path.join(ROOT, f);

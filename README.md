@@ -13,6 +13,11 @@ français ou en anglais (Configuration › Langue).
 Téléchargez le dépôt et ouvrez `index.html` dans un navigateur récent (Chrome, Edge, Firefox). La partie est
 sauvegardée automatiquement dans le navigateur.
 
+## Carte
+La page Carte montre chaque lieu vu de dessus, avec ses sorties. Les cartes se fabriquent une fois depuis votre ROM de
+Majora's Mask (N64, version américaine, celle que 2Ship a demandée à l'installation) : choisissez-la sur la page Carte,
+elle est lue dans le navigateur et rien n'est envoyé.
+
 ## Auto-tracking
 L'appli suit votre partie en lisant la sauvegarde de 2Ship : checks faits, objets trouvés, prix des boutiques, jour et
 heure du cycle. Elle ne modifie jamais vos fichiers.

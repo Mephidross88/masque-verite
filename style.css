@@ -665,6 +665,18 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .zmap-zoom button{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font-size:16px;line-height:1;cursor:pointer}
 .zmap-zoom button:hover{border-color:var(--gold)}
 .zmap-walls{fill:none;stroke:var(--map-wall);stroke-linecap:round;opacity:.7}
+/* eau (boîtes d'eau du jeu), sorties de la Carte (repère et nom du lieu d'arrivée) */
+.zmap-water{fill:#3f86c9;opacity:.35;pointer-events:none}
+.zx .zm-shape{fill:var(--gold)}
+.zx.self .zm-shape{fill:var(--muted)}
+.zx text{font-weight:600}
+.zmap-legend .lg-water{background:#3f86c9;opacity:.5;border:0;border-radius:3px;width:16px;height:10px}
+.zmap-legend .lg-exit{background:var(--gold);border:1.5px solid #1c1a12}
+.zmap-bar .map-scene{width:auto;min-width:260px}
+.zmap-bar .zmap-back{padding:4px 12px}
+.map-info{font-size:13.5px;color:var(--muted);align-self:center}
+.maps-src{font-size:13px;color:var(--muted);margin:8px 0 0}
+.maps-src .link{color:var(--muted);text-decoration:underline;text-underline-offset:3px;margin-left:6px}
 .zm{cursor:pointer}
 /* couleur par type de sortie (repères et légende) */
 .t-overworld,.zm{--zc:var(--gold)} .t-interior{--zc:var(--ocarina)} .t-grotto{--zc:#b07a3e} .t-dungeon{--zc:var(--purple)} .t-owl{--zc:#e0c48a}

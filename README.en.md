@@ -13,6 +13,10 @@ French or English (Settings › Language).
 Download the repository and open `index.html` in a recent browser (Chrome, Edge, Firefox). Your game is saved
 automatically in the browser.
 
+## Map
+The Map page shows every place seen from above, with its exits. The maps are made once from your Majora's Mask ROM (N64,
+US version, the one 2Ship asked for at install): choose it on the Map page; it is read in the browser and nothing is sent.
+
 ## Auto-tracking
 The app follows your game by reading 2Ship's save: checks done, items found, shop prices, day and hour of the cycle. It
 never changes your files.

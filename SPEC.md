@@ -191,6 +191,22 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   Bombers : trait vertical rouge à cette heure sur toutes les lignes, heure dans l'en-tête (`link.save.hours`) ;
   le temps écoulé avant (depuis le jour 1, 6 h) est assombri et hachuré, barres comprises.
 
+## Carte (js/pages/map.js, js/maps-extract.js)
+- **Fabrication** : depuis la ROM de Majora's Mask du joueur (N64 US, compressée ou non, .z64 / .v64), jamais distribuée :
+  choisie sur la page Carte, lue dans le navigateur (`js/maps-extract.js`, chargé à la demande), cartes gardées dans
+  IndexedDB (`masque-verite-maps`), « Oublier ces cartes ». En ligne de commande : `tools/2ship-maps/extract_maps.mjs`
+  → `data/maps-data.js` (non versionné, passe avant). Recette `data/maps-recipe.js` (`tools/2ship-maps/gen_maps_recipe.mjs`,
+  tirée des sources de 2Ship : scènes, noms français, numéro de scène des entrées, acteurs) : rien de la ROM.
+- **Lecture de la ROM** : table des fichiers (dmadata), Yaz0, table des scènes du code (16 octets par scène : là où le plus
+  de fichiers commencent par un en-tête de scène) ; par scène : collision (sols vus de dessus, murs, eau), points
+  d'apparition, sorties (polygones dont le type de surface porte un numéro de sortie, y compris derrière les portes des
+  intérieurs ; liste des sorties 0x13 → numéro d'entrée → scène d'arrivée).
+- **Page** : choix du lieu (ceux de la page Checks dans leur ordre, puis les autres : intérieurs, variantes), `ui.map.scene` ;
+  sol en dix teintes de hauteur (quantiles), murs, eau ; un repère par sortie avec le nom du lieu d'arrivée, clic : sa
+  carte (← : retour). Molette : zoom ; glisser : déplacer ; + / − / tout le terrain.
+- À venir : checks à leur place (acteurs des salles reliés aux checks par les sources de 2Ship), statues de hibou, étages
+  des donjons, position de la dernière sauvegarde.
+
 ## Logique de 2Ship
 - **Données** (`data/logic-data.js`, généré par `tools/2ship-logic/extract_logic.mjs`) : les 315 régions de
   `Logic/Regions/*.cpp` et la région de départ `RR_MAX` (`Logic.cpp`), avec checks, sorties (résolues en région d'arrivée
@@ -245,8 +261,8 @@ Même démarche que pour l'Œil Sheikah : chaque étape est utilisable et vérif
    des trois jours et moment dans la page Checks, « pourquoi pas encore ? ».
 3. **Journal des Bombers** — *fait* (remplace le Routeur : sans entrées mélangées, les trajets n'apportent guère) :
    frise des trois jours, une barre par check (voir Journal des Bombers).
-4. **Carte** — fabriquée dans le navigateur depuis la ROM de Majora's Mask du joueur (jamais distribuée) : terrain vu
-   de dessus, sorties, checks, statues de hibou, étages des donjons.
+4. **Carte** — *en cours* : fabrication depuis la ROM du joueur, terrain vu de dessus et sorties faits (voir Carte) ;
+   reste : checks, statues de hibou, étages des donjons.
 5. **Auto-tracking** — *fait* : lecture de la sauvegarde de 2Ship dans le navigateur, sans relais (voir Auto-tracking).
 
 Ensuite, au fil de l'eau : Indices (pierres à potins, banque, restes de boss, Chant de Saria…), fenêtre de stream,
