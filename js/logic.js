@@ -449,6 +449,57 @@ function fullState(settings){
   return S0;
 }
 
+/* ---------- Pourquoi pas encore ? ----------
+   Ce qui manque pour un check (au moment choisi : demi-journée 0 à 5, -1 : n'importe quand), comme whyLocked de l'Œil
+   Sheikah : on part du panneau Objets « tout obtenu », puis on retire tout ce qui n'est pas nécessaire (par blocs, un à un,
+   puis palier / nombre au plus bas par dichotomie). Le résultat est un ensemble minimal parmi d'autres possibles.
+   Renvoie { never } (jamais, même avec tous les objets), { neverAt, when } (jamais à ce moment ; when : moments possibles),
+   { panel } (le panneau ne suffit pas : objet hors panneau), sinon { items:[{ label, src }], when } (moments alors). */
+const whyMax = (it, s) => typeof it.max === 'function' ? it.max(s) : it.max ?? it.stages.length - 1;
+function whyLocked(game, settings, rc, moment){
+  const okAt = x => x && x.ok && (moment < 0 || (x.when & HALF_MASK[moment]) !== 0n);
+  const full = computeLogic(fullState(settings)).checks[rc];
+  if (!full || !full.ok) return { never:true };
+  if (!okAt(full)) return { neverAt:true, when:whenText(full.when) };
+  const g = JSON.parse(JSON.stringify(game)), cur = game, num = v => typeof v === 'boolean' ? +v : v || 0;
+  const res = () => computeLogic(stateFromGame(g, settings, game.prices)).checks[rc];
+  // dimensions où le panneau « tout obtenu » dépasse le panneau noté : { bloc, objet, clé, booléen, lo, hi, libellé(v), icône(v) }
+  const dims = [];
+  const add = (block, obj, key, bool, lo, hi, label, src) => { if (hi > lo) dims.push({ block, obj, key, bool, lo, hi, v:hi, label, src:src || (() => null) }); };
+  ITEM_GROUPS.forEach(gr => gr.items.forEach(it => {
+    if (it.visible && !it.visible(settings)) return;
+    const bool = it.kind === 'bool';
+    add('g' + gr.id, g.items, it.key, bool, num(cur.items[it.key]), bool ? 1 : whyMax(it, settings),
+      v => it.kind === 'level' ? it.stages[v] || it.label : it.kind === 'count' ? it.label + ' : ' + v : it.label,
+      v => 'icons/' + (it.kind === 'level' && it.icons ? it.icons[Math.max(1, v) - 1] : it.icon || 'items/' + it.key + '.png'));
+  }));
+  DUNGEONS.forEach(d => {
+    const o = g.dungeons[d.id], c = cur.dungeons[d.id];
+    add('d' + d.id, o, 'keys', false, c.keys, d.keys, v => d.label + ' : ' + tn(v, '{n} petite clé', '{n} petites clés'));
+    add('d' + d.id, o, 'bossKey', true, +c.bossKey, 1, () => d.label + ' : ' + t('Clé d’Or'));
+    add('d' + d.id, o, 'fairies', false, c.fairies, 15, v => d.label + ' : ' + tn(v, '{n} fée perdue', '{n} fées perdues'));
+  });
+  add('town', g, 'townFairy', true, +cur.townFairy, 1, () => t('Fée perdue de Bourg-Clocher'));
+  SPIDER_HOUSES.forEach(h => add('tokens', g.tokens, h.id, false, cur.tokens[h.id], 30, v => h.label + ' : ' + tn(v, '{n} jeton', '{n} jetons')));
+  const set = (d, v) => { d.obj[d.key] = d.bool ? !!v : v; d.v = v; };
+  dims.forEach(d => set(d, d.hi));
+  if (!okAt(res())) return { panel:true };
+  // 1. par blocs, 2. un à un, 3. palier / nombre au plus bas (dichotomie)
+  for (const b of [...new Set(dims.map(d => d.block))]){
+    const ds = dims.filter(d => d.block === b);
+    ds.forEach(d => set(d, d.lo));
+    if (!okAt(res())) ds.forEach(d => set(d, d.hi));
+  }
+  for (const d of dims) if (d.v !== d.lo){ set(d, d.lo); if (!okAt(res())) set(d, d.hi); }
+  for (const d of dims) if (d.v - d.lo > 1){
+    let lo = d.lo, hi = d.v;   // faisable à hi, pas à lo
+    while (hi - lo > 1){ const m = (lo + hi) >> 1; set(d, m); if (okAt(res())) hi = m; else lo = m; }
+    set(d, hi);
+  }
+  const x = res();
+  return { items:dims.filter(d => d.v !== d.lo).map(d => ({ label:d.label(d.v), src:d.src(d.v) })), when:whenText(x.when) };
+}
+
 /* ---------- Moments ---------- */
 // heure de début d'une tranche, en heures depuis le jour 1 à 6 h (0 à 72 ; fin du cycle : 72)
 const sliceStart = s => { if (s >= SLICE_COUNT) return 72; const x = SLICE_INFO[s]; return (x.day - 1) * 24 + (x.h < 6 ? x.h + 24 : x.h) + x.m / 60 - 6; };

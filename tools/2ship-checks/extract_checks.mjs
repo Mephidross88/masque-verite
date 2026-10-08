@@ -92,13 +92,19 @@ const options = Object.fromEntries([...loadOptions().values()].map(o => {
   return [o.id, v];
 }));
 
+// ordre des énumérations (RandoCheckId, RandoItemId, RandoOptionId de Types.h) : la sauvegarde de 2Ship range ses checks
+// (randoSaveChecks), objets (randoItemId) et options (randoSaveOptions) par leur numéro
+const enumOrder = name => Object.entries(parseEnum(types, name)).sort((a, b) => a[1] - b[1]).map(([k]) => k);
+const order = { rc:enumOrder('RandoCheckId'), ri:enumOrder('RandoItemId'), ro:enumOrder('RandoOptionId') };
+
 const out = `/* FICHIER GÉNÉRÉ par tools/2ship-checks/extract_checks.mjs depuis les sources de 2 Ship 2 Harkinian (commit ${COMMIT}) :
    ne pas modifier à la main (libellés français : tools/2ship-checks/translate.mjs). Voir SPEC.md > Checks.
    scenes  : scènes du tracker de checks de 2Ship, dans son ordre { id, en, fr, num }
    checks  : { id, en, fr, type (RCTYPE_…), scene (scène affichée), also (autres scènes), flag (FLAG_… : CYCL_… remis à
              zéro par le Chant du temps), item (objet d'origine) }
    items   : { id, en, fr, type (RITYPE_…) }
-   options : options du randomizer (RO_…) et leur valeur par défaut ; ro : valeurs de leurs choix (RO_GENERIC_ON…) */
+   options : options du randomizer (RO_…) et leur valeur par défaut ; ro : valeurs de leurs choix (RO_GENERIC_ON…)
+   order   : noms des énumérations dans l'ordre de leurs numéros (rc : checks, ri : objets, ro : options), pour la sauvegarde */
 window.CHECKS_DATA = {
 scenes:${JSON.stringify(scenes)},
 checks:[
@@ -108,7 +114,8 @@ items:[
 ${items.map(i => JSON.stringify(i)).join(',\n')}
 ],
 options:${JSON.stringify(options)},
-ro:${JSON.stringify(ro)}};
+ro:${JSON.stringify(ro)},
+order:${JSON.stringify(order)}};
 `;
 fs.writeFileSync(path.join(ROOT, 'data/checks-data.js'), out);
 console.log(`${scenes.length} scènes, ${checks.length} checks, ${items.length} objets, ${Object.keys(options).length} options → data/checks-data.js`);

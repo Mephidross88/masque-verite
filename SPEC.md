@@ -33,8 +33,9 @@ commit, `commitHash`).
 - **Les cycles** : le Chant du temps ramène au premier jour. 2Ship garde pour chaque check `obtained` (obtenu au moins
   une fois) et `cycleObtained` (obtenu dans ce cycle) ; une partie des objets se perd au retour (rubis, munitions,
   clés…). L'appli doit distinguer ce qui est acquis pour toujours de ce qui est à refaire.
-- **Pas de réseau** : 2Ship n'a pas d'Anchor. L'auto-tracking passera par la sauvegarde du jeu (`saves/*.json`, voir
-  Étapes), donc seulement quand le jeu sauvegarde (statue de hibou, Chant du temps).
+- **Pas de réseau** : 2Ship n'a pas d'Anchor. L'auto-tracking lit la sauvegarde du jeu (`saves/*.json`, voir
+  Auto-tracking), donc seulement quand le jeu sauvegarde : Chant du temps, statues de hibou, option Autosave (toutes les
+  1 à 60 minutes ; pas à chaque check en 5.0.1).
 
 ## Langue
 Comme dans l'Œil Sheikah : interface en français (langue source), anglais livré, autres langues ajoutables sans toucher
@@ -132,7 +133,14 @@ au code (`js/i18n.js`, dictionnaires `data/i18n/<code>.js`).
 - **Moment** (barre d'outils, `ui.checks.moment`) : Tous, ou une demi-journée (J1 … N3). Avec un moment, « faisable »
   veut dire faisable à ce moment-là ; la case du moment est entourée sur les frises. « Seulement les faisables »
   (`ui.checks.onlyAvailable`) : seulement les checks faisables (au moment choisi) et ceux déjà faits.
-- À venir : « pourquoi pas encore ? », moment repris de la sauvegarde (auto-tracking).
+- **Pourquoi pas encore ?** (bouton ? sur un check pas encore faisable, au survol ; clic sur sa piste dans le Journal des
+  Bombers) : ce qui manque, au moment choisi s'il y en a un (`whyLocked` de `js/logic.js`). Panneau Objets « tout
+  obtenu » (objets, temples, fée de Bourg-Clocher, jetons), puis on retire ce qui n'est pas nécessaire : par blocs, un à
+  un, puis palier ou nombre au plus bas — un ensemble minimal parmi d'autres, demi-journées comprises en temps mélangé.
+  Affiche aussi les moments où le check serait alors faisable ; « jamais à ce moment-là » (avec les moments possibles)
+  quand même tout obtenu ne suffit pas au moment choisi. Calcul de 0,1 à 1 s, lancé après l'ouverture de la fenêtre.
+- Checks faits d'après la sauvegarde (auto-tracking) : objet trouvé à la suite du libellé (`game.found`), aussi dans le
+  Journal des Bombers.
 
 ## Journal des Bombers
 Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours, une barre par check.
@@ -140,9 +148,13 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   graduations toutes les 6 h ; bandes de fond : jour clair, nuit teintée.
 - **Lignes** : les checks de la seed (non exclus, faisables avec la configuration) à horaire limité, triés par heure de
   début (puis de fin, puis libellé) ; « Aussi les checks sans horaire » ajoute les autres (barre sur tout le cycle).
-  Libellé : icône de catégorie, nom, scène, coche — un clic coche ou décoche, comme dans Checks. Heures exactes au survol.
+  Libellé : icône de catégorie, nom, scène, coche — un clic coche ou décoche, comme dans Checks, avec le bandeau « Coché :
+  … » et Annuler (une seule fois si Checks est ouvert à côté). Faisable : icône cerclée de vert, nom en gras ; pas encore :
+  estompé, avec le bouton ? (« Pourquoi pas encore ? ») en bout de ligne, à la place de la case ronde de Checks ; fait : ✓.
+  Heures exactes au survol.
 - **Barres** : pâles, moments possibles avec tous les objets ; dorées par-dessus, moments possibles avec l'inventaire
-  noté (mêmes calculs que la frise de Checks). Ligne faisable mise en avant, check fait estompé.
+  noté (mêmes calculs que la frise de Checks). Ligne faisable mise en avant, check fait estompé. Clic sur la piste d'un
+  check pas encore faisable : « Pourquoi pas encore ? » (voir Checks).
 - **Moment** : le même que dans Checks (`ui.checks.moment`) : colonne mise en évidence ; « Seulement les faisables »
   partagé aussi. Temps mélangé : demi-journées pas encore possédées hachurées. Recherche et « Masquer les checks faits »
   propres à la page (`ui.notebook`).
@@ -150,6 +162,34 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   ligne d'en-tête repliable (`ui.notebook.collapsed`) avec faits / total et, repliée, sur sa piste, la réunion des horaires de ses
   checks (dorée : checks restants faisables avec l'inventaire noté) ; barre de gauche : tout déplier / replier. Checks triés par heure dans chaque section.
   Toute la largeur du panneau (la frise gagne en précision).
+
+## Auto-tracking (js/link.js, js/pages/tracking.js)
+- **Source** : la sauvegarde de 2Ship, `saves/file1.json` (2, 3) — `newCycleSave` (Chant du temps) et `owlSave` (statue
+  de hibou, Autosave). Chaque check (`randoSaveChecks`, rangé par numéro de `RandoCheckId`) : `obtained`, `randoItemId`,
+  `price`, `shuffled` ; options (`randoSaveOptions`, par numéro de `RandoOptionId`), objets de départ
+  (`randoStartingItems`), `finalSeed`, jour, heure (`time` sur 16 bits, 0x4000 = 6 h), nuit. Numéros → noms :
+  `CHECKS_DATA.order` (énumérations de `Types.h`, générées). Les deux parties sont réunies (checks faits de l'une ou de
+  l'autre) ; jour et heure : la plus récente (`filePlaytime`).
+- **Lecture** : dossier `saves` choisi par le joueur (File System Access API, Chrome et Edge ; poignée dans IndexedDB
+  `masque-verite-link` ; après rechargement, reprise directe si la permission tient, sinon « Reprendre le suivi » d'un
+  clic), relu toutes les 2 s quand le fichier change (`ui.link.slot` : le plus récent, ou file1/2/3) ; JSON illisible
+  (fichier en cours d'écriture) : relu au tour suivant. Autres navigateurs, ou à la demande : « Lire une sauvegarde… ».
+  Jamais d'écriture dans les fichiers du jeu.
+- **Report** (`linkApply`), jamais en arrière (un check fait reste fait, un objet noté reste noté) :
+  - nouvelle seed (ou liste des checks vide) : réglages et checks de la seed (`shuffled`) repris ;
+  - checks faits, et l'objet trouvé dans chacun (`game.found` : seul ce que le jeu a montré) ;
+  - prix des boutiques, laiterie, cartes de Tingle mélangées (`game.prices`, lus par la logique) ;
+  - panneau Objets : objets de départ (de la seed et donnés d'office) + objets des checks faits (`applyStartingItems`),
+    fusionnés au plus haut ;
+  - moment : demi-journée de la sauvegarde dans le sélecteur Moment (option `ui.link.moment`).
+- **Autre seed** que la partie notée (avec des checks faits) : ignorée et signalée (`link.foreign`), « Remettre à zéro et
+  suivre ». Autre version de 2Ship : avertissement (commit) ou refus (nombre de checks différent).
+- **Interface** : pastille d'état dans la barre de gauche (pas de suivi, en pause, suivi, dossier illisible) ; fenêtre :
+  marche à suivre (Autosave à 1 minute), dossier, fichier suivi, moment, dernière lecture, journal.
+- **Suivi en ligne** : carte « Dernière sauvegarde » en tête des pages, à côté du compteur de checks (demi-journée et heure
+  du jeu, soleil ou lune, frise des six demi-journées avec un repère ; clic : fenêtre de l'auto-tracking) ; Journal des
+  Bombers : trait vertical rouge à cette heure sur toutes les lignes, heure dans l'en-tête (`link.save.hours`) ;
+  le temps écoulé avant (depuis le jour 1, 6 h) est assombri et hachuré, barres comprises.
 
 ## Logique de 2Ship
 - **Données** (`data/logic-data.js`, généré par `tools/2ship-logic/extract_logic.mjs`) : les 315 régions de
@@ -201,14 +241,13 @@ Même démarche que pour l'Œil Sheikah : chaque étape est utilisable et vérif
    (syntaxe, noms non définis, traductions), téléchargement des sources de 2Ship.
 1. **Données** — *fait, sauf les icônes du panneau Objets* : `data/checks-data.js` (voir Données de 2Ship),
    Configuration et import du spoiler, page Checks, panneau Objets. Statistiques (chronologie) dans la foulée.
-2. **Logique** — *en cours* : extraction et moteur faits (voir Logique de 2Ship ; 7 spoilers 5.0.1 finis), checks
-   faisables, frise des trois jours et moment dans la page Checks. Reste : « pourquoi pas encore ? ».
+2. **Logique** — *fait* : extraction et moteur (voir Logique de 2Ship ; 7 spoilers 5.0.1 finis), checks faisables, frise
+   des trois jours et moment dans la page Checks, « pourquoi pas encore ? ».
 3. **Journal des Bombers** — *fait* (remplace le Routeur : sans entrées mélangées, les trajets n'apportent guère) :
    frise des trois jours, une barre par check (voir Journal des Bombers).
 4. **Carte** — fabriquée dans le navigateur depuis la ROM de Majora's Mask du joueur (jamais distribuée) : terrain vu
    de dessus, sorties, checks, statues de hibou, étages des donjons.
-5. **Auto-tracking** — relais local qui surveille la sauvegarde de 2Ship (`randoSaveChecks` : `obtained`,
-   `cycleObtained`, `eligible`, `skipped` ; `randoInf`, inventaire), à chaque sauvegarde du jeu.
+5. **Auto-tracking** — *fait* : lecture de la sauvegarde de 2Ship dans le navigateur, sans relais (voir Auto-tracking).
 
 Ensuite, au fil de l'eau : Indices (pierres à potins, banque, restes de boss, Chant de Saria…), fenêtre de stream,
 README détaillé.

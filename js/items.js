@@ -153,13 +153,13 @@ function computedStartingItems(s){
   return out;
 }
 const DUNGEON_OF = { WOODFALL:'woodfall', SNOWHEAD:'snowhead', GREAT_BAY:'greatBay', STONE_TOWER:'stoneTower' };
-// objets de départ du spoiler (startingItems : noms RI_…) → panneau Objets. → nombre d'objets notés
-function applyStartingItems(list){
+// objets (noms RI_…) → panneau Objets (g : la partie, store.game par défaut) : objets de départ du spoiler, objets trouvés
+// d'après la sauvegarde (js/link.js). → nombre d'objets notés
+function applyStartingItems(list, g = store.game){
   let n = 0;
   for (const ri of list){
     const x = ITEM_BY_RI[ri];
     if (!x) continue;
-    const g = store.game;
     if (x.it){
       const it = x.it, v = g.items[it.key];
       if (it.kind === 'bool') g.items[it.key] = true;

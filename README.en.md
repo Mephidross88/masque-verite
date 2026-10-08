@@ -12,3 +12,13 @@ French or English (Settings › Language).
 ## Running the app
 Download the repository and open `index.html` in a recent browser (Chrome, Edge, Firefox). Your game is saved
 automatically in the browser.
+
+## Auto-tracking
+The app follows your game by reading 2Ship's save: checks done, items found, shop prices, day and hour of the cycle. It
+never changes your files.
+1. In 2Ship, menu Enhancements › Saving: turn on **Autosave** and set the interval to **1 minute** (the game also saves
+   on the Song of Time and at owl statues; the app updates on each save, not on each check).
+2. In the app, click "Not tracking" at the bottom of the left bar, then "Choose the saves folder…": the `saves` folder
+   next to `2ship.exe`. Chrome or Edge only; elsewhere, use "Read a save…" after each in-game save.
+3. After reloading the page, "Resume tracking" with one click (the browser asks for permission again).
+

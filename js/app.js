@@ -82,11 +82,11 @@ const App = {
     // pages assemblées dans l'ordre (chacune reçoit ce que les précédentes ont défini ; les rares appels vers une page
     // suivante passent par ctx, voir « défini plus loin »)
     const ctx = {};
-    for (const use of [useShell, useItemsPanel, useChecksPage, useNotebookPage, useConfigPage, useShellEnd])
+    for (const use of [useShell, useItemsPanel, useChecksPage, useNotebookPage, useConfigPage, useTracking, useShellEnd])
       Object.assign(ctx, use(ctx));
     // (noms globaux utilisés par le gabarit)
     return { LANG, LANGS, I18N_LANGS, setLang, removeLang, store, ICONS, CI, saveError, CHECK_CATS, CHECK_CAT, CONFIG_TABS, DUNGEONS,
-      SPIDER_HOUSES, ITEM_BY_KEY, ...ctx };
+      SPIDER_HOUSES, ITEM_BY_KEY, CHECK_SCENE, brokenIcons, ...ctx };
   },
   template:`
 <div class="shell" :class="{'nav-open':navOpen, split:splitOn, 'items-folded':ui.itemsFolded, 'items-drawer':itemsDrawer, 'nav-folded':ui.navFolded}">
@@ -126,6 +126,7 @@ ${NOTEBOOK_SIDE_TPL}
             :title="ui.theme==='dark' ? 'Thème sombre (cliquer pour suivre le système)' : 'Thème sombre'"></button>
         </div>
       </div>
+${LINK_BTN_TPL}
       <button class="side-btn" @click="openBackup">Exporter ou importer la partie</button>
       <button class="danger-btn" @click="modal='reset'">Tout remettre à zéro</button>
     </div>
@@ -135,6 +136,7 @@ ${NOTEBOOK_SIDE_TPL}
     <!-- Progression globale, en tête de toutes les pages -->
     <div class="global-progress">
       <progress-card :stats="checkStats" :unit="t('checks')" title="Checks" :active="ui.view==='checks'" @open="go('checks')"></progress-card>
+${SAVE_CARD_TPL}
     </div>
     <div class="panes" :class="{split:splitOn}">
 ${CHECKS_TPL}
@@ -174,6 +176,8 @@ ${ITEMS_PANEL_TPL}
           <div class="mactions"><button class="btn" @click="modal=null">Annuler</button><button class="btn red" @click="resetAll">Tout effacer</button></div>
         </div>
       </template>
+${WHY_TPL}
+${LINK_MODAL_TPL}
     </div>
   </div>
 </div>`,
@@ -185,4 +189,4 @@ const app = createApp(App);
 app.config.globalProperties.t = t;
 app.config.globalProperties.tn = tn;
 app.mount('#app');
-window.__PF = { I18N_MISSING, store, CHECKS, CHECK_BY_ID, checkShuffled, ITEM_BY_KEY, ITEM_BY_RI, SETTINGS_DEF };
+window.__PF = { I18N_MISSING, store, CHECKS, CHECK_BY_ID, checkShuffled, ITEM_BY_KEY, ITEM_BY_RI, SETTINGS_DEF, computeLogic, stateFromGame, fullState, whyLocked, link, readSave, linkApply };

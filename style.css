@@ -1491,7 +1491,42 @@ button.nb-lab:hover{background:var(--surface-2)}
 .nb-scene .nb-bar{height:8px}
 .nb-scene.done .nb-bar{background:var(--line)}
 .nb-row.sub .nb-lab{padding-left:30px}
+.nb-track.why{cursor:help}
+/* repère de la dernière sauvegarde (auto-tracking) : trait vertical sur toutes les lignes, heure dans l'en-tête */
+.nb-save{position:absolute;top:0;bottom:0;width:0;border-left:2px solid var(--red);z-index:1;pointer-events:none;transform:translateX(-1px)}
+.nb-save.head{top:24px;pointer-events:auto}
+/* avant la dernière sauvegarde : temps écoulé, assombri et hachuré (par-dessus les barres) */
+.nb-past{position:absolute;top:0;bottom:0;left:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(45deg, color-mix(in srgb, var(--text) 16%, transparent) 0 1.5px, transparent 1.5px 7px), color-mix(in srgb, var(--text) 9%, transparent)}
+.nb-save.head b{position:absolute;top:-1px;left:3px;padding:0 4px;border-radius:4px;background:var(--red);color:#fff;font-size:10.5px;line-height:15px;white-space:nowrap}
+/* carte « Dernière sauvegarde » (en tête, à côté du compteur de checks) */
+.save-card{text-align:left}
+.sc-ic{width:58px;height:58px;flex:none;display:grid;place-items:center;border-radius:50%;margin:0 10px}
+.sc-ic svg{width:30px;height:30px}
+.save-card.day .sc-ic{color:var(--tl-day);background:color-mix(in srgb, var(--tl-day) 15%, transparent)}
+.save-card.night .sc-ic{color:var(--tl-night);background:color-mix(in srgb, var(--tl-night) 15%, transparent)}
+.save-card .pc-count b{font-size:28px}
+.save-card .pc-count span{font-size:20px;margin-left:6px}
+.sc-bar{position:relative;display:flex;gap:2px;height:8px;margin-top:8px;max-width:280px}
+.sc-bar i{flex:1;border-radius:2px}
+.sc-bar i.d{background:var(--tl-day-soft)}
+.sc-bar i.n{background:var(--tl-night-soft)}
+.sc-bar i.d.past,.sc-bar i.d.cur{background:var(--tl-day)}
+.sc-bar i.n.past,.sc-bar i.n.cur{background:var(--tl-night)}
+.sc-bar i.past{opacity:.45}
+.sc-bar b{position:absolute;top:-3px;bottom:-3px;width:3px;margin-left:-1.5px;border-radius:2px;background:var(--red);box-shadow:0 0 0 1.5px var(--surface)}
+.nb-track.why:hover .nb-bar:not(.now){background:color-mix(in srgb, var(--gold) 50%, var(--surface))}
 .nb-row.done .nb-name{color:var(--muted);text-decoration:line-through}
+/* libellé d'un check : bouton principal (cocher) et « Pourquoi pas encore ? » ; faisable / pas encore, comme dans Checks */
+.nb-main{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:0;background:none;border:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.nb-row:not(.nb-scene):not(.nb-head) .nb-lab:hover{background:var(--surface-2)}
+/* (pas de case ronde : le bouton « Pourquoi pas encore ? » est toujours visible sur les checks pas encore faisables) */
+.nb-lab .ci-ex{opacity:1}
+.nb-lab .ci-ex{width:24px;height:24px;margin:0 -6px 0 -4px}
+.nb-row.avail .ci-cat{box-shadow:0 0 0 2px var(--green-soft);border-radius:6px}
+.nb-row.avail .nb-name{font-weight:600}
+.nb-row.locked .nb-name,.nb-row.locked .ci-cat{opacity:.5}
+.nb-row.done .cr-mark{color:var(--green)}
 
 /* ---------- Pages à venir (bloc « bientôt » : ce que fera la page, et à quelle étape) ---------- */
 .soon{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;background:var(--surface);border:1px dashed var(--line);

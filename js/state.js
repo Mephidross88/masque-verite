@@ -9,7 +9,8 @@ function defaults(){
   // timeline (chronologie, page Statistiques : à venir)
   const game = { items:{}, dungeons:{}, townFairy:false, tokens:{ swamp:0, ocean:0 }, checks:{},
     seed:{ input:'', final:0, file:'', commit:'' }, timeline:[],
-    prices:{} };   // prices : prix connus des boutiques et cartes de Tingle mélangées { RC: rubis } (la logique les compare à la bourse)
+    prices:{},   // prices : prix connus des boutiques et cartes de Tingle mélangées { RC: rubis } (la logique les compare à la bourse)
+    found:{} };  // found : objet trouvé dans chaque check fait, d'après la sauvegarde de 2Ship { RC: RI } (auto-tracking)
   ITEM_GROUPS.forEach(g => g.items.forEach(it => { game.items[it.key] = it.kind === 'bool' ? false : 0; }));
   DUNGEONS.forEach(d => { game.dungeons[d.id] = { map:false, compass:false, bossKey:false, keys:0, fairies:0 }; });
   return {
@@ -20,6 +21,9 @@ function defaults(){
     settings:{ ...OPT_DEFAULT, pool:{}, excluded:{} },
     game,
     ui:{ view:'checks', split:'', itemsFolded:false, navFolded:false, theme:'auto', configTab:'logic',
+      // link : auto-tracking par la sauvegarde de 2Ship (js/link.js) — suivi activé, emplacement suivi ('' : le plus récent,
+      // sinon 'file1.json'…), moment repris de la sauvegarde
+      link:{ enabled:false, slot:'', moment:true },
       // notebook : page Journal des Bombers (recherche, masquer les faits, aussi les checks sans horaire, regroupement
       // par scène et scènes repliées { scène: true })
       notebook:{ q:'', hideDone:false, all:false, byScene:true, collapsed:{} },

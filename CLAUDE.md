@@ -36,11 +36,15 @@ fonctionnelle, et le mettre à jour quand une règle change.
   4b. `js/logic.js` : moteur de logique (notre portage de `Rando/Logic` de 2Ship) — contexte global `L` lu par les
      conditions de `logic-data.js` (macros de `Logic.h`, temps), état `LS` / tranches `LT` (champs de bits BigInt),
      `computeLogic(état)` → `{ regions, events, evFirst, checks:{ RC:{ ok, when } } }`, `stateFromGame(game, settings,
-     prices)`, `fullState(settings)`, `giveItem(état, RI)`, `HALF_MASK`, `halfDaysOf`, `halfDayLabel`, `whenText`. Pur.
+     prices)`, `fullState(settings)`, `giveItem(état, RI)`, `HALF_MASK`, `halfDaysOf`, `halfDayLabel`, `whenText`, `whenRuns`,
+     `whyLocked(game, settings, RC, moment)` (« Pourquoi pas encore ? » : objets du panneau au plus juste). Pur.
   5. `js/state.js` : persistance (`defaults`, `merge`, `load`, `store`, sauvegarde auto, `lastSaved`, `saveError`).
+  5b. `js/link.js` : auto-tracking par la sauvegarde de 2Ship — `link` (état, journal), `readSave(json)` (sauvegarde →
+     checks faits, objets, prix, options, moment), `linkApply` (→ partie notée, jamais en arrière), suivi du dossier `saves`
+     (`linkPick`, `linkResume`, `linkStop` ; File System Access API, poignée dans IndexedDB), `linkPickFile`, `linkAdopt`.
   6. `js/components.js` : composants Vue réutilisables (`Seg`, `ProgressCard`, `ItemTile`), `brokenIcons`, et
      `paneTpl(id, en-tête, corps)`, gabarit commun d'une page (section, barre du second panneau, en-tête).
-  7. `js/pages/*.js` : une page (ou partie d'écran) par fichier — `items` (panneau Objets, temples), `checks`, `notebook`
+  7. `js/pages/*.js` : une page (ou partie d'écran) par fichier — `items` (panneau Objets, temples), `checks`, `notebook`, `tracking` (fenêtre de l'auto-tracking)
      (Journal des Bombers : frise des 72 h, une barre par check, d'après `logicFull` / `logicNow` de `checks`), `hints`, `map`, `stats`, `config`. Chacun : gabarits en constantes `…_TPL` (insérés par `${…}` dans celui d'App) et, si
      besoin, logique en `use…(ctx)` : reçoit dans `ctx` les noms des pages assemblées avant elle, renvoie les siens
      (ordre d'assemblage dans `App.setup`). Page pas encore construite : bloc `.soon` (ce qu'elle fera, à quelle étape).

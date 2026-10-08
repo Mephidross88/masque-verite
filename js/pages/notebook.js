@@ -43,6 +43,7 @@ const NOTEBOOK_TPL = paneTpl('notebook', `<h1>Journal des Bombers</h1><p class="
               <span v-for="(m,i) in MOMENTS" :key="i" class="nb-half" :class="[i%2 ? 'n' : 'd', {mo:ui.checks.moment===i, lock:!owned[i]}]"
                 :style="{left:(i*100/6)+'%', width:(100/6)+'%'}"><span v-html="i%2 ? TL_MOON : TL_SUN"></span>{{m.long}}</span>
               <span v-for="h in NB_TICKS" :key="h.at" class="nb-tick" :style="{left:(h.at*100/72)+'%'}">{{h.label}}</span>
+              <span v-if="saveAt !== null" class="nb-save head" :style="{left:(saveAt*100/72)+'%'}" :title="t('Dernière sauvegarde : {when}', {when:link.when})"><b>{{link.save.clock}}</b></span>
             </div>
           </div>
           <template v-for="g in notebookGroups" :key="g.id || '-'">
@@ -57,30 +58,44 @@ const NOTEBOOK_TPL = paneTpl('notebook', `<h1>Journal des Bombers</h1><p class="
                 :style="{left:(i*100/6)+'%', width:(100/6)+'%'}"></span>
               <span v-for="(b,j) in (ui.notebook.collapsed[g.id] ? g.full : [])" :key="'f'+j" class="nb-bar" :style="{left:(b[0]*100/72)+'%', width:((b[1]-b[0])*100/72)+'%'}"></span>
               <span v-for="(b,j) in (ui.notebook.collapsed[g.id] ? g.now : [])" :key="'n'+j" class="nb-bar now" :style="{left:(b[0]*100/72)+'%', width:((b[1]-b[0])*100/72)+'%'}"></span>
+              <span v-if="saveAt !== null" class="nb-past" :style="{width:(saveAt*100/72)+'%'}"></span>
+              <span v-if="saveAt !== null" class="nb-save" :style="{left:(saveAt*100/72)+'%'}"></span>
             </div>
           </div>
           <!-- une ligne par check -->
-          <div v-for="r in (g.id && ui.notebook.collapsed[g.id] ? [] : g.rows)" :key="r.c.id" class="nb-row" :class="{done:store.game.checks[r.c.id], avail:!store.game.checks[r.c.id] && canNow(r.c), sub:g.id}">
-            <button type="button" class="nb-lab" :title="r.c.label + ' — ' + r.scene + (r.text ? ' · ' + r.text : '')" @click="toggleCheck(r.c)">
-              <span class="ci-cat cat-svg" v-html="CHECK_CAT[r.c.cat].icon"></span>
-              <span class="nb-name">{{r.c.label}}<small v-if="!g.id">{{r.scene}}</small></span>
-              <span class="cr-mark" v-html="store.game.checks[r.c.id] ? ICONS.check : ICONS.circleO"></span></button>
-            <div class="nb-track" :title="r.text ? t('Faisable : {when}', {when:r.text}) : t('Faisable à tout moment')">
+          <div v-for="r in (g.id && ui.notebook.collapsed[g.id] ? [] : g.rows)" :key="r.c.id" class="nb-row"
+            :class="{done:store.game.checks[r.c.id], avail:!store.game.checks[r.c.id] && canNow(r.c), locked:!store.game.checks[r.c.id] && !canNow(r.c), sub:g.id}">
+            <div class="nb-lab">
+              <button type="button" class="nb-main" :title="r.c.label + ' — ' + r.scene + (r.text ? ' · ' + r.text : '')" @click="toggleCheck(r.c)">
+                <span class="ci-cat cat-svg" v-html="CHECK_CAT[r.c.cat].icon"></span>
+                <span class="nb-name">{{r.c.label}}<i v-if="store.game.checks[r.c.id] && store.game.found[r.c.id]" class="ci-found" title="Objet trouvé (d’après la sauvegarde)">{{foundLabel(r.c.id)}}</i><small v-if="!g.id">{{r.scene}}</small></span>
+                <span v-if="store.game.checks[r.c.id]" class="cr-mark" v-html="ICONS.check"></span></button>
+              <button v-if="!store.game.checks[r.c.id] && !canNow(r.c)" type="button" class="ci-ex ci-go"
+                title="Pourquoi ce check n’est pas encore faisable ?" v-html="ICONS.why" @click="openWhy(r.c)"></button>
+            </div>
+            <div class="nb-track" :class="{why:!store.game.checks[r.c.id] && !canNow(r.c)}"
+              :title="(r.text ? t('Faisable : {when}', {when:r.text}) : t('Faisable à tout moment')) + (!store.game.checks[r.c.id] && !canNow(r.c) ? t(' — clic : pourquoi pas encore ?') : '')"
+              @click="!store.game.checks[r.c.id] && !canNow(r.c) && openWhy(r.c)">
               <span v-for="(m,i) in MOMENTS" :key="i" class="nb-bg" :class="[i%2 ? 'n' : 'd', {mo:ui.checks.moment===i, lock:!owned[i]}]"
                 :style="{left:(i*100/6)+'%', width:(100/6)+'%'}"></span>
               <span v-for="(b,j) in r.full" :key="'f'+j" class="nb-bar" :style="{left:(b[0]*100/72)+'%', width:((b[1]-b[0])*100/72)+'%'}"></span>
               <span v-for="(b,j) in r.now" :key="'n'+j" class="nb-bar now" :style="{left:(b[0]*100/72)+'%', width:((b[1]-b[0])*100/72)+'%'}"></span>
+              <span v-if="saveAt !== null" class="nb-past" :style="{width:(saveAt*100/72)+'%'}"></span>
+              <span v-if="saveAt !== null" class="nb-save" :style="{left:(saveAt*100/72)+'%'}"></span>
             </div>
           </div>
           </template>
         </div>
-      </div>`);
+      </div>
+      <!-- annuler le dernier check (comme dans Checks ; une seule fois si les deux pages sont côte à côte) -->
+      <div v-if="lastCheck && !shown('checks')" class="toast" role="status">{{lastCheck.text}}
+        <button type="button" @click="undoCheck"><span v-html="ICONS.undo"></span>Annuler</button></div>`);
 
 // graduations de l'axe : toutes les 6 h (6 h, 12 h, 18 h, 0 h…), en heures depuis le jour 1 à 6 h
 const NB_TICKS = Array.from({ length:13 }, (_, k) => ({ at:k * 6, label:((6 + k * 6) % 24) + ' h' }));
 
 function useNotebookPage(ctx){
-  const { ui, logicNow, logicFull, canNow, seedChecks, owned } = ctx;
+  const { ui, logicNow, logicFull, canNow, seedChecks, owned } = ctx;   // (openWhy : de la page Checks, dans le gabarit)
   const s = store.settings;
   const norm = x => x.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   // lignes : checks de la seed (non exclus) à horaire limité (ou tous avec l'option), triés par heure de début
@@ -125,5 +140,7 @@ function useNotebookPage(ctx){
   });
   const toggleNbScene = id => { ui.notebook.collapsed[id] = !ui.notebook.collapsed[id]; };
   function setAllNbScenes(collapsed){ CHECK_SCENES.forEach(sc => { ui.notebook.collapsed[sc.id] = collapsed; }); }
-  return { notebookRows, notebookGroups, toggleNbScene, setAllNbScenes, NB_TICKS };
+  // heure de la dernière sauvegarde lue (suivi en ligne) : repère vertical sur la frise
+  const saveAt = computed(() => link.status === 'on' && link.save && link.save.half >= 0 ? link.save.hours : null);
+  return { notebookRows, notebookGroups, toggleNbScene, setAllNbScenes, NB_TICKS, saveAt };
 }

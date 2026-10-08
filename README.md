@@ -12,3 +12,13 @@ français ou en anglais (Configuration › Langue).
 ## Lancer l'appli
 Téléchargez le dépôt et ouvrez `index.html` dans un navigateur récent (Chrome, Edge, Firefox). La partie est
 sauvegardée automatiquement dans le navigateur.
+
+## Auto-tracking
+L'appli suit votre partie en lisant la sauvegarde de 2Ship : checks faits, objets trouvés, prix des boutiques, jour et
+heure du cycle. Elle ne modifie jamais vos fichiers.
+1. Dans 2Ship, menu Enhancements › Saving : activez **Autosave** et réglez l'intervalle sur **1 minute** (le jeu
+   sauvegarde aussi au Chant du temps et aux statues de hibou ; l'appli suit à chaque sauvegarde, pas à chaque check).
+2. Dans l'appli, cliquez sur « Pas de suivi » en bas de la barre de gauche, puis « Choisir le dossier saves… » : le
+   dossier `saves` à côté de `2ship.exe`. Chrome ou Edge seulement ; ailleurs, « Lire une sauvegarde… » après chaque
+   sauvegarde du jeu.
+3. Après un rechargement de la page, « Reprendre le suivi » d'un clic (le navigateur redemande l'autorisation).

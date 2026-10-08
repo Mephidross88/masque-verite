@@ -62,13 +62,15 @@ const CHECKS_TPL = paneTpl('checks', `<h1>Checks</h1>`, `
               :class="{done:store.game.checks[c.id], excluded:s.excluded[c.id], avail:!store.game.checks[c.id] && canNow(c), locked:!store.game.checks[c.id] && !canNow(c)}">
               <button type="button" class="ci-main" :title="checkTitle(c)" @click="toggleCheck(c)">
                 <span class="ci-cat cat-svg" v-html="CHECK_CAT[c.cat].icon"></span>
-                <span class="ci-label">{{c.label}}</span>
+                <span class="ci-label">{{c.label}}<i v-if="store.game.checks[c.id] && store.game.found[c.id]" class="ci-found" title="Objet trouvé (d’après la sauvegarde)">{{foundLabel(c.id)}}</i></span>
                 <span v-if="timeline[c.id]" class="tl3" :title="timeline[c.id].title"><span v-for="d in 3" :key="d" class="tl3-d"><b>{{d}}</b><i
                   v-for="k in 2" :key="k" :class="[timeline[c.id].cells[(d-1)*2+k-1], {mo:ui.checks.moment===(d-1)*2+k-1, ok:nowCells(c)[(d-1)*2+k-1], lock:!owned[(d-1)*2+k-1]}]"
                   :style="timeline[c.id].fill[(d-1)*2+k-1]"
                   v-html="k===1 ? TL_SUN : TL_MOON"></i></span></span>
                 <span v-else-if="never[c.id]" class="tl3 never" title="Jamais faisable selon la logique avec la configuration actuelle (même avec tous les objets)">—</span>
                 <span class="cr-mark" v-html="store.game.checks[c.id] ? ICONS.check : ICONS.circleO"></span></button>
+              <button v-if="!store.game.checks[c.id] && !s.excluded[c.id] && !canNow(c) && !never[c.id]" type="button" class="ci-ex ci-go"
+                title="Pourquoi ce check n’est pas encore faisable ?" v-html="ICONS.why" @click="openWhy(c)"></button>
               <button type="button" class="ci-ex" :title="s.excluded[c.id] ? 'Réintégrer ce check' : 'Exclure ce check (ne compte plus)'"
                 @click="toggleExcluded(c)">{{s.excluded[c.id] ? '↺' : '⊘'}}</button>
             </li>
@@ -78,6 +80,28 @@ const CHECKS_TPL = paneTpl('checks', `<h1>Checks</h1>`, `
       </article>
       <div v-if="lastCheck" class="toast" role="status">{{lastCheck.text}}
         <button type="button" @click="undoCheck"><span v-html="ICONS.undo"></span>Annuler</button></div>`);
+
+// fenêtre « Pourquoi pas encore ? » : ce qui manque (whyLocked de logic.js), au moment choisi s'il y en a un
+const WHY_TPL = `
+      <template v-else-if="modal==='why' && why.check">
+        <header><h3>Pourquoi pas encore ?</h3><button @click="modal=null" aria-label="Fermer" v-html="ICONS.close"></button></header>
+        <div class="body why-modal">
+          <p class="why-check"><b>{{why.check.label}}</b> · {{CHECK_SCENE[why.check.scene].label}}<template v-if="why.moment>=0"> · {{MOMENTS[why.moment].long}}</template></p>
+          <p v-if="!why.res" class="why-wait">Calcul en cours…</p>
+          <p v-else-if="why.res.never">Jamais faisable selon la logique avec la configuration actuelle (même avec tous les objets).</p>
+          <p v-else-if="why.res.neverAt">Jamais faisable à ce moment-là, même avec tous les objets. Possible : {{why.res.when || t('à tout moment')}}.</p>
+          <p v-else-if="why.res.panel">Il manque quelque chose que le panneau Objets ne permet pas de noter.</p>
+          <template v-else>
+            <p v-if="!why.res.items.length">Rien ne manque : il est déjà faisable (l’inventaire a changé entre-temps).</p>
+            <template v-else>
+              <p>Il suffirait d’avoir :</p>
+              <ul class="why-items"><li v-for="(it,i) in why.res.items" :key="i"><img v-if="it.src && !brokenIcons[it.src]" :src="it.src" alt=""
+                @error="brokenIcons[it.src]=true"><span v-else class="why-dot"></span>{{it.label}}</li></ul>
+            </template>
+            <p class="why-note">Ensuite faisable : {{why.res.when || t('à tout moment')}}. C’est un ensemble minimal d’objets parmi d’autres possibles.</p>
+          </template>
+        </div>
+      </template>`;
 
 // icônes des cases de la frise (soleil : jour, lune : nuit)
 const TL_SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>';
@@ -186,6 +210,12 @@ function useChecksPage(ctx){
     if (l.was) store.game.checks[l.id] = true; else delete store.game.checks[l.id];
     lastCheck.value = null;
   }
+  // « Pourquoi pas encore ? » : calcul de quelques centaines de millisecondes, lancé après l'ouverture de la fenêtre
+  const why = reactive({ check:null, moment:-1, res:null });
+  function openWhy(c){
+    why.check = c; why.moment = ui.checks.moment; why.res = null; ctx.modal.value = 'why';
+    setTimeout(() => { if (why.check?.id === c.id) why.res = whyLocked(store.game, s, c.id, why.moment); }, 30);
+  }
   function toggleExcluded(c){ if (s.excluded[c.id]) delete s.excluded[c.id]; else s.excluded[c.id] = true; }
   const toggleScene = id => { ui.checks.collapsed[id] = !ui.checks.collapsed[id]; };
   function setAllChecks(collapsed){ CHECK_SCENES.forEach(sc => { ui.checks.collapsed[sc.id] = collapsed; }); }
@@ -199,5 +229,5 @@ function useChecksPage(ctx){
   const allCats = () => { CHECK_CATS.forEach(k => { ui.checks.hiddenCats[k.id] = false; }); };
   return { s, logicNow, logicFull, canNow, nowCells, timeline, never, seedChecks, sceneStats, checkStats, catCounts, checkList,
     sceneTitle, checkTitle, lastCheck, toggleCheck, undoCheck, toggleExcluded, toggleScene, setAllChecks, jumpScene, toggleCat,
-    soloCat, allCats, MOMENTS, TL_SUN, TL_MOON, owned };
+    soloCat, allCats, MOMENTS, TL_SUN, TL_MOON, owned, why, openWhy };
 }
