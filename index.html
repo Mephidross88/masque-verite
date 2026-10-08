@@ -13,16 +13,23 @@
 <div id="app" v-cloak></div>
 <!-- Vue : version fixée, empreinte vérifiée par le navigateur (à recalculer en changeant de version : sha384 du fichier) -->
 <script src="https://cdn.jsdelivr.net/npm/vue@3.4.38/dist/vue.global.prod.js" integrity="sha384-Z9a2xA0EIaURxthVmeQmPrgSC05eG8Lch8X4Y2+lXpTg9wcxPj2m3QNurDl5hLiS" crossorigin="anonymous"></script>
+<!-- données de 2Ship (fichier généré : tools/2ship-checks/extract_checks.mjs) -->
+<script src="data/checks-data.js"></script>
+<script src="data/logic-data.js"></script>
 <!-- langues livrées (data/i18n/<code>.js) : ajouter ici une ligne par langue -->
 <script src="data/i18n/en.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/icons.js"></script>
+<script src="js/config.js"></script>
+<script src="js/checks.js"></script>
+<script src="js/items.js"></script>
+<script src="js/logic.js"></script>
 <script src="js/state.js"></script>
 <script src="js/components.js"></script>
 <!-- pages : gabarit et logique de chaque page, assemblés par js/app.js -->
 <script src="js/pages/items.js"></script>
 <script src="js/pages/checks.js"></script>
-<script src="js/pages/router.js"></script>
+<script src="js/pages/notebook.js"></script>
 <script src="js/pages/hints.js"></script>
 <script src="js/pages/map.js"></script>
 <script src="js/pages/stats.js"></script>

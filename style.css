@@ -11,6 +11,7 @@
   --song-minuet:#3f8a2c; --song-bolero:#b8392a; --song-serenade:#1d7fae; --song-requiem:#b8701a; --song-nocturne:#7a3fa5; --song-prelude:#c99a00;
   --bg:#ece2c8; --surface:#faf5e6; --surface-2:#f1e8d2; --line:#ddcfa9; --text:#3a2f1d; --muted:#8a7c5f;
   --shadow:0 1px 2px rgba(50,36,10,.08),0 6px 18px rgba(50,36,10,.08);
+  --tl-day:#e39a26; --tl-day-soft:#f5dcb0; --tl-night:#3d4f9c; --tl-night-soft:#c9cfea;
   --serif:'Alegreya SC','Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;
   --sans:'Alegreya Sans','Segoe UI',system-ui,-apple-system,Roboto,sans-serif;
 }
@@ -23,6 +24,7 @@
     --song-minuet:#8fd07a; --song-bolero:#f08a7a; --song-serenade:#7cc8ec; --song-requiem:#f0b25e; --song-nocturne:#c49be0; --song-prelude:#e8d36a;
     --bg:#141017; --surface:#1d1720; --surface-2:#262029; --line:#3b3140; --text:#ece3d6; --muted:#a69a8e;
     --shadow:0 1px 2px rgba(0,0,0,.3);
+    --tl-day:#f0ad3d; --tl-day-soft:#5a4524; --tl-night:#7b8fe6; --tl-night-soft:#2f3555;
   }
 }
 :root[data-theme="dark"]{
@@ -33,6 +35,7 @@
   --song-minuet:#8fd07a; --song-bolero:#f08a7a; --song-serenade:#7cc8ec; --song-requiem:#f0b25e; --song-nocturne:#c49be0; --song-prelude:#e8d36a;
   --bg:#141017; --surface:#1d1720; --surface-2:#262029; --line:#3b3140; --text:#ece3d6; --muted:#a69a8e;
   --shadow:0 1px 2px rgba(0,0,0,.3);
+  --tl-day:#f0ad3d; --tl-day-soft:#5a4524; --tl-night:#7b8fe6; --tl-night-soft:#2f3555;
 }
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -1014,7 +1017,7 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .check-item:hover{background:var(--surface-2)}
 .ci-main{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:0;padding:6px 8px;text-align:left;color:var(--text);font-size:14.5px}
 .ci-main .cr-mark{width:16px;height:16px;flex:none;color:var(--line)}
-.ci-label{overflow:hidden;text-overflow:ellipsis}
+.ci-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 /* objet trouvé dans le check (auto-tracking) : à la suite du libellé, discret */
 .ci-found{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:0 7px 0 4px;border-radius:999px;font-size:12.5px;
   color:var(--ocarina);background:var(--ocarina-soft);text-decoration:none;font-style:normal;vertical-align:1px;white-space:nowrap}
@@ -1292,7 +1295,7 @@ select.sel:hover{border-color:var(--gold)}
 .import-btn{cursor:pointer}
 .lang-pick{display:inline-flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
 .lang-pick > label:first-child{display:inline-flex;align-items:center;gap:8px}
-.lang-pick .sel{padding:4px 8px;font-size:14px}
+.lang-pick .sel{width:auto;min-height:34px;padding:4px 30px 4px 10px;font-size:14px;background-position:right 9px center}
 .lang-pick .linklike{font-size:13px;cursor:pointer}
 .btn-ic{display:inline-flex;width:17px;height:17px;margin-right:7px;vertical-align:-3px}
 .btn-ic svg{width:17px;height:17px}
@@ -1384,6 +1387,111 @@ select.sel:hover{border-color:var(--gold)}
 .mactions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;margin-top:14px}
 .msg{font-size:14px;margin-top:8px}
 .msg.ok{color:var(--green)} .msg.ko{color:var(--red)}
+
+/* ---------- Le Masque de Vérité : icônes de catégorie (trait), panneau Objets, Configuration ---------- */
+/* icônes de catégorie de check : SVG en trait, teinte du texte (pastilles, en-têtes de scène, lignes) */
+.cat-svg{display:inline-grid;place-items:center;flex:none;color:var(--gold-deep)}
+.cat-svg svg{width:100%;height:100%}
+.cat-chip .cat-svg{width:20px;height:20px;margin-left:2px}
+.zc .cat-svg{width:16px;height:16px}
+.ci-cat.cat-svg{width:20px;height:20px}
+.check-item.done .ci-cat.cat-svg{color:var(--muted)}
+/* panneau Objets : une grille de tuiles par groupe (--cols colonnes) */
+.ip-title{font-family:var(--serif);font-size:15px;font-weight:700;color:var(--muted);margin:0 0 8px}
+.tile-grid{display:grid;grid-template-columns:repeat(var(--cols,6),minmax(0,1fr));gap:6px}
+.icon-abbr{font:700 14px/1 var(--sans);letter-spacing:.02em;color:var(--text)}
+.ig-enemySouls .icon-abbr{font-size:11px}
+.dg-txt{font:700 12px/1 var(--sans)}
+.dg-k{display:inline-grid;place-items:center;font:700 11px/1 var(--sans);min-width:16px}
+.dg-k svg{width:16px;height:16px}
+.dg-extra{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:8px}
+.dg-extra .dg-keys{padding:0 10px}
+/* Configuration : explication sous le libellé, nombre avec son unité, liste des checks du spoiler */
+.copt .d{font-size:13.5px;color:var(--muted);max-width:60ch}
+.opt-numw{display:inline-flex;align-items:center;gap:6px}
+.opt-numw small{color:var(--muted)}
+.pool-note{color:var(--muted);font-size:14.5px;margin:0 0 12px;max-width:1240px}
+
+/* frise des trois jours (page Checks) : une paire soleil / lune par jour, numéro du jour au-dessus. Jour : ambre, nuit :
+   bleu nuit ; vif : faisable avec l'inventaire noté, pâle : faisable plus tard ; une partie de la demi-journée seulement :
+   case remplie de gauche à droite aux heures couvertes ; pas disponible : case inversée (fond transparent, bord et symbole en couleur) ; moment choisi : entourée */
+.tl3{flex:none;display:inline-flex;gap:3px;align-items:center;padding-top:7px}
+.tl3-d{position:relative;display:inline-flex;gap:1px;padding:1px;border:1px solid var(--line);border-radius:5px}
+.tl3-d b{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;line-height:1;color:var(--muted);
+  background:var(--surface);padding:0 2px}
+.tl3 i{--c:var(--tl-day-soft);--fg:var(--tl-day);width:17px;height:17px;border-radius:3px;display:grid;place-items:center;color:var(--line)}
+.tl3 i:nth-of-type(2){--c:var(--tl-night-soft);--fg:var(--tl-night)}
+.tl3 i.ok{--c:var(--tl-day);--fg:#fff}
+.tl3 i.ok:nth-of-type(2){--c:var(--tl-night)}
+.tl3 i svg{width:11px;height:11px}
+/* période où le check n'est pas disponible : case « inversée » — fond transparent, bord et symbole à la couleur du jour /
+   de la nuit */
+.tl3 i:not(.full):not(.part){color:var(--fg);box-shadow:inset 0 0 0 1px var(--fg);opacity:.6}
+.tl3 i.full,.tl3 i.part{color:var(--fg)}
+.tl3 i.full svg,.tl3 i.part svg{opacity:1}
+.tl3 i.full{background:var(--c)}
+.tl3 i.part{color:var(--text);box-shadow:inset 0 0 0 1px var(--c)}   /* (fond : dégradé aux heures couvertes, en style) */
+.tl3 i.part svg{opacity:.75}
+.tl3 i.mo{outline:2px solid var(--text);outline-offset:0}
+/* temps mélangé : demi-journée pas encore possédée, barrée */
+.tl3 i.lock{position:relative}
+.tl3 i.lock::after{content:'';position:absolute;inset:0;background:linear-gradient(to top right, transparent calc(50% - 1px), var(--text) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px));opacity:.55}
+.moment-seg button.lock{text-decoration:line-through;color:var(--muted)}
+.clock-note{display:flex;align-items:flex-start;gap:8px;max-width:1240px;margin:0 0 14px;padding:10px 14px;border:1px solid var(--gold);border-radius:10px;background:var(--gold-soft);color:var(--gold-deep);font-size:14.5px}
+.clock-note span{flex:none;width:18px;height:18px;margin-top:1px}
+.tl3.never{color:var(--muted);font-weight:700;padding:0 4px}
+.check-item.done .tl3{opacity:.45}
+/* sélecteur de moment : jours clairs, nuits sombres */
+.moment-seg button{padding:5px 9px}
+.moment-seg button.mo-night:not(.on){background:color-mix(in srgb, var(--ink) 14%, var(--surface))}
+
+/* ---------- Journal des Bombers : frise des trois jours (72 h), une ligne par check ---------- */
+/* toute la largeur du panneau : la frise gagne en précision */
+.checks-toolbar.nb-tools,.nb-tools .checks-search{max-width:none}
+.nb-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.nb{min-width:620px}   /* (plus étroit : défilement horizontal) */
+.nb-row{display:grid;grid-template-columns:minmax(170px,clamp(230px,18%,320px)) minmax(0,1fr);align-items:stretch;border-top:1px solid var(--line)}
+.nb-row:first-child{border-top:0}
+.nb-head{position:sticky;top:0;z-index:2;background:var(--surface);border-bottom:1px solid var(--line)}
+.nb-head .nb-lab{padding:8px 12px;color:var(--muted);font-size:13.5px}
+.nb-lab{display:flex;align-items:center;gap:8px;min-width:0;padding:5px 12px;background:none;border:0;text-align:left;color:var(--text);font-size:14.5px}
+button.nb-lab:hover{background:var(--surface-2)}
+.nb-name{flex:1;min-width:0;line-height:1.2}
+.nb-name small{display:block;font-size:12px;color:var(--muted)}
+.nb-lab .cr-mark{width:16px;height:16px;flex:none;color:var(--line)}
+.nb-track{position:relative;min-height:34px;margin-right:10px}
+.nb-head .nb-track{height:44px}
+/* bandes : jours clairs, nuits teintées ; moment choisi : bande dorée ; temps mélangé non possédé : hachures */
+.nb-half{position:absolute;top:0;height:24px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:12.5px;font-weight:700;border-left:1px solid var(--line)}
+.nb-half span{display:inline-grid;width:12px;height:12px}
+.nb-half span svg{width:12px;height:12px}
+.nb-half.d{color:var(--tl-day)}
+.nb-half.n{color:var(--tl-night);background:color-mix(in srgb, var(--tl-night) 10%, transparent)}
+.nb-half.mo{box-shadow:inset 0 -3px 0 var(--text)}
+.nb-tick{position:absolute;bottom:3px;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap}
+.nb-tick:first-of-type{transform:none}
+.nb-tick:last-of-type{transform:translateX(-100%)}
+.nb-bg{position:absolute;top:0;bottom:0;border-left:1px solid var(--line)}
+.nb-bg.n{background:color-mix(in srgb, var(--tl-night) 8%, transparent)}
+.nb-bg.mo{background:color-mix(in srgb, var(--gold) 16%, transparent)}
+.nb-half.lock,.nb-bg.lock{background-image:repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in srgb, var(--text) 14%, transparent) 5px 6px)}
+/* barres : faisable avec tous les objets (pâle), avec l'inventaire noté (doré) */
+.nb-bar{position:absolute;top:50%;height:14px;transform:translateY(-50%);min-width:3px;border-radius:4px;background:color-mix(in srgb, var(--gold) 32%, var(--surface));
+  box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--gold) 60%, transparent)}
+.nb-bar.now{background:var(--gold);box-shadow:none}
+.nb-row.done .nb-bar{background:var(--line);box-shadow:none}
+/* regroupement par scène : ligne d'en-tête (repliable), checks en retrait */
+.nb-scene{background:var(--surface-2);border-top:1px solid var(--line)}
+.nb-scene .nb-lab{font-weight:700;font-size:14px}
+.nb-scene .chev{display:inline-grid;width:16px;height:16px;flex:none;color:var(--muted);transition:transform .18s}
+.nb-scene .chev svg{width:16px;height:16px}
+.nb-scene.collapsed .chev{transform:rotate(-90deg)}
+.nb-count{flex:none;font-size:12.5px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.nb-scene .nb-track{min-height:30px}
+.nb-scene .nb-bar{height:8px}
+.nb-scene.done .nb-bar{background:var(--line)}
+.nb-row.sub .nb-lab{padding-left:30px}
+.nb-row.done .nb-name{color:var(--muted);text-decoration:line-through}
 
 /* ---------- Pages à venir (bloc « bientôt » : ce que fera la page, et à quelle étape) ---------- */
 .soon{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;background:var(--surface);border:1px dashed var(--line);

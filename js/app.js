@@ -14,7 +14,7 @@ function useShell(ctx){
   // Pages du menu, par groupe : la partie en cours (Progression), les vues d'ensemble (Aperçus), puis la Configuration à part.
   const views = [
     { id:'checks', label:t('Checks'), icon:ICONS.checks, group:t('Progression') },
-    { id:'router', label:t('Routeur'), icon:ICONS.router, group:t('Progression') },
+    { id:'notebook', label:t('Journal des Bombers'), icon:ICONS.notebook, group:t('Progression') },
     { id:'hints', label:t('Indices'), icon:ICONS.hint, group:t('Progression') },
     { id:'map', label:t('Carte'), icon:ICONS.map, group:t('Aperçus') },
     { id:'stats', label:t('Statistiques'), icon:ICONS.stats, group:t('Aperçus') },
@@ -50,6 +50,8 @@ function useShell(ctx){
 
 function useShellEnd(ctx){
   const { backup, modal, ui } = ctx;
+  // remise à zéro de la partie (la configuration est gardée)
+  const resetGame = () => { store.game = defaults().game; };
   /* Sauvegarde */
   function openBackup(){ backup.text = JSON.stringify({ version:1, settings:store.settings, game:store.game }, null, 1); backup.msg = ''; modal.value = 'backup'; }
   async function copyBackup(){
@@ -65,25 +67,26 @@ function useShellEnd(ctx){
       backup.ok = true; backup.msg = t('Partie importée.');
     } catch (e) { backup.ok = false; backup.msg = t('Texte invalide : collez le contenu complet d’un export.'); }
   }
-  function resetAll(){ store.game = defaults().game; modal.value = null; }
+  function resetAll(){ resetGame(); modal.value = null; }
 
   function onKey(ev){ if (ev.key === 'Escape') modal.value = null; }
   window.addEventListener('keydown', onKey);
 
   const savedAt = computed(() => lastSaved.value ? lastSaved.value.toLocaleTimeString(LANG === 'fr' ? 'fr-FR' : LANG, { hour:'2-digit', minute:'2-digit', second:'2-digit' }) : null);
-  return { openBackup, copyBackup, importBackup, resetAll, onKey, savedAt };
+  return { openBackup, copyBackup, importBackup, resetGame, resetAll, onKey, savedAt };
 }
 
 const App = {
-  components:{ Seg, ProgressCard },
+  components:{ Seg, ProgressCard, ItemTile },
   setup(){
     // pages assemblées dans l'ordre (chacune reçoit ce que les précédentes ont défini ; les rares appels vers une page
     // suivante passent par ctx, voir « défini plus loin »)
     const ctx = {};
-    for (const use of [useShell, useConfigPage, useShellEnd])
+    for (const use of [useShell, useItemsPanel, useChecksPage, useNotebookPage, useConfigPage, useShellEnd])
       Object.assign(ctx, use(ctx));
     // (noms globaux utilisés par le gabarit)
-    return { LANG, LANGS, I18N_LANGS, setLang, removeLang, store, ICONS, saveError, ...ctx };
+    return { LANG, LANGS, I18N_LANGS, setLang, removeLang, store, ICONS, CI, saveError, CHECK_CATS, CHECK_CAT, CONFIG_TABS, DUNGEONS,
+      SPIDER_HOUSES, ITEM_BY_KEY, ...ctx };
   },
   template:`
 <div class="shell" :class="{'nav-open':navOpen, split:splitOn, 'items-folded':ui.itemsFolded, 'items-drawer':itemsDrawer, 'nav-folded':ui.navFolded}">
@@ -108,6 +111,9 @@ const App = {
       </template>
     </nav>
 
+${CHECKS_SIDE_TPL}
+${NOTEBOOK_SIDE_TPL}
+
     <div class="side-foot">
       <div class="side-foot-row">
         <div class="saved ko" v-if="saveError" title="Le navigateur refuse d'enregistrer (place insuffisante, navigation privée ?) : exportez la partie (Exporter ou importer la partie) pour ne pas la perdre."><i></i>Partie non enregistrée !</div>
@@ -126,10 +132,14 @@ const App = {
   </aside>
 
   <main class="main">
+    <!-- Progression globale, en tête de toutes les pages -->
+    <div class="global-progress">
+      <progress-card :stats="checkStats" :unit="t('checks')" title="Checks" :active="ui.view==='checks'" @open="go('checks')"></progress-card>
+    </div>
     <div class="panes" :class="{split:splitOn}">
 ${CHECKS_TPL}
 
-${ROUTER_TPL}
+${NOTEBOOK_TPL}
 
 ${HINTS_TPL}
 
@@ -170,9 +180,9 @@ ${ITEMS_PANEL_TPL}
 };
 
 // langue : gabarits traduits au chargement (js/i18n.js), t() et tn() utilisables dans tous les gabarits
-[App, Seg, ProgressCard].forEach(c => { c.template = tpl(c.template); });
+[App, Seg, ProgressCard, ItemTile].forEach(c => { c.template = tpl(c.template); });
 const app = createApp(App);
 app.config.globalProperties.t = t;
 app.config.globalProperties.tn = tn;
 app.mount('#app');
-window.__PF = { I18N_MISSING, store };
+window.__PF = { I18N_MISSING, store, CHECKS, CHECK_BY_ID, checkShuffled, ITEM_BY_KEY, ITEM_BY_RI, SETTINGS_DEF };

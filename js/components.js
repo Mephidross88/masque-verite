@@ -27,6 +27,32 @@ const ProgressCard = {
   </button>`,
 };
 
+// Tuile d'objet (panneau Objets) : clic gauche / droit pour augmenter / diminuer / activer. Icône seule (nom au survol) ;
+// sans image (icons/items/<clé>.png), un sigle. Badge : taille (paliers), nombre (compteurs).
+const brokenIcons = reactive({});
+const ItemTile = {
+  props:{ k:{ type:String, required:true } },
+  data:() => ({ brokenIcons }),
+  computed:{
+    item(){ return ITEM_BY_KEY[this.k]; },
+    value(){ return store.game.items[this.k]; },
+    src(){ return iconSrc(this.item); },
+    abbr(){ return itemAbbr(this.item); },
+  },
+  methods:{
+    onClick(ev){ clickItem(ev, this.item); },
+    onRight(ev){ rightClickItem(ev, this.item); },
+    itemActive, itemTitle, itemMaxed,
+  },
+  template:`<button type="button" class="icon-tile" :class="{off:!itemActive(item,value)}" :aria-label="item.label" :title="itemTitle(item)"
+    @click="onClick" @contextmenu.prevent="onRight">
+    <img v-if="!brokenIcons[src]" :src="src" :alt="item.label" @error="brokenIcons[src]=true">
+    <span v-else class="icon-abbr">{{abbr}}</span>
+    <span v-if="item.kind==='count'" class="icon-badge" :class="{maxed:itemMaxed(item)}">{{value}}</span>
+    <span v-else-if="item.sizes && item.sizes[value]" class="icon-badge" :class="{maxed:itemMaxed(item)}">{{item.sizes[value]}}</span>
+  </button>`,
+};
+
 /* Gabarit commun des pages (js/pages) : section du panneau principal ou du second panneau (côte à côte), barre du second
    panneau (échanger, fermer), en-tête. body : contenu de la page. */
 const paneTpl = (id, head, body) => `

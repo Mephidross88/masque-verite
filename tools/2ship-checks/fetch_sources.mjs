@@ -18,10 +18,13 @@ const wanted = tree.tree.filter(e => e.type === 'blob').map(e => e.path).filter(
   /^mm\/2s2h\/Rando\/.*\.(cpp|h|hpp)$/.test(p) ||
   // noms des scènes (tracker de checks), sauvegarde JSON (auto-tracking)
   /^mm\/2s2h\/(ShipUtils\.(cpp|h)|SaveManager\/SaveManager\.(cpp|h))$/.test(p) ||
-  // jeu : objets, sauvegarde (drapeaux, RandoSaveCheck), scènes, acteurs, entrées (tables des scènes), étages des donjons
+  // jeu : objets, sauvegarde (drapeaux, RandoSaveCheck), scènes, acteurs, entrées (tables des scènes), étages des donjons,
+  // variantes d'une scène regroupées (marais purifié, printemps… : Play_GetOriginalSceneId de z_play.c)
   /^mm\/include\/(z64item|z64save|z64scene)\.h$/.test(p) ||
   /^mm\/include\/tables\/(scene|actor|object)_table\.h$/.test(p) ||
-  /^mm\/src\/code\/(z_scene_table|z_map_data)\.c$/.test(p));
+  /^mm\/src\/code\/(z_scene_table|z_map_data|z_play)\.c$/.test(p) ||
+  // constantes des options (SPIDER_HOUSE_TOKENS_REQUIRED, z_en_si.h, inclus par StaticData/Options.cpp)
+  p === 'mm/src/overlays/actors/ovl_En_Si/z_en_si.h');
 
 // téléchargements en parallèle, par petits paquets
 for (let i = 0; i < wanted.length; i += 12) await Promise.all(wanted.slice(i, i + 12).map(async p => {

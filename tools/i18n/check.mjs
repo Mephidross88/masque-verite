@@ -49,9 +49,28 @@ for (const f of ['js', 'js/pages'].flatMap(d => fs.readdirSync(path.join(ROOT, d
   for (const m of src.matchAll(/\btd\(\s*'((?:[^'\\]|\\.)*)'/g)) data.add(lit(m[1]));
 }
 
-// 2. libellés des données, traduits au chargement (tWalk, td) : relevés en français dans un second bac à sable.
-//    'ui' : à traduire (dictionnaire) ; 'data' : nom anglais de 2Ship en repli (checks, objets, options…).
-//    Aucune donnée pour l'instant (étape 1, voir SPEC.md > Étapes) : fichiers et listes à ajouter ici.
+// 2. libellés des données, traduits au chargement (tWalk, tl, td) : relevés en français dans un second bac à sable.
+//    'ui' : à traduire (dictionnaire) ; 'data' : nom anglais de 2Ship en repli (scènes, checks, objets).
+{
+  const fr = { console, localStorage:{ getItem:() => 'fr', setItem(){} }, navigator:{ language:'fr' }, location:{ reload(){} }, Intl,
+    Vue:{ createApp(){}, reactive:x => x, computed:f => ({ get value(){ return f(); } }), watch(){}, ref:v => ({ value:v }), nextTick(){} } };
+  fr.window = fr;
+  vm.createContext(fr);
+  try {
+    for (const f of ['data/checks-data.js', 'js/i18n.js', 'js/icons.js', 'js/config.js', 'js/checks.js', 'js/items.js'])
+      vm.runInContext(read(f), fr, { filename:f });
+    const run = e => vm.runInContext(e, fr);
+    const letters = s => /[A-Za-zÀ-ÿŒœ]/.test(s);
+    const add = (set, list) => list.filter(s => typeof s === 'string' && letters(s)).forEach(s => set.add(s));
+    const D = run('CHECKS_DATA'), dataFr = new Set([...D.scenes, ...D.checks, ...D.items].map(x => x.fr));
+    add(ui, run('CONFIG_TABS').flatMap(tab => [tab.label, ...tab.cards.map(c => c[1])]));
+    add(ui, run('SETTINGS_DEF').flatMap(d => [d.label, d.tip, ...(d.choices || []).map(c => c[1])]));
+    add(ui, run('CHECK_CATS').map(c => c.label));
+    add(ui, run('ITEM_GROUPS').flatMap(g => [g.title, ...g.items.flatMap(it => [it.label, ...(it.stages || [])])]).filter(s => !dataFr.has(s)));
+    add(ui, run('DUNGEONS').map(d => d.label));
+    add(data, [...dataFr]);
+  } catch (e){ console.warn('données : ' + e.message); }
+}
 
 const byFr = (a, b) => a.localeCompare(b, 'fr');
 if (opt.template){

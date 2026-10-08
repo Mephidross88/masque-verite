@@ -1,5 +1,5 @@
 /* =====================================================================
-   Le Masque de Vérité — tracker d'objets et de checks, et routeur, pour le randomizer de 2 Ship 2 Harkinian
+   Le Masque de Vérité — tracker d'objets et de checks pour le randomizer de 2 Ship 2 Harkinian
    Application éclatée en plusieurs <script> classiques (pas de modules ES,
    pas de build : voir CLAUDE.md > Fichiers), chargés dans l'ordre imposé
    par index.html. Tous partagent le même scope global de haut niveau
@@ -25,7 +25,8 @@ const ICONS = {
   caret:     S('<path d="M5 9l7 7 7-7"/>', 'stroke-width="2.4"'),
   close:     S('<path d="M6 6l12 12M18 6L6 18"/>', 'stroke-width="2.4"'),
   menu:      S('<path d="M4 7h16M4 12h16M4 17h16"/>'),
-  router:    S('<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6H15a3 3 0 010 6H9a3 3 0 000 6h6.5"/>'),
+  // Journal des Bombers : carnet et sa frise
+  notebook:  S('<path d="M5 3.5h12a2 2 0 012 2v15H7a2 2 0 01-2-2z"/><path d="M5 18.5a2 2 0 012-2h12"/><path d="M9 8h7M9 11.5h4"/>'),
   hint:      S('<path d="M12 3c-4 0-7 3-7 7.5 0 4.5 3 8.5 7 10.5 4-2 7-6 7-10.5C19 6 16 3 12 3z"/><path d="M9.5 9.5c1.5-1 3.5-1 5 0M9.5 13h5"/>'),
   stats:     S('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
   map:       S('<path d="M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/>'),
