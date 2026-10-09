@@ -87,8 +87,11 @@ function useConfigPage(ctx){
     const unknown = Object.keys(sp.options).filter(k => !SETTING_BY_KEY[k]);
     s.pool = Object.fromEntries(Object.keys(sp.checks).filter(k => CHECK_BY_ID[k]).map(k => [k, 1]));
     // objets de départ du spoiler, et ceux que 2Ship donne d'office selon les réglages (absents du spoiler)
-    const start = applyStartingItems([...(Array.isArray(sp.startingItems) ? sp.startingItems : []), ...computedStartingItems(s)]);
+    timelineSkip = true;   // (objets de départ : pas dans la chronologie)
+    let start;
+    try { start = applyStartingItems([...(Array.isArray(sp.startingItems) ? sp.startingItems : []), ...computedStartingItems(s)]); } finally { timelineSkip = false; }
     store.game.seed = { input:String(sp.inputSeed ?? ''), final:Number(sp.finalSeed) || 0, file:file || '', commit:String(sp.commitHash || '') };
+    setSeedItems(Number(sp.finalSeed) || 0, sp.checks);   // (objets de la seed : indices)
     notes.push(tn(n, '{n} réglage repris', '{n} réglages repris'), tn(Object.keys(s.pool).length, '{n} check dans la seed', '{n} checks dans la seed'),
       tn(start, '{n} objet de départ noté', '{n} objets de départ notés'));
     if (sp.commitHash && sp.commitHash !== SPOILER_COMMIT)

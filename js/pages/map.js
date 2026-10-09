@@ -5,7 +5,7 @@
    data/maps-recipe.js tirée des sources de 2Ship), gardées dans IndexedDB (base masque-verite-maps) ; data/maps-data.js
    (outil en ligne de commande, non versionné), s'il est présent, passe avant. Rien de la ROM n'est publié. */
 
-const MAPS_VER = 6;   // (à augmenter quand le calcul change : les cartes du navigateur sont alors à refaire)
+const MAPS_VER = 7;   // (à augmenter quand le calcul change : les cartes du navigateur sont alors à refaire)
 // cartes en service (window.MAPS_DATA du fichier, sinon celles du navigateur) ; infos : source, date, nom de la ROM
 const mapsData = Vue.shallowRef(window.MAPS_DATA || null);
 const MAPS_INFO = reactive({ source:window.MAPS_DATA ? 'file' : null, at:null, rom:'', old:false });
@@ -257,8 +257,8 @@ const MapView = {
   // placés à la main dans la scène [{ c, x, y, z, moving }]
   // holes : trous de grotte [{ x, z, to, label }] ; home : lieu extérieur d'une grotte (sa sortie y ramène)
   props:{ scene:{ type:String, required:true }, checks:{ type:Array, default:() => [] }, placing:Boolean, placed:{ type:Array, default:() => [] }, editing:Boolean,
-    holes:{ type:Array, default:() => [] }, home:{ type:String, default:null } },
-  emits:['goto', 'check', 'place'],
+    holes:{ type:Array, default:() => [] }, home:{ type:String, default:null }, stones:{ type:Array, default:() => [] } },
+  emits:['goto', 'check', 'place', 'stone'],
   data:() => ({ view:null, drag:null, hover:null, level:null }),
   computed:{
     sc(){ return mapsData.value && mapsData.value.scenes[this.scene] || null; },
@@ -341,6 +341,9 @@ const MapView = {
         <g v-for="m in placedShown" :key="'e:' + m.c.id" class="ze-mark" :class="{moving:m.moving}">
           <rect :x="m.x - unit * 0.9" :y="m.z - unit * 0.9" :width="unit * 1.8" :height="unit * 1.8" :rx="unit * 0.3"></rect>
           <title>{{m.c.label}} (placé à la main)</title></g>
+        <g v-for="m in stones" :key="m.id" v-show="onLevel(m.y)" class="zs" :class="{read:m.read}" @pointerdown.stop @click.stop="$emit('stone', m.id)"
+          :transform="'translate(' + m.x + ' ' + m.z + ') rotate(45)'">
+          <rect :x="-unit * 0.8" :y="-unit * 0.8" :width="unit * 1.6" :height="unit * 1.6"></rect><title>{{m.tip}}</title></g>
         <g v-for="(h,i) in holes" :key="'h' + i" v-show="onLevel(h.y)" class="zm zg" @pointerdown.stop @click.stop="$emit('goto', h.to)">
           <rect class="zm-shape" :x="h.x - unit * 1.1" :y="h.z - unit * 1.1" :width="unit * 2.2" :height="unit * 2.2" :transform="'rotate(45 ' + h.x + ' ' + h.z + ')'"></rect>
           <text :x="h.x" :y="h.z - unit * 2" :font-size="unit * 1.7">{{h.label}}</text>
@@ -396,7 +399,7 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
         <div v-if="mapGroups.length > 1" class="zmap-tabs map-groups" title="Plusieurs grottes partagent cette salle : choisissez celle dont afficher les checks">
           <button type="button" :class="{on:!mapGroup}" @click="mapGroup = ''">Tous</button>
           <button v-for="g in mapGroups" :key="g.id" type="button" :class="{on:mapGroup===g.id}" @click="mapGroup = g.id">{{g.label}} <small>{{g.n}}</small></button></div>
-        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
+        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :stones="ui.map.checks === 'off' ? [] : hintStones(mapBase)" @stone="toggleHint" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
           @goto="mapGoto" @check="toggleCheck" @place="mapPlace"></map-view>
         <div v-if="mapEdit" class="zmap-edit">
           <div class="ze-head"><b>Placer les checks sans position</b>
@@ -425,7 +428,7 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
         <div class="zmap-legend"><span><i class="lg-chk now"></i>Check faisable</span><span><i class="lg-chk"></i>Pas encore</span><span><i class="lg-chk done"></i>Fait</span>
           <span class="muted">{{ui.map.editTool ? t('(outil de placement : tous les checks du jeu, sans filtres)') : t('(clic : cocher)')}}</span></div>
         <div class="zmap-legend"><span><i class="lg-ground"></i>Sol, du plus bas au plus haut</span><span><i class="lg-water"></i>Eau</span>
-          <span><i class="lg-exit"></i>Sortie (clic : voir la carte du lieu d’arrivée)</span></div>
+          <span><i class="lg-exit"></i>Sortie (clic : voir la carte du lieu d’arrivée)</span><span><i class="lg-stone"></i>Pierre à potins (clic : lue)</span></div>
         <p class="maps-src">{{MAPS_INFO.source === 'file' ? t('Cartes du fichier data/maps-data.js.') : t('Cartes fabriquées dans ce navigateur depuis {rom}.', {rom:MAPS_INFO.rom || 'la ROM'})}}
           <button v-if="MAPS_INFO.source === 'browser'" type="button" class="link" @click="mapsForgetAsk">Oublier ces cartes</button>
           <label class="check maps-tool" title="Outil pour placer à la main les checks sans position, et exporter ces positions (contributeurs)"><input type="checkbox" v-model="ui.map.editTool">Outil de placement des checks</label></p>

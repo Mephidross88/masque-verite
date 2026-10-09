@@ -181,7 +181,8 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   - prix des boutiques, laiterie, cartes de Tingle mélangées (`game.prices`, lus par la logique) ;
   - panneau Objets : objets de départ (de la seed et donnés d'office) + objets des checks faits (`applyStartingItems`),
     fusionnés au plus haut ;
-  - moment : demi-journée de la sauvegarde dans le sélecteur Moment (option `ui.link.moment`).
+  - moment : demi-journée de la sauvegarde dans le sélecteur Moment (option `ui.link.moment`) ;
+  - temps de jeu de 2Ship (`filePlaytime`, `game.playtime`) et chronologie datée (voir Statistiques).
 - **Autre seed** que la partie notée (avec des checks faits) : ignorée et signalée (`link.foreign`), « Remettre à zéro et
   suivre ». Autre version de 2Ship : avertissement (commit) ou refus (nombre de checks différent).
 - **Interface** : pastille d'état dans la barre de gauche (pas de suivi, en pause, suivi, dossier illisible) ; fenêtre :
@@ -190,6 +191,39 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   du jeu, soleil ou lune, frise des six demi-journées avec un repère ; clic : fenêtre de l'auto-tracking) ; Journal des
   Bombers : trait vertical rouge à cette heure sur toutes les lignes, heure dans l'en-tête (`link.save.hours`) ;
   le temps écoulé avant (depuis le jour 1, 6 h) est assombri et hachuré, barres comprises.
+
+## Indices (js/pages/hints.js)
+- **Source** : les objets de la seed — spoiler importé (Configuration) ou sauvegarde suivie (`randoItemId` de chaque check
+  mélangé) —, gardés à part de la partie (`seedItems`, localStorage `masque-verite-seed` : { finalSeed, objets par check }).
+  Objets d'une autre seed que la partie notée : indices non calculés, signalé.
+- **Révélés à la lecture** : chaque indice reste caché (« non lu ») tant que le joueur ne l'a pas marqué lu
+  (`game.hints` : { id : true }), comme en jeu ; clic sur la ligne (ou sur la pierre de la Carte) : lu / non lu.
+- **Pierres à potins** (`EnGs.cpp`, `GetRandomCheck`) : le check désigné est tiré au sort, pondéré (poids 100 + (base − 1)
+  × force de l'option, base par check, sinon par objet, sinon par type d'objet ; objets « JUNK » exclus), avec la graine
+  finalSeed + (numéro de scène + x + z de la pierre) et le générateur de 2Ship (PCG32, `Ship_Random` avec rejet). Les
+  pierres et leur position viennent des cartes (`stones` de `maps-data`) : sans cartes, pas de pierres. Texte : objet
+  et lieu (`GetLocationNameForHint` : scène de la région de logique ; intérieurs et grottes : scène de leur sortie).
+  Rangées comme la liste des cartes (régions, lieux, grottes).
+- **Autres indices** (selon leurs options) : avis de recherche des restes des boss, masques de transformation (âmes en
+  peine), Skull Kid (Hymne du Ciel), stèle du Marais du Sud (Chant de l'Envol), Zora de la Grande Baie (grappin), forgeron
+  (poudre d'or), pancarte de la banque, récompenses des Maisons des Araignées, du forgeron et des Grandes Fées.
+- **Ignoré** : le Chant de Saria (indice dynamique, vers le prochain check utile : il dépend de la partie en cours).
+- **Ailleurs** : page Checks, objet indiqué sur son check (indice précis : récompense, pierre à poids propre) ou en tête du
+  lieu (indice de lieu seulement) ; Carte, pierres en losanges (claires : non lues, pleines : lues ; masquées avec les checks).
+
+## Statistiques (js/pages/stats.js)
+- **Chronologie** (`game.timeline`, sauvegardée, remise à zéro avec la partie) : chaque hausse d'un objet du panneau
+  (`{ k:'items', id, v }`, v = palier ou nombre atteint) et chaque check coché (`{ k:'checks', id }`). Une baisse ou un
+  check décoché retire ses entrées. Observateur synchrone (`state.js`) ; objets de départ (spoiler, sauvegarde) non notés
+  (`timelineSkip`).
+- **Datation** : heure réelle `t` ; temps de jeu `p` de 2Ship (`filePlaytime` de la sauvegarde, en ms, mis à jour à chaque
+  sauvegarde : avec l'Autosave, à chaque check) pour ce que rapporte l'auto-tracking, sinon estimé (temps de la dernière
+  sauvegarde lue plus le temps écoulé, 10 min au plus, suivi en ligne) ; moment du cycle `c` (demi-journée, heure du jeu)
+  de la sauvegarde. Première lecture de la page ou d'une nouvelle seed : ce que la sauvegarde contenait déjà est noté
+  sans date (« avant le suivi », `timelineQuiet`).
+- **Contenu** : compteurs (temps de jeu de 2Ship à la dernière sauvegarde lue `game.playtime`, checks faits, masques,
+  cœurs) ; courbe en escalier des checks faits au fil du temps de jeu ; chronologie (plus récent d'abord) filtrable
+  Objets / Checks / Tout : temps de jeu (ou heure réelle, en plus petit), moment du cycle, objet trouvé dans le check.
 
 ## Carte (js/pages/map.js, js/maps-extract.js)
 - **Fabrication** : depuis la ROM de Majora's Mask du joueur (N64 US, compressée ou non, .z64 / .v64), jamais distribuée :
@@ -320,8 +354,11 @@ Même démarche que pour l'Œil Sheikah : chaque étape est utilisable et vérif
 3. **Journal des Bombers** — *fait* (remplace le Routeur : sans entrées mélangées, les trajets n'apportent guère) :
    frise des trois jours, une barre par check (voir Journal des Bombers).
 4. **Carte** — *en cours* : fabrication depuis la ROM du joueur, terrain, sorties et checks faits (voir Carte) ;
-   étages, placement à la main ; reste : grottes, position de la dernière sauvegarde.
+   étages, placement à la main, grottes (la position de la dernière sauvegarde est écartée : sans heure réelle, trompeuse).
 5. **Auto-tracking** — *fait* : lecture de la sauvegarde de 2Ship dans le navigateur, sans relais (voir Auto-tracking).
 
-Ensuite, au fil de l'eau : Indices (pierres à potins, banque, restes de boss, Chant de Saria…), fenêtre de stream,
+6. **Indices** — *fait* (voir Indices ; à valider en jeu sur les pierres à potins).
+7. **Statistiques** — *fait* (voir Statistiques).
+
+Ensuite, au fil de l'eau : fenêtre de stream,
 README détaillé.

@@ -492,6 +492,11 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .st-at{flex:none;width:110px;font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px}
 .st-list img,.st-noic{width:28px;height:28px;object-fit:contain;flex:none}
 .st-lab small{color:var(--muted)}
+.st-at.real{font-size:12.5px}
+.st-when{flex:none;width:118px;font-size:13px;color:var(--ocarina);font-variant-numeric:tabular-nums}
+.st-noic.cat-svg{display:grid;place-items:center;color:var(--muted)}
+.st-noic.cat-svg svg{width:22px;height:22px}
+.st-abbr{display:grid;place-items:center;border-radius:6px;background:var(--surface-2,var(--line));font-size:11px;font-weight:700;color:var(--muted)}
 
 /* Indices (pierres à potins) */
 .hint-sum{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 16px;max-width:1240px}
@@ -513,6 +518,22 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .hint-zone h2{margin:0;padding:10px 16px;font-family:var(--serif);font-size:17px;border-bottom:1px solid var(--line)}
 .hint-row{display:flex;align-items:flex-start;gap:12px;padding:10px 16px}
 .hint-row + .hint-row{border-top:1px solid var(--line)}
+/* page Indices : liste des indices (texte une fois lu), synthèse des objets indiqués */
+.hint-list,.hk-list{list-style:none;margin:0;padding:0}
+.hint-zone h2 small{font-family:var(--sans);font-size:13px;color:var(--muted);font-weight:400;margin-left:6px}
+.hint-row{align-items:center}
+.hr-src{flex:0 1 340px;min-width:0;font-size:14.5px}
+.hr-src small{color:var(--muted);font-size:12.5px}
+.hr-text{flex:1;min-width:0;font-weight:600;color:var(--text)}
+.hr-hidden{flex:1;color:var(--muted);font-style:italic;font-size:13.5px}
+.hs-note{align-self:center;font-size:13.5px;color:var(--muted)}
+.hk-list li{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:8px 16px;border-top:1px solid var(--line);font-size:14.5px}
+.hk-list li:first-child{border-top:0}
+.hk-list li small{color:var(--muted);font-size:12.5px;margin-left:auto}
+.hk-list li.done{opacity:.55}
+.hk-list li.done b{text-decoration:line-through}
+.hk-arrow{color:var(--muted)}
+@media (max-width:700px){ .hint-row{flex-wrap:wrap} .hr-src{flex-basis:calc(100% - 40px)} .hr-text,.hr-hidden{flex-basis:100%;padding-left:40px} }
 .hr-mark{flex:none;width:28px;height:28px;display:grid;place-items:center;border:0;background:none;color:var(--muted);cursor:pointer;padding:0}
 .hr-mark svg{width:22px;height:22px}
 .hint-row.read .hr-mark{color:var(--green)}
@@ -683,6 +704,11 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .zmap-legend .lg-exit{background:var(--gold);border:1.5px solid #1c1a12}
 .zmap-legend .lg-chk{background:var(--red);border:1px solid #1c1a12;width:10px;height:10px}
 .zmap-legend .lg-chk.now{background:#7fd36b}
+.zmap-legend .lg-stone{width:9px;height:9px;border-radius:1px;transform:rotate(45deg);background:#f0ead6;border:1.5px solid #1c1a12}
+/* page Checks : objets indiqués par les indices lus, en tête du lieu */
+.zone-hints{display:inline-flex;align-items:center;gap:5px;min-width:0;font-size:12.5px;color:var(--ocarina);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zone-hints span{display:inline-grid;width:14px;height:14px;flex:none}
+.zone-hints svg{width:14px;height:14px}
 .zmap-legend .lg-chk.done{background:#8a8a8a;opacity:.6}
 .zmap-legend .muted{color:var(--muted)}
 .zmap-bar .map-scene{width:auto;min-width:260px}
@@ -770,7 +796,7 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .zc-place text{fill:#1c1a12;font-family:var(--sans);font-weight:800;text-anchor:middle;pointer-events:none}
 .zc-place.sel rect{stroke:var(--text);stroke-width:2px}
 .zs{cursor:pointer}
-.zs rect{fill:rgba(240,234,214,.25);stroke:#f0ead6;stroke-width:1.5px;vector-effect:non-scaling-stroke}
+.zs rect{fill:rgba(240,234,214,.35);stroke:#5c5340;stroke-width:1.5px;vector-effect:non-scaling-stroke}
 .zs.read rect{fill:#f0ead6;stroke:#1c1a12}
 .zs.sel rect{stroke:var(--gold);stroke-width:2.5px}
 .zp-list{list-style:none;margin:0;padding:0;max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:2px}

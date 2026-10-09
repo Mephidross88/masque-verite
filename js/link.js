@@ -36,13 +36,13 @@ function readSave(j){
   const last = parts.reduce((a, b) => (b.shipSaveInfo.filePlaytime || 0) >= (a.shipSaveInfo.filePlaytime || 0) ? b : a);
   const R = last.shipSaveInfo.rando;
   const out = { seed:R.finalSeed >>> 0, commit:String.fromCharCode(...(last.shipSaveInfo.commitHash || []).filter(Boolean)),
-    options:{}, shuffled:{}, obtained:{}, prices:{}, start:[], day:last.day, night:!!last.isNight, time:last.time,
+    options:{}, shuffled:{}, items:{}, obtained:{}, prices:{}, start:[], day:last.day, night:!!last.isNight, time:last.time,
     playtime:last.shipSaveInfo.filePlaytime || 0, size:R.randoSaveChecks.length };
   LINK_ORDER.ro.forEach((k, i) => { if (k !== 'RO_MAX' && typeof R.randoSaveOptions[i] === 'number') out.options[k] = R.randoSaveOptions[i]; });
   R.randoSaveChecks.forEach((c, i) => {
     const rc = LINK_ORDER.rc[i];
     if (!rc || !c) return;
-    if (c.shuffled) out.shuffled[rc] = 1;
+    if (c.shuffled){ out.shuffled[rc] = 1; out.items[rc] = LINK_ORDER.ri[c.randoItemId] || 'RI_UNKNOWN'; }
     if (c.shuffled && c.price && PRICED.test(rc)) out.prices[rc] = c.price;
   });
   for (const p of parts) p.shipSaveInfo.rando.randoSaveChecks.forEach((c, i) => {
@@ -62,10 +62,11 @@ function saveHours(sv){
   return Math.min(72, Math.max(0, (sv.day - 1) * 24 + (h < 6 ? h + 24 : h) - 6));
 }
 
-/* Panneau Objets d'après la sauvegarde : objets de départ (de la seed et donnés d'office) et objets des checks faits */
-function saveGame(sv){
+/* Panneau Objets d'après la sauvegarde : objets de départ (de la seed et donnés d'office) et objets des checks faits
+   (start : seulement les objets de départ) */
+function saveGame(sv, start){
   const g = defaults().game;
-  applyStartingItems([...sv.start, ...computedStartingItems(store.settings), ...Object.values(sv.obtained)], g);
+  applyStartingItems([...sv.start, ...computedStartingItems(store.settings), ...(start ? [] : Object.values(sv.obtained))], g);
   return g;
 }
 // report dans la partie notée, sans jamais revenir en arrière → nombre d'objets ajoutés
@@ -82,7 +83,7 @@ function mergeGame(src){
 
 /* Sauvegarde lue → partie notée. adopt : suivre cette seed même si la partie notée en suit une autre (après remise à zéro). */
 function linkApply(sv, file, adopt){
-  const g = store.game, s = store.settings;
+  const g = store.game, s = store.settings, first = !link.at;
   link.file = file; link.at = new Date(); link.seed = sv.seed;
   link.warn = sv.commit && sv.commit !== LINK_COMMIT ? t('Sauvegarde d’une autre version de 2Ship (commit {c}) : l’appli suit la 5.0.1 ({ref}).', { c:sv.commit, ref:LINK_COMMIT })
     : sv.size !== LINK_ORDER.rc.length - 1 ? t('Sauvegarde d’une autre version de 2Ship : les checks ne correspondent pas.') : '';
@@ -90,6 +91,7 @@ function linkApply(sv, file, adopt){
   const progress = Object.keys(g.checks).length > 0;
   if (!adopt && g.seed.final && g.seed.final !== sv.seed && progress){ link.foreign = { seed:sv.seed, file, sv:Vue.markRaw(sv) }; return; }
   link.foreign = null;
+  const fresh = first || adopt || g.seed.final !== sv.seed;
   // nouvelle seed (ou première lecture) : réglages et liste des checks repris de la sauvegarde
   if (g.seed.final !== sv.seed || !Object.keys(s.pool).length){
     for (const [k, v] of Object.entries(sv.options)) if (k in OPT_DEFAULT) s[k] = v;
@@ -97,7 +99,23 @@ function linkApply(sv, file, adopt){
     g.seed = { input:g.seed.final === sv.seed ? g.seed.input : '', final:sv.seed, file, commit:sv.commit };
     linkLog(t('Seed suivie : {seed} — réglages et checks repris de la sauvegarde.', { seed:sv.seed }));
   }
-  // checks faits et objets trouvés
+  setSeedItems(sv.seed, sv.items);   // (indices : page Indices)
+  // chronologie (js/state.js) : objets de départ non notés ; le reste daté du temps de jeu et du moment de la sauvegarde,
+  // sauf à la première lecture de la page ou de la seed (ce qui était déjà fait : sans date)
+  const half = saveHalfDay(sv);
+  link.when = half >= 0 ? halfDayLabel(half) + ', ' + saveClock(sv.time) : t('Avant le premier jour');
+  link.save = { half, clock:saveClock(sv.time), hours:saveHours(sv) };
+  timelineSkip = true;
+  try { mergeGame(saveGame(sv, true)); } finally { timelineSkip = false; }
+  timelineQuiet = fresh; timelinePlay = sv.playtime || null; timelineAt = half >= 0 ? [half, sv.time] : null;
+  try { linkReport(sv); } finally { timelineQuiet = false; timelinePlay = null; timelineAt = null; }
+  if (sv.playtime > g.playtime){ g.playtime = sv.playtime; g.playtimeAt = Date.now(); }
+  // moment du cycle
+  if (store.ui.link.moment && half >= 0) store.ui.checks.moment = half;
+}
+// checks faits, objets trouvés, prix, panneau Objets
+function linkReport(sv){
+  const g = store.game;
   let checks = 0;
   for (const [rc, ri] of Object.entries(sv.obtained)){
     const c = CHECK_BY_ID[rc];
@@ -112,11 +130,6 @@ function linkApply(sv, file, adopt){
   for (const [rc, p] of Object.entries(sv.prices)) if (g.prices[rc] !== p) g.prices[rc] = p;
   const items = mergeGame(saveGame(sv));
   if (items) linkLog(tn(items, '{n} objet noté', '{n} objets notés'));
-  // moment du cycle
-  const half = saveHalfDay(sv);
-  link.when = half >= 0 ? halfDayLabel(half) + ', ' + saveClock(sv.time) : t('Avant le premier jour');
-  link.save = { half, clock:saveClock(sv.time), hours:saveHours(sv) };
-  if (store.ui.link.moment && half >= 0) store.ui.checks.moment = half;
   if (!checks && !items) linkLog(t('Sauvegarde relue : rien de nouveau ({when}).', { when:link.when }));
 }
 

@@ -18,6 +18,7 @@
      w:[x1, z1, x2, z2, …] (murs), wy:[ymin, ymax, …], water:[x0, z0, x1, z1, y, …], sp:[[x, y, z], …] (apparitions),
      ex:[[entrée, x, y, z, rayon], …] (sorties), lv:[hauteur, …] (étages, du plus bas au plus haut ; absent : un seul),
      lb:numéro du plus bas (0 : 1er étage, -1 : sous-sol 1…), ho:[[x, y, z, entrée des grottes, données], …] (trous de grotte) }
+   data.stones : pierres à potins [scène du jeu, x, y, z, carte].
    Scène des grottes : une carte par salle, « SCENE_KAKUSIANA#n » ; data.grottoRooms : entrée des grottes → salle.
    data.checks[RC_…] = [scène, x, y, z, approchée?] : position de l'acteur du check (règles recipe.loc, tirées des sources de
    2Ship) ; 5e valeur 1 : position approchée (personnage, qui bouge selon l'heure : un même PNJ donne des checks à des
@@ -320,6 +321,11 @@ async function extractMaps({ rom:bytes, recipe, progress }){
     data.scenes[name] = r.out;
     stats.scenes++; stats.floors += r.out.f.length / 7; stats.exits += r.out.ex.length;
   }
+  // pierres à potins (En_Gs) : [scène du jeu, x, y, z, carte] — la scène et la position de départ font la graine de leur
+  // indice (EnGs.cpp, GetRandomCheck)
+  data.stones = [];
+  const GS = ACTOR_ID.ACTOR_EN_GS;
+  for (const [name, r] of Object.entries(RAW)) for (const list of r.rooms) for (const ac of list) if (ac.id === GS) data.stones.push([name, ac.x, ac.y, ac.z, name]);
   // checks : [scène, x, y, z]
   for (const [rc, rule] of Object.entries(recipe.loc || {})){
     const p = locate(rule);
@@ -363,6 +369,7 @@ async function extractMaps({ rom:bytes, recipe, progress }){
       data.scenes['SCENE_KAKUSIANA#' + r] = t;
     }
     for (const p of Object.values(data.checks)) if (p[0] === 'SCENE_KAKUSIANA') p[0] = 'SCENE_KAKUSIANA#' + roomOf(p[1], p[3]);
+    for (const p of data.stones) if (p[0] === 'SCENE_KAKUSIANA') p[4] = 'SCENE_KAKUSIANA#' + roomOf(p[1], p[3]);
     data.grottoRooms = KAK.ent.map(e => e[1]);
   }
   await step('done', 1);

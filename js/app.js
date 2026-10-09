@@ -82,7 +82,7 @@ const App = {
     // pages assemblées dans l'ordre (chacune reçoit ce que les précédentes ont défini ; les rares appels vers une page
     // suivante passent par ctx, voir « défini plus loin »)
     const ctx = {};
-    for (const use of [useShell, useItemsPanel, useChecksPage, useNotebookPage, useMapPage, useConfigPage, useTracking, useShellEnd])
+    for (const use of [useShell, useItemsPanel, useChecksPage, useNotebookPage, useMapPage, useHintsPage, useStatsPage, useConfigPage, useTracking, useShellEnd])
       Object.assign(ctx, use(ctx));
     // (noms globaux utilisés par le gabarit)
     return { LANG, LANGS, I18N_LANGS, setLang, removeLang, store, ICONS, CI, saveError, CHECK_CATS, CHECK_CAT, CONFIG_TABS, DUNGEONS,

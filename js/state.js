@@ -6,11 +6,14 @@ function defaults(){
   // game : la partie en cours — objets du panneau (items : clé → oui/non ou nombre), temples (carte, boussole, petites
   // clés, Clé d'Or, fées perdues), fée perdue de Bourg-Clocher, jetons de Skulltula d'or par maison, checks faits
   // { RC: true }, seed (d'après le spoiler importé : inputSeed, finalSeed, fichier, commit de 2Ship),
-  // timeline (chronologie, page Statistiques : à venir)
+  // timeline (chronologie, page Statistiques : objets du panneau et checks { t: heure réelle (ms) ou null (avant le suivi),
+  // p: temps de jeu de 2Ship (ms) ou null, c: [demi-journée, heure du jeu] de la sauvegarde ou null, k: items | checks, id, v })
   const game = { items:{}, dungeons:{}, townFairy:false, tokens:{ swamp:0, ocean:0 }, checks:{},
     seed:{ input:'', final:0, file:'', commit:'' }, timeline:[],
     prices:{},   // prices : prix connus des boutiques et cartes de Tingle mélangées { RC: rubis } (la logique les compare à la bourse)
-    found:{} };  // found : objet trouvé dans chaque check fait, d'après la sauvegarde de 2Ship { RC: RI } (auto-tracking)
+    found:{},    // found : objet trouvé dans chaque check fait, d'après la sauvegarde de 2Ship { RC: RI } (auto-tracking)
+    playtime:0, playtimeAt:0,   // temps de jeu de 2Ship à la dernière sauvegarde lue (ms) et heure réelle où il a été lu
+    hints:{} };  // hints : indices lus { id de l'indice : true } (page Indices : leur texte n'apparaît qu'une fois lus)
   ITEM_GROUPS.forEach(g => g.items.forEach(it => { game.items[it.key] = it.kind === 'bool' ? false : 0; }));
   DUNGEONS.forEach(d => { game.dungeons[d.id] = { map:false, compass:false, bossKey:false, keys:0, fairies:0 }; });
   return {
@@ -52,6 +55,47 @@ function load(){
 }
 
 const store = reactive(load());
+
+/* Objets de la seed (sauvegarde suivie ou spoiler importé), gardés à part de la partie (localStorage masque-verite-seed,
+   jamais affichés tels quels) : la page Indices en calcule le texte de chaque indice, montré seulement une fois lu.
+   { seed (finalSeed), items:{ RC: RI } (checks mélangés) } */
+const SEED_KEY = 'masque-verite-seed';
+const seedItems = Vue.shallowRef((() => { try { return JSON.parse(localStorage.getItem(SEED_KEY)) || null; } catch (e) { return null; } })());
+function setSeedItems(seed, items){
+  if (seedItems.value && seedItems.value.seed === seed && JSON.stringify(seedItems.value.items) === JSON.stringify(items)) return;
+  seedItems.value = { seed, items };
+  try { localStorage.setItem(SEED_KEY, JSON.stringify(seedItems.value)); } catch (e) {}
+}
+/* Chronologie (page Statistiques) : chaque hausse d'un objet du panneau et chaque check coché est daté (game.timeline) ;
+   une baisse ou un check décoché retire ses entrées. Observateur synchrone. Variables posées par l'auto-tracking autour
+   de son report : timelinePlay (temps de jeu de la sauvegarde), timelineAt (moment du cycle), timelineQuiet (première
+   lecture : ce que la sauvegarde contenait déjà, sans date) ; timelineSkip : ajustements (objets de départ), pas notés.
+   Hors auto-tracking, temps de jeu estimé : celui de la dernière sauvegarde plus le temps écoulé depuis (10 min au plus). */
+let timelineQuiet = false, timelineSkip = false, timelinePlay = null, timelineAt = null;
+const num01 = v => typeof v === 'boolean' ? +v : v || 0;
+function timelineSnap(g){ return { game:g, items:{ ...g.items }, checks:{ ...g.checks } }; }
+{
+  let snap = timelineSnap(store.game);
+  // (la partie elle-même n'est pas observée en profondeur : la chronologie en fait partie)
+  watch(() => [store.game.items, store.game.checks], () => {
+    const g = store.game;
+    if (snap.game !== g || timelineSkip){ snap = timelineSnap(g); return; }   // partie remplacée (remise à zéro, import), ajustement
+    if (!Array.isArray(g.timeline)) g.timeline = [];
+    const now = Date.now(), live = link.status === 'on' && g.playtimeAt && now - g.playtimeAt < 600000;
+    const e0 = timelineQuiet ? { t:null, p:null, c:null }
+      : { t:now, p:timelinePlay ?? (live ? g.playtime + now - g.playtimeAt : null), c:timelineAt };
+    const tl = g.timeline;
+    for (const [k, v] of Object.entries(g.items)){
+      const a = num01(snap.items[k]), b = num01(v);
+      if (b > a) tl.push({ ...e0, k:'items', id:k, v:b });
+      else if (b < a) g.timeline = tl.filter(e => !(e.k === 'items' && e.id === k && e.v > b));
+    }
+    for (const id of Object.keys(g.checks)) if (!snap.checks[id]) g.timeline.push({ ...e0, k:'checks', id });
+    for (const id of Object.keys(snap.checks)) if (!g.checks[id]) g.timeline = g.timeline.filter(e => !(e.k === 'checks' && e.id === id));
+    snap = timelineSnap(g);
+  }, { deep:true, flush:'sync' });
+}
+
 const lastSaved = ref(null);
 // échec de l'enregistrement (place insuffisante, navigation privée…) : signalé dans le panneau de gauche
 const saveError = ref(false);

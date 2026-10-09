@@ -47,6 +47,7 @@ const CHECKS_TPL = paneTpl('checks', `<h1>Checks</h1>`, `
         <button class="area-head" @click="toggleScene(x.scene.id)" :aria-expanded="!ui.checks.collapsed[x.scene.id]">
           <span class="chev" v-html="ICONS.chevron"></span>
           <h2>{{x.scene.label}}</h2>
+          <span v-if="hintsByScene[x.scene.id]" class="zone-hints" :title="t('Indices lus : {objets}', {objets:hintsByScene[x.scene.id].join(', ')})"><span v-html="ICONS.hint"></span>{{hintsByScene[x.scene.id].join(' · ')}}</span>
           <span class="zone-cats">
             <span v-for="b in x.byCat" v-show="b.left" :key="b.cat.id" class="zc" :title="b.cat.label + ' : ' + b.left + ' à faire'"><span class="cat-svg" v-html="b.cat.icon"></span>{{b.left}}</span>
           </span>
@@ -62,7 +63,7 @@ const CHECKS_TPL = paneTpl('checks', `<h1>Checks</h1>`, `
               :class="{done:store.game.checks[c.id], excluded:s.excluded[c.id], avail:!store.game.checks[c.id] && canNow(c), locked:!store.game.checks[c.id] && !canNow(c)}">
               <button type="button" class="ci-main" :title="checkTitle(c)" @click="toggleCheck(c)">
                 <span class="ci-cat cat-svg" v-html="CHECK_CAT[c.cat].icon"></span>
-                <span class="ci-label">{{c.label}}<i v-if="store.game.checks[c.id] && store.game.found[c.id]" class="ci-found" title="Objet trouvé (d’après la sauvegarde)">{{foundLabel(c.id)}}</i></span>
+                <span class="ci-label">{{c.label}}<i v-if="store.game.checks[c.id] && store.game.found[c.id]" class="ci-found" title="Objet trouvé (d’après la sauvegarde)">{{foundLabel(c.id)}}</i><i v-else-if="hintsByCheck[c.id]" class="ci-found seen" title="Objet indiqué (indice lu)">{{hintsByCheck[c.id].join(', ')}}</i></span>
                 <span v-if="timeline[c.id]" class="tl3" :title="timeline[c.id].title"><span v-for="d in 3" :key="d" class="tl3-d"><b>{{d}}</b><i
                   v-for="k in 2" :key="k" :class="[timeline[c.id].cells[(d-1)*2+k-1], {mo:ui.checks.moment===(d-1)*2+k-1, ok:nowCells(c)[(d-1)*2+k-1], lock:!owned[(d-1)*2+k-1]}]"
                   :style="timeline[c.id].fill[(d-1)*2+k-1]"
