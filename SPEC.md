@@ -201,7 +201,11 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   de fichiers commencent par un en-tête de scène) ; par scène : collision (sols vus de dessus, murs, eau), points
   d'apparition, sorties (polygones dont le type de surface porte un numéro de sortie, y compris derrière les portes des
   intérieurs ; liste des sorties 0x13 → numéro d'entrée → scène d'arrivée).
-- **Page** : choix du lieu (ceux de la page Checks dans leur ordre, puis les autres : intérieurs, variantes), `ui.map.scene` ;
+- **Page** : choix du lieu (`ui.map.scene`) par région (MAP_REGIONS de js/pages/map.js) : Centre (Bourg-Clocher et Plaine
+  Termina, Route du Lait, Ranch), Sud (Marais, Bois-Cascade), Nord (Montagne, Pic des Neiges), Ouest (Grande Baie), Est (Ikana,
+  Forteresse de Pierre), Autres (Lune, Chambre des Géants, Fontaines des Fées, début du jeu) ; dans l'ordre du chemin (lieu,
+  intérieurs, donjon), puis les grottes de la région (d'après leur trou ; sans trou : leur lieu extérieur d'après la logique),
+  homonymes numérotés ; carte absente de la table : Autres ;
   sol en dix teintes de hauteur (quantiles), murs, eau ; un repère par sortie avec le nom du lieu d'arrivée, clic : sa
   carte (← : retour). Molette : zoom ; glisser : déplacer ; + / − / tout le terrain.
 - **Checks à leur place** : position de l'acteur de chaque check dans les listes d'acteurs des salles (en-tête principal),

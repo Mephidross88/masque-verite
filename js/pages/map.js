@@ -63,6 +63,28 @@ const mapSceneName = id => (GROTTO_MAPS.value.byId[id] || {}).label || baseScene
 // scène d'arrivée d'une entrée (numéro : scène << 9 | apparition << 4)
 const entrScene = v => MAP_ENTR_SCENE[v >> 9] || null;
 
+/* ---------- Classement des cartes (liste des lieux) ----------
+   Par région, dans l'ordre du chemin (lieu, puis ses intérieurs et ses donjons) ; les grottes rejoignent la région de leur
+   trou ; une carte absente de la table va dans « Autres ». */
+const MAP_REGIONS = [
+  ['centre', t('Centre — Bourg-Clocher et Plaine Termina'), ['CLOCKTOWER', 'TOWN', 'ICHIBA', 'BACKTOWN', 'ALLEY', 'OKUJOU', 'INSIDETOWER',
+    'YADOYA', 'MILK_BAR', 'SONCHONOIE', 'TAKARAYA', 'BOWLING', 'SYATEKI_MIZU', 'POSTHOUSE', 'AYASHIISHOP', 'BOMYA', '8ITEMSHOP',
+    'TAKARAKUJI', 'DOUJOU', 'DEKUTES', 'TENMON_DAI', '00KEIKOKU', 'ROMANYMAE', 'F01', 'OMOYA', 'F01_B', 'F01C', 'KOEPONARACE']],
+  ['sud', t('Sud — Marais et Bois-Cascade'), ['24KEMONOMITI', '20SICHITAI', '20SICHITAI2', 'MAP_SHOP', 'WITCH_SHOP', 'SYATEKI_MORI',
+    'KINSTA1', '26SARUNOMORI', '22DEKUCITY', 'DEKU_KING', 'DANPEI', '21MITURINMAE', 'MITURIN', 'MITURIN_BS']],
+  ['nord', t('Nord — Montagne et Pic des Neiges'), ['13HUBUKINOMITI', '10YUKIYAMANOMURA', '10YUKIYAMANOMURA2', 'KAJIYA', 'GORON_HAKA',
+    '17SETUGEN', '17SETUGEN2', 'GORONRACE', '11GORONNOSATO', '11GORONNOSATO2', '16GORON_HOUSE', 'GORONSHOP', '14YUKIDAMANOMITI',
+    '12HAKUGINMAE', 'HAKUGIN', 'HAKUGIN_BS']],
+  ['ouest', t('Ouest — Grande Baie'), ['30GYOSON', 'LABO', 'FISHERMAN', 'KINDAN2', '31MISAKI', '33ZORACITY', 'BANDROOM', 'SINKAI',
+    '35TAKI', 'TORIDE', 'KAIZOKU', 'PIRATE', 'SEA', 'SEA_BS']],
+  ['est', t('Est — Ikana et Forteresse de Pierre'), ['IKANAMAE', 'BOTI', 'HAKASHITA', 'DANPEI2TEST', 'IKANA', 'TOUGITES', 'MUSICHOUSE',
+    'SECOM', 'REDEAD', 'RANDOM', 'CASTLE', 'IKNINSIDE', 'F40', 'F41', 'INISIE_N', 'INISIE_R', 'INISIE_BS']],
+  ['autres', t('Autres — Lune, fontaines, début du jeu'), ['SOUGEN', 'LAST_DEKU', 'LAST_GORON', 'LAST_ZORA', 'LAST_LINK', 'LAST_BS',
+    'KYOJINNOMA', 'YOUSEI_IZUMI', 'OPENINGDAN', 'LOST_WOODS', 'KONPEKI_ENT']],
+].map(([id, label, list]) => ({ id, label, list:list.map(x => 'SCENE_' + x) }));
+const MAP_REGION_OF = {};
+MAP_REGIONS.forEach(r => r.list.forEach(sc => { MAP_REGION_OF[sc] = r.id; }));
+
 /* ---------- Grottes : une carte par grotte ----------
    La scène des grottes (SCENE_KAKUSIANA) est découpée en salles par js/maps-extract.js (« SCENE_KAKUSIANA#n »). Les grottes
    à coffre et à vache partagent une salle : une carte par grotte, « SCENE_KAKUSIANA#n|RC_…_GROTTO » (même terrain, ses
@@ -123,7 +145,40 @@ const GROTTO_MAPS = computed(() => {
     if (keys) keys.forEach(k => add(base + '|' + k));
     else if (!out.list.some(x => x.base === base) && counts[base]) add(base);   // (salle sans check ni trou : pas de carte)
   }
-  out.list.sort((a, b) => a.label.localeCompare(b.label));
+  /* lieu extérieur d'une grotte sans trou connu (Autel du Pic Isolé, grotte du vendeur de haricots) : d'après la logique —
+     région d'un de ses checks, puis ses sorties et connexions, jusqu'à une région hors de la scène des grottes */
+  const regionOfCheck = {};
+  for (const r of LOGIC.regions) for (const [rc] of r.checks) regionOfCheck[rc] = r;
+  const outside = r0 => {
+    const seen = new Set([r0.id]);
+    let todo = [r0];
+    for (let d = 0; d < 3 && todo.length; d++){
+      const next = [];
+      for (const r of todo) for (const [to] of [...r.exits, ...r.conns]){
+        const t = REGION[to];
+        if (!t || seen.has(to)) continue;
+        if (t.scene !== 'SCENE_KAKUSIANA' && t.scene) return t.scene;
+        seen.add(to); next.push(t);
+      }
+      todo = next;
+    }
+    return null;
+  };
+  for (const e of out.list){
+    if (e.home) continue;
+    const rc = Object.keys(m.checks || {}).find(id => m.checks[id][0] === e.base && CHECK_BY_ID[id] && (!e.key || checkGroupOf(CHECK_BY_ID[id]) === e.key) && regionOfCheck[id]);
+    e.home = rc ? outside(regionOfCheck[rc]) : null;
+    if (e.home && /^Grotte /.test(e.label)) e.label = baseSceneName(e.home) + ' · ' + t('grotte');
+  }
+  // (nommée d'après un lieu seulement : « · grotte » ; homonymes : numérotés)
+  for (const e of out.list) if (!e.label.includes(' · ') && e.label === baseSceneName(e.home || '') ) e.label += ' · ' + t('grotte');
+  out.list.sort((a, b) => a.label.localeCompare(b.label) || a.id.localeCompare(b.id));
+  const seenLabel = {};
+  for (const e of out.list){
+    const n = seenLabel[e.label] = (seenLabel[e.label] || 0) + 1;
+    if (n > 1 || out.list.filter(x => x.label === e.label).length > 1) e.labelN = e.label + ' (' + n + ')';
+  }
+  for (const e of out.list) if (e.labelN){ e.label = e.labelN; delete e.labelN; }
   /* carte d'un check de grotte sans position (sa salle est inconnue) : celle de sa grotte, sinon celle dont c'est le groupe
      principal, sinon une grotte de son lieu extérieur — une seule, pour qu'il ne soit pas proposé dans toutes */
   out.ownerOf = c => {
@@ -389,17 +444,18 @@ function useMapPage(ctx){
   const mapBase = computed(() => mapBaseOf(ui.map.scene));
   const mapHoles = computed(() => (GROTTO_MAPS.value.holes[mapBase.value] || []).map(h => ({ ...h, label:mapSceneName(h.to) })));
   const mapHome = computed(() => (GROTTO_MAPS.value.byId[ui.map.scene] || {}).home || null);
-  // choix du lieu : ceux de la page Checks (dans son ordre), puis les autres (intérieurs, variantes)
+  // choix du lieu : par région (MAP_REGIONS), lieux dans l'ordre du chemin puis grottes de la région (d'après leur trou)
   const mapSceneGroups = computed(() => {
     const m = mapsData.value;
     if (!m) return [];
-    const main = CHECK_SCENES.map(s => s.id).filter(id => m.scenes[id]);
-    const seen = new Set(main);
-    const other = Object.keys(m.scenes).filter(id => !seen.has(id) && id !== 'SCENE_SPOT00' && !id.startsWith('SCENE_KAKUSIANA')).sort((x, y) => mapSceneName(x).localeCompare(mapSceneName(y)));
     // (provisoire) outil de placement affiché : seulement les lieux qui ont des checks sans position (et le lieu affiché)
     const keep = id => !ui.map.editTool || id === ui.map.scene || mapMissing(id) > 0;
-    return [{ label:t('Lieux de la page Checks'), list:main.filter(keep) }, { label:t('Autres lieux'), list:other.filter(keep) },
-      { label:t('Grottes'), list:GROTTO_MAPS.value.list.map(x => x.id).filter(keep) }];
+    const groups = MAP_REGIONS.map(r => ({ id:r.id, label:r.label, list:r.list.filter(id => m.scenes[id]) }));
+    const byId = Object.fromEntries(groups.map(g => [g.id, g])), other = byId.autres;
+    for (const id of Object.keys(m.scenes).sort((x, y) => mapSceneName(x).localeCompare(mapSceneName(y))))
+      if (!MAP_REGION_OF[id] && id !== 'SCENE_SPOT00' && !id.startsWith('SCENE_KAKUSIANA')) other.list.push(id);
+    for (const g of GROTTO_MAPS.value.list) (byId[MAP_REGION_OF[g.home]] || other).list.push(g.id);
+    return groups.map(g => ({ label:g.label, list:g.list.filter(keep) })).filter(g => g.list.length);
   });
   // checks de la scène affichée : ceux de la seed (non exclus) placés sur cette carte, filtrés comme la page Checks
   // (catégories masquées, checks faits masqués, seulement les faisables)
