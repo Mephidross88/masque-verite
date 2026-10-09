@@ -65,7 +65,8 @@ fonctionnelle, et le mettre à jour quand une règle change.
 - `js/maps-extract.js` : fabrication des cartes depuis la ROM du joueur (`extractMaps`), script **chargé à la demande** (page
   Carte, `mapsBuild` de `js/pages/map.js` ; et `tools/2ship-maps/extract_maps.mjs` → `data/maps-data.js`, **généré, non
   versionné**, tiré de la ROM). `data/maps-recipe.js` : **fichier généré** par `tools/2ship-maps/gen_maps_recipe.mjs` depuis
-  les sources de 2Ship (rien de la ROM). Ne jamais versionner ni publier de données tirées de la ROM.
+  les sources de 2Ship (rien de la ROM) et `tools/2ship-maps/positions-manuelles.json` (checks placés à la main sur la Carte,
+  exportés par son outil de placement ; à relancer après l'avoir mis à jour). Ne jamais versionner ni publier de données tirées de la ROM.
 - `tools/i18n/check.mjs`, `tools/lint/no_undef.mjs` : contrôles (voir leur en-tête).
 - `.github/workflows/` : `pages.yml` (appli en ligne, fichiers de l'appli seulement), `checks.yml` (syntaxe, noms non
   définis, traductions `--strict`).

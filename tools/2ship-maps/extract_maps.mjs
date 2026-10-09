@@ -20,4 +20,4 @@ const out = `/* FICHIER GÉNÉRÉ par tools/2ship-maps/extract_maps.mjs depuis l
 window.MAPS_DATA = ${JSON.stringify(data)};
 `;
 fs.writeFileSync(path.join(ROOT, 'data/maps-data.js'), out);
-console.log(`${stats.scenes} scènes, ${stats.floors} triangles de sol, ${stats.exits} sorties → data/maps-data.js (${Math.round(out.length / 1024)} Ko, ${Date.now() - t0} ms)`);
+console.log(`${stats.scenes} scènes, ${stats.floors} triangles de sol, ${stats.exits} sorties, ${stats.checks} checks placés → data/maps-data.js (${Math.round(out.length / 1024)} Ko, ${Date.now() - t0} ms)`);

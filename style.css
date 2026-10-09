@@ -655,6 +655,13 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .ze-row small{color:var(--muted)}
 .ze-row > span{flex:1;min-width:0}
 .ze-row.moving{color:var(--ocarina)}
+.zmap-edit .ze-row{justify-content:flex-start;color:var(--text);font-size:13.5px}
+.zmap-edit .ze-row .ci-cat{width:18px;height:18px;flex:none;display:inline-grid;place-items:center;color:var(--muted)}
+.zmap-edit .ze-row .ci-cat svg{width:16px;height:16px}
+.zmap-edit label.ze-row{cursor:pointer}
+.zmap-edit .ze-approx label.check{flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;color:var(--text)}
+.zmap-edit .ze-note{margin:0 0 6px;font-size:12.5px}
+.ze-id{display:block;color:var(--muted);font-size:11.5px;font-family:ui-monospace,Consolas,monospace;word-break:break-all}
 .zmap-tabs button{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:999px;padding:4px 12px;font-size:13.5px;cursor:pointer}
 .zmap-tabs button.on{background:var(--gold);border-color:var(--gold);color:#1c1a12;font-weight:700}
 .zmap-frame{position:relative}
@@ -668,14 +675,27 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 /* eau (boîtes d'eau du jeu), sorties de la Carte (repère et nom du lieu d'arrivée) */
 .zmap-water{fill:#3f86c9;opacity:.35;pointer-events:none}
 .zx .zm-shape{fill:var(--gold)}
+.zg .zm-shape{fill:#b07a3e}
+.zg text{font-weight:600}
 .zx.self .zm-shape{fill:var(--muted)}
 .zx text{font-weight:600}
 .zmap-legend .lg-water{background:#3f86c9;opacity:.5;border:0;border-radius:3px;width:16px;height:10px}
 .zmap-legend .lg-exit{background:var(--gold);border:1.5px solid #1c1a12}
+.zmap-legend .lg-chk{background:var(--red);border:1px solid #1c1a12;width:10px;height:10px}
+.zmap-legend .lg-chk.now{background:#7fd36b}
+.zmap-legend .lg-chk.done{background:#8a8a8a;opacity:.6}
+.zmap-legend .muted{color:var(--muted)}
 .zmap-bar .map-scene{width:auto;min-width:260px}
 .zmap-bar .zmap-back{padding:4px 12px}
+.zmap-bar .map-chk{display:flex;align-items:center;gap:8px;margin-left:auto}
+.zmap-bar .map-chk .lbl{font-size:13px;color:var(--muted)}
 .map-info{font-size:13.5px;color:var(--muted);align-self:center}
 .maps-src{font-size:13px;color:var(--muted);margin:8px 0 0}
+.maps-src .maps-tool{display:inline-flex;margin-left:14px;font-size:13px;color:var(--muted)}
+.map-groups{margin:0 0 8px}
+.map-groups small{opacity:.7;margin-left:2px}
+.zmap-svg.placing{cursor:crosshair}
+.zmap-bar .zmap-edit-btn{margin:0}
 .maps-src .link{color:var(--muted);text-decoration:underline;text-underline-offset:3px;margin-left:6px}
 .zm{cursor:pointer}
 /* couleur par type de sortie (repères et légende) */
@@ -742,6 +762,7 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .zc-check circle{fill:var(--red);stroke:#1c1a12;stroke-width:1px;vector-effect:non-scaling-stroke;opacity:.85}
 .zc-check.now circle{fill:#7fd36b}
 .zc-check.done circle{fill:#8a8a8a;opacity:.6}
+.zc-check.approx circle{stroke:var(--text);stroke-width:1.5px;stroke-dasharray:3 2}
 .zc-check.sel circle{stroke:var(--text);stroke-width:2px}
 .zc-place rect{fill:#8a8a8a;stroke:#1c1a12;stroke-width:1px;vector-effect:non-scaling-stroke}
 .zc-place.now rect{fill:#7fd36b}

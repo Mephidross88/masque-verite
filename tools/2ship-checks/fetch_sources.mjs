@@ -24,7 +24,9 @@ const wanted = tree.tree.filter(e => e.type === 'blob').map(e => e.path).filter(
   /^mm\/include\/tables\/(scene|actor|object)_table\.h$/.test(p) ||
   /^mm\/src\/code\/(z_scene_table|z_map_data|z_play)\.c$/.test(p) ||
   // constantes des options (SPIDER_HOUSE_TOKENS_REQUIRED, z_en_si.h, inclus par StaticData/Options.cpp)
-  p === 'mm/src/overlays/actors/ovl_En_Si/z_en_si.h');
+  p === 'mm/src/overlays/actors/ovl_En_Si/z_en_si.h' ||
+  // code des acteurs (cartes : acteur qui lève le drapeau d'un check, acteurs qui en font apparaître un autre)
+  /^mm\/src\/overlays\/actors\/[^/]+\/[^/]+\.(c|h)$/.test(p));
 
 // téléchargements en parallèle, par petits paquets
 for (let i = 0; i < wanted.length; i += 12) await Promise.all(wanted.slice(i, i + 12).map(async p => {

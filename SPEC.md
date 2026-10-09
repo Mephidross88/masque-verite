@@ -204,8 +204,62 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
 - **Page** : choix du lieu (ceux de la page Checks dans leur ordre, puis les autres : intérieurs, variantes), `ui.map.scene` ;
   sol en dix teintes de hauteur (quantiles), murs, eau ; un repère par sortie avec le nom du lieu d'arrivée, clic : sa
   carte (← : retour). Molette : zoom ; glisser : déplacer ; + / − / tout le terrain.
-- À venir : checks à leur place (acteurs des salles reliés aux checks par les sources de 2Ship), statues de hibou, étages
-  des donjons, position de la dernière sauvegarde.
+- **Checks à leur place** : position de l'acteur de chaque check dans les listes d'acteurs des salles (en-tête principal),
+  d'après des règles tirées de `Rando/ActorBehavior/*.cpp` (`recipe.loc`, comme 2Ship relie ses acteurs à ses checks) :
+  tables { scène, salle, n-ième acteur } (caisses, tonneaux, arbres, boules de neige, ruches, papillons, objets cachés,
+  pots, herbe ; acteurs qui en font apparaître plusieurs : checks de suite de la même famille) ; drapeaux de coffre (coffres,
+  Skulltulas d'or), d'objet (objets posés, pots, fées perdues, réceptacles) et d'interrupteur ; brins des touffes d'herbe
+  (motifs d'Obj_Grass_Unit, brin gardé si le sol est à moins de 80 unités, numérotés à la suite) ; sinon l'acteur du
+  personnage (fichier ActorBehavior qui cite le check) ; statues de hibou. Variantes de scène (Marais purifié, printemps)
+  : checks de la scène d'origine. Grottes (SCENE_KAKUSIANA) : une salle commune à toutes les grottes à coffre (salle 4)
+  et une aux grottes à vache (salle 10), reconnues par 2Ship à leur entrée (chestGrottoMap, chestGrottoActorIdsToBaseRc,
+  cowGrottoMap d'ObjGrass.cpp) : herbes et coffre (créé par En_Torch) placés dans la salle commune. Anneaux d'herbe de
+  Keaton, objets cachés (un point libère plusieurs objets : checks de suite), fresque du mur de la Plaine (En_Gakufu),
+  gong de l'École d'escrime (Obj_Dora) ; Skulltulas d'or cachées (sol meuble, caisse, ruche, pot : numéro de jeton dans
+  leurs paramètres) ; fées dans une bulle (En_Elfbub) ; ruches (drapeau d'objet). À défaut : la position d'un voisin de
+  la même famille (rubis d'un Guay, articles d'une boutique) ; salle d'un boss : la place du boss. PNJ : l'acteur dont
+  le code (décompilation embarquée par 2Ship, src/overlays/actors, téléchargée par fetch_sources.mjs) lève le drapeau
+  d'événement du check (comparé par valeur : WEEKEVENTREG_57_04 = son nom parlant) ; boutiques : le marchand (acteur qui
+  fait apparaître les articles) ; acteur créé en cours de partie : celui qui le crée (Actor_Spawn, trois niveaux).
+  ~2 550 checks placés, dont ~190 **approchés** (5e valeur) : personnage (il bouge selon l'heure : Anju donne la clé au
+  comptoir et la lettre dans la cuisine), voisin de famille, boss ; ~30 sans position (hors ennemis).
+- Outil de placement affiché : la carte montre tous les checks du jeu (pas seulement ceux de la seed), sans les filtres.
+- Mode placement : liste « À vérifier » (positions approchées du lieu), repères approchés en pointillés ; les placer à la
+  main les corrige ; « valider » une position juste la garde telle quelle, comme placée à la main (elle quitte la liste et
+  part dans l'export : rien n'est oublié).
+- Repères des checks de la seed (non exclus) : faisable (vert), pas encore (rouge), fait (gris), heures au survol ; clic :
+  cocher (bandeau Annuler). Réglage « Checks » (`ui.map.checks`, comme l'Œil Sheikah) : « Comme la page Checks » (ses filtres :
+  catégories, faits masqués, seulement les faisables au moment choisi, recherche), « Tous » (ceux de la seed non exclus,
+  faits compris), « Aucun ».
+- **Grottes : une carte par grotte** (liste « Grottes »). La scène des grottes est découpée en salles (`SCENE_KAKUSIANA#n` :
+  sols, murs, eau, sorties, checks de la salle la plus proche). Les grottes à coffre (salle 4) et à vache (salle 10)
+  partagent une salle : une carte par grotte (`SCENE_KAKUSIANA#n|RC_…_GROTTO` : même terrain, ses seuls checks). Nom : d'après
+  ses checks (« Plaine Termina · grotte du pilier ») ; salle non partagée : son groupe de checks le plus fourni. Trous de
+  grotte sur les cartes extérieures (Door_Ana : entrée des grottes → salle, données de réapparition → grotte, comme 2Ship ;
+  losange brun, clic : la carte de la grotte) ; dans une grotte, la sortie (retour au trou) mène au lieu extérieur.
+  Rotations des acteurs des salles : 9 bits du haut, en degrés ou valeur brute selon le drapeau du numéro d'acteur
+  (Actor_SpawnEntry). Zones d'une même sortie éloignées de plus de 300 unités : un repère chacune.
+- **Étages** (donjons, Château d'Ikana, Village Goron…) : hauteur de sol de référence de chaque salle sur la carte du
+  menu pause (commande 0x1C de la scène), hauteurs distinctes à 5 unités près, écarts d'au moins 200 unités (sinon un
+  seul niveau : Marais du Sud). Étage d'une hauteur : comme MapDisp_GetStoreyY (sol de l'étage − 80). Noms comme le menu
+  pause : 1, 2… et sous-sols S1, S2 (étage le plus bas de z_map_disp.c : Pic des Neiges S1, Grande Baie S2, Forteresse
+  de Pierre S1). Boutons à droite de la carte, du plus haut au plus bas, avec le nombre de checks à faire ; étage affiché
+  par défaut : celui de l'entrée ; les autres en fond atténué ; sorties et checks de l'étage seulement.
+  Lieux sans carte au menu pause (Auberge, Observatoire, intérieur de la Tour de l'Horloge, maison de Romani…) : hauteurs
+  de référence de leurs salles quand même, regroupées à 100 unités près, au moins 150 d'écart, gardées seulement si les
+  étages se superposent (un sol sur cinq d'un étage au-dessus d'un sol plus bas).
+  Maisons des Araignées (aucune donnée, hauteurs continues) : coupe fixée à la main dans js/maps-extract.js (MANUAL_STOREYS)
+  à 160 — Marais : 1 (sols) et 2 (passerelles, balcons, ruches) ; Côte : S1 (sous-sol) et 1 (étage de l'entrée).
+- **Placement à la main** (« Outil de placement des checks », sous la carte : `ui.map.editTool`) : bouton « ✎ Placer les
+  checks » ; liste des checks du lieu sans position (checks de la scène du jeu, `recipe.cs`, ou de sa scène d'origine pour
+  une variante), à cocher puis placer d'un clic sur la carte (hauteur : le sol sous le clic, à l'étage affiché) ; liste
+  des checks placés à la main (déplacer, retirer). Positions gardées dans le navigateur (localStorage
+  `masque-verite-positions`), « Exporter » : `positions-manuelles.json` (avec celles déjà dans la recette), à déposer
+  dans `tools/2ship-maps/` puis `gen_maps_recipe.mjs` (`recipe.manual`, sans refaire les cartes). Ordre : placées dans ce
+  navigateur, puis celles de la recette, puis celles calculées depuis la ROM (corriger une position calculée : la placer).
+  Provisoire : outil affiché, la liste des lieux ne propose que ceux qui ont des checks sans position (et leur nombre).
+- À venir : une carte par salle pour les scènes partagées, position
+  de la dernière sauvegarde.
 
 ## Logique de 2Ship
 - **Données** (`data/logic-data.js`, généré par `tools/2ship-logic/extract_logic.mjs`) : les 315 régions de
@@ -261,8 +315,8 @@ Même démarche que pour l'Œil Sheikah : chaque étape est utilisable et vérif
    des trois jours et moment dans la page Checks, « pourquoi pas encore ? ».
 3. **Journal des Bombers** — *fait* (remplace le Routeur : sans entrées mélangées, les trajets n'apportent guère) :
    frise des trois jours, une barre par check (voir Journal des Bombers).
-4. **Carte** — *en cours* : fabrication depuis la ROM du joueur, terrain vu de dessus et sorties faits (voir Carte) ;
-   reste : checks, statues de hibou, étages des donjons.
+4. **Carte** — *en cours* : fabrication depuis la ROM du joueur, terrain, sorties et checks faits (voir Carte) ;
+   étages, placement à la main ; reste : grottes, position de la dernière sauvegarde.
 5. **Auto-tracking** — *fait* : lecture de la sauvegarde de 2Ship dans le navigateur, sans relais (voir Auto-tracking).
 
 Ensuite, au fil de l'eau : Indices (pierres à potins, banque, restes de boss, Chant de Saria…), fenêtre de stream,

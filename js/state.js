@@ -24,8 +24,9 @@ function defaults(){
       // link : auto-tracking par la sauvegarde de 2Ship (js/link.js) — suivi activé, emplacement suivi ('' : le plus récent,
       // sinon 'file1.json'…), moment repris de la sauvegarde
       link:{ enabled:false, slot:'', moment:true },
-      // map : lieu affiché sur la page Carte
-      map:{ scene:'SCENE_CLOCKTOWER' },
+      // map : lieu affiché sur la page Carte, checks affichés (filters : comme la page Checks, all : tous ceux de la seed,
+      // off : aucun), outil de placement des checks affiché
+      map:{ scene:'SCENE_CLOCKTOWER', checks:'filters', editTool:false },
       // notebook : page Journal des Bombers (recherche, masquer les faits, aussi les checks sans horaire, regroupement
       // par scène et scènes repliées { scène: true })
       notebook:{ q:'', hideDone:false, all:false, byScene:true, collapsed:{} },
