@@ -23,7 +23,7 @@ const ITEM_GROUPS = [
     B('RI_DEKU_STICK', { ri:['RI_DEKU_STICK', 'RI_DEKU_STICKS_5'] }), B('RI_DEKU_NUT', { ri:['RI_DEKU_NUT', 'RI_DEKU_NUTS_5', 'RI_DEKU_NUTS_10'] }),
     B('RI_MAGIC_BEAN'), B('RI_POWDER_KEG'), B('RI_PICTOGRAPH_BOX'), B('RI_LENS'), B('RI_HOOKSHOT'), B('RI_GREAT_FAIRY_SWORD'),
     { key:'bottles', ri:['RI_BOTTLE_EMPTY', 'RI_BOTTLE_MILK', 'RI_BOTTLE_GOLD_DUST', 'RI_BOTTLE_CHATEAU_ROMANI', 'RI_BOTTLE_RED_POTION'],
-      kind:'count', max:6, label:t('Bouteilles'), icon:'items/bottle_empty.png' },
+      kind:'count', max:6, label:t('Bouteilles') },
   ]},
   { id:'trade', title:'Objets d’échange', items:[
     // (objets indépendants dans le randomizer : chacun a son emplacement)
@@ -38,28 +38,28 @@ const ITEM_GROUPS = [
   ]},
   { id:'equipment', title:'Équipement', items:[
     { key:'sword', ri:['RI_PROGRESSIVE_SWORD'], kind:'level', label:t('Épée'), stages:['', nm('RI_SWORD_KOKIRI'), nm('RI_SWORD_RAZOR'), nm('RI_SWORD_GILDED')],
-      levelOf:{ RI_SWORD_KOKIRI:1, RI_SWORD_RAZOR:2, RI_SWORD_GILDED:3 }, icons:['items/sword_kokiri.png', 'items/sword_razor.png', 'items/sword_gilded.png'] },
+      levelOf:{ RI_SWORD_KOKIRI:1, RI_SWORD_RAZOR:2, RI_SWORD_GILDED:3 } },
     B('RI_SHIELD_HERO'), B('RI_SHIELD_MIRROR'),
     { key:'wallet', ri:['RI_PROGRESSIVE_WALLET'], kind:'level', label:t('Bourse'),
       stages:['Bourse (99)', 'Bourse d’Adulte (200)', 'Bourse Géante (500)', 'Bourse de Magnat (5000)'].map(tl), sizes:['99', '200', '500', '5000'],
       levelOf:{ RI_WALLET_ADULT:1, RI_WALLET_GIANT:2, RI_WALLET_TYCOON:3 } },
     { key:'magic', ri:['RI_PROGRESSIVE_MAGIC'], kind:'level', label:t('Magie'), stages:['', nm('RI_SINGLE_MAGIC'), nm('RI_DOUBLE_MAGIC')],
-      levelOf:{ RI_SINGLE_MAGIC:1, RI_DOUBLE_MAGIC:2 }, icons:['items/magic_single.png', 'items/magic_double.png'] },
+      levelOf:{ RI_SINGLE_MAGIC:1, RI_DOUBLE_MAGIC:2 } },
     B('RI_DOUBLE_DEFENSE'), B('RI_GREAT_SPIN_ATTACK'), B('RI_BOMBERS_NOTEBOOK'),
-    { key:'heart_pieces', ri:['RI_HEART_PIECE'], kind:'count', max:52, label:t('Quarts de cœur'), icon:'items/heart_piece.png' },
-    { key:'heart_containers', ri:['RI_HEART_CONTAINER'], kind:'count', max:4, label:t('Réceptacles de cœur'), icon:'items/heart_container.png' },
+    { key:'heart_pieces', ri:['RI_HEART_PIECE'], kind:'count', max:52, label:t('Quarts de cœur') },
+    { key:'heart_containers', ri:['RI_HEART_CONTAINER'], kind:'count', max:4, label:t('Réceptacles de cœur') },
   ]},
   { id:'songs', title:'Chants', items:[
     B('RI_SONG_TIME'), B('RI_SONG_HEALING'), B('RI_SONG_EPONA'), B('RI_SONG_SOARING'), B('RI_SONG_STORMS'), B('RI_SONG_SONATA'),
     { key:'lullaby', ri:['RI_PROGRESSIVE_LULLABY'], kind:'level', label:nm('RI_SONG_LULLABY'), stages:['', nm('RI_SONG_LULLABY_INTRO'), nm('RI_SONG_LULLABY')],
-      levelOf:{ RI_SONG_LULLABY_INTRO:1, RI_SONG_LULLABY:2 }, icons:['items/song_lullaby_intro.png', 'items/song_lullaby.png'] },
+      levelOf:{ RI_SONG_LULLABY_INTRO:1, RI_SONG_LULLABY:2 } },   // (prélude seul : icône à moitié estompée ; ou badge : sizes:['', '1/2', ''])
     B('RI_SONG_NOVA'), B('RI_SONG_ELEGY'), B('RI_SONG_OATH'),
     B('RI_SONG_SUN'), B('RI_SONG_DOUBLE_TIME'), B('RI_SONG_INVERTED_TIME'), B('RI_SONG_SARIA', { visible:shuffled('RO_SHUFFLE_SONG_SARIA') }),
   ]},
   { id:'remains', title:'Restes des boss', items:[
     B('RI_REMAINS_ODOLWA'), B('RI_REMAINS_GOHT'), B('RI_REMAINS_GYORG'), B('RI_REMAINS_TWINMOLD'),
     { key:'triforce', ri:['RI_TRIFORCE_PIECE', 'RI_TRIFORCE_PIECE_PREVIOUS'], kind:'count', max:s => s.RO_TRIFORCE_PIECES_MAX,
-      goal:s => s.RO_TRIFORCE_PIECES_REQUIRED, label:t('Fragments de Triforce'), visible:shuffled('RO_SHUFFLE_TRIFORCE_PIECES'), icon:'items/triforce_piece.png' },
+      goal:s => s.RO_TRIFORCE_PIECES_REQUIRED, label:t('Fragments de Triforce'), visible:shuffled('RO_SHUFFLE_TRIFORCE_PIECES') },
   ]},
   { id:'abilities', title:'Capacités', items:[
     B('RI_ABILITY_SWIM', { visible:shuffled('RO_SHUFFLE_SWIM') }),
@@ -68,7 +68,7 @@ const ITEM_GROUPS = [
     // demi-journées (temps mélangé) : au hasard, une par une ; progressif : un compteur
     ...['DAY_1', 'NIGHT_1', 'DAY_2', 'NIGHT_2', 'DAY_3', 'NIGHT_3'].map(h => B('RI_TIME_' + h,
       { visible:s => !!s.RO_CLOCK_SHUFFLE && s.RO_CLOCK_SHUFFLE_PROGRESSIVE === RO.RO_CLOCK_SHUFFLE_RANDOM })),
-    { key:'time_progressive', ri:['RI_TIME_PROGRESSIVE'], kind:'count', max:6, label:nm('RI_TIME_PROGRESSIVE'), icon:'items/time_progressive.png',
+    { key:'time_progressive', ri:['RI_TIME_PROGRESSIVE'], kind:'count', max:6, label:nm('RI_TIME_PROGRESSIVE'),
       visible:s => !!s.RO_CLOCK_SHUFFLE && s.RO_CLOCK_SHUFFLE_PROGRESSIVE !== RO.RO_CLOCK_SHUFFLE_RANDOM },
     // grenouilles et statues de hibou : des objets même sans mélange (la logique en a besoin)
     ...['WHITE', 'BLUE', 'CYAN', 'PINK'].map(c => B('RI_FROG_' + c)),
@@ -80,17 +80,59 @@ const ITEM_GROUPS = [
 ].map(g => ({ ...g, title:t(g.title) }));
 
 /* Temples : carte, boussole, petites clés (nombre de la version d'origine), Clé d'Or, fées perdues (15), Skulltulas d'or
-   pour les deux maisons. ri : objets de 2Ship de chaque case. */
+   pour les deux maisons. ri : objets de 2Ship de chaque case. fairy : icône des fées perdues (icons/dungeons). */
 const DUNGEONS = [
-  { id:'woodfall', label:'Bois-Cascade', keys:1, color:'#4f8a3a', p:'WOODFALL' },
-  { id:'snowhead', label:'Pic des Neiges', keys:3, color:'#5b8fc7', p:'SNOWHEAD' },
-  { id:'greatBay', label:'Grande Baie', keys:1, color:'#2f8f99', p:'GREAT_BAY' },
-  { id:'stoneTower', label:'Forteresse de Pierre', keys:4, color:'#b8892e', p:'STONE_TOWER' },
+  { id:'woodfall', label:'Bois-Cascade', keys:1, color:'#4f8a3a', p:'WOODFALL', fairy:'StrayFairyWoodfall' },
+  { id:'snowhead', label:'Pic des Neiges', keys:3, color:'#5b8fc7', p:'SNOWHEAD', fairy:'StrayFairySnowhead' },
+  { id:'greatBay', label:'Grande Baie', keys:1, color:'#2f8f99', p:'GREAT_BAY', fairy:'StrayFairyGreatBay' },
+  { id:'stoneTower', label:'Forteresse de Pierre', keys:4, color:'#b8892e', p:'STONE_TOWER', fairy:'StrayFairyStoneTower' },
 ].map(d => ({ ...d, label:tl(d.label) }));
 const DUNGEON_BY_ID = Object.fromEntries(DUNGEONS.map(d => [d.id, d]));
 
+/* Icônes (icons/<chemin>, 192 px) rangées par dossier : clé de l'objet → chemin, ou liste (un par palier). Sans entrée :
+   icons/items/<clé>.png, à défaut un sigle. */
+const ITEM_ICONS = {
+  ocarina:'items/OcarinaOfTime.png', bomb_bag:'items/Bomb.png', arrow_fire:'items/FireArrow.png', arrow_ice:'items/IceArrow.png',
+  arrow_light:'items/LightArrow.png', magic_bean:'items/MagicBeans.png', powder_keg:'items/PowderKeg.png', lens:'items/LensOfTruth.png',
+  great_fairy_sword:'equipment/GreatFairysSword.png', bottles:'items/Bottle.png', bow:'items/Bow.png', bombchu:'items/Bombchu.png', deku_stick:'items/DekuStick.png', deku_nut:'items/DekuNut.png',
+  hookshot:'items/Hookshot.png', pictograph_box:'items/PictographBox.png',
+  moons_tear:'trade_items/MoonsTear.png', deed_land:'trade_items/LandDeed.png', deed_swamp:'trade_items/SwampDeed.png',
+  deed_mountain:'trade_items/MountainDeed.png', deed_ocean:'trade_items/OceanDeed.png', room_key:'trade_items/RoomKey.png',
+  letter_to_kafei:'trade_items/LetterToKafei.png', letter_to_mama:'trade_items/LetterToMama.png', pendant_of_memories:'trade_items/PendantOfMemories.png',
+  mask_postman:'masks/PostmansHat.png', mask_all_night:'masks/AllNightMask.png', mask_blast:'masks/BlastMask.png', mask_stone:'masks/StoneMask.png',
+  mask_great_fairy:'masks/GreatFairysMask.png', mask_deku:'masks/DekuMask.png', mask_keaton:'masks/KeatonMask.png', mask_bremen:'masks/BremenMask.png',
+  mask_bunny:'masks/BunnyHood.png', mask_don_gero:'masks/DonGerosMask.png', mask_scents:'masks/MaskofScents.png', mask_goron:'masks/GoronMask.png',
+  mask_romani:'masks/RomanisMask.png', mask_circus_leader:'masks/TroupeLeaders-Mask.png', mask_kafeis_mask:'masks/KafeisMask.png',
+  mask_couple:'masks/CouplesMask.png', mask_truth:'masks/MaskOfTruth.png', mask_zora:'masks/ZoraMask.png', mask_kamaro:'masks/KamarosMask.png',
+  mask_gibdo:'masks/GibdoMask.png', mask_garo:'masks/GarosMask.png', mask_captain:'masks/CaptainsHat.png', mask_giant:'masks/GiantsMask.png',
+  mask_fierce_deity:'masks/FierceDeitysMask.png',
+  sword:['equipment/KokiriSword.png', 'equipment/RazorSword.png', 'equipment/GildedSword.png'], shield_hero:'equipment/HerosShield.png',
+  shield_mirror:'equipment/MirrorShield.png', wallet:'equipment/AdultsWallet.png', magic:['equipment/SmallMagicJarTex.png', 'equipment/BigMagicJar.png'],
+  bombers_notebook:'equipment/BombersNotebook.png', heart_pieces:'equipment/PieceOfHeart.png', heart_containers:'equipment/HeartContainer.png',
+  song_time:'songs/SongOfTime.png', song_healing:'songs/SongOfHealing.png', song_epona:'songs/EponaSong.png', song_soaring:'songs/SongOfSoaring.png',
+  song_storms:'songs/SongOfStorms.png', song_sonata:'songs/SonataOfAwakening.png', lullaby:['songs/GoronLullabyIntro.png', 'songs/GoronLullaby.png'],
+  song_nova:'songs/BossaNova.png', song_elegy:'songs/ElegyOfEmptiness.png', song_oath:'songs/OathToOrder.png', song_sun:'songs/SunSong.png',
+  song_double_time:'songs/SongOfDoubleTime.png', song_inverted_time:'songs/InvertedSongOfTime.png', song_saria:'songs/SariaSong.png',
+  remains_odolwa:'boss_remains/OdolwasRemains.png', remains_goht:'boss_remains/GohtsRemains.png', remains_gyorg:'boss_remains/GyorgsRemains.png',
+  remains_twinmold:'boss_remains/TwinmoldsRemains.png', triforce:'boss_remains/TriforcePiece.png',
+  double_defense:'equipment/DoubleDefense.png', great_spin_attack:'equipment/CycloneAttack.png', ability_swim:'equipment/swim.png',
+  ocarina_button_a:'others/OcarinaA.png', ocarina_button_c_up:'others/OcarinaCUp.png', ocarina_button_c_down:'others/OcarinaCDown.png',
+  ocarina_button_c_left:'others/OcarinaCLeft.png', ocarina_button_c_right:'others/OcarinaCRight.png', skeleton_key:'others/SkeletonKey.png',
+  frog_white:'others/FrogGrey.png', frog_blue:'others/FrogBlue.png', frog_cyan:'others/FrogCyan.png', frog_pink:'others/FrogPink.png',
+  time_day_1:'others/Day1.png', time_night_1:'others/Night1.png', time_day_2:'others/Day2.png', time_night_2:'others/Night2.png',
+  time_day_3:'others/Day3.png', time_night_3:'others/Night3.png',
+  ...Object.fromEntries(['clock_town_south', 'milk_road', 'southern_swamp', 'woodfall', 'mountain_village', 'snowhead', 'great_bay_coast', 'zora_cape',
+    'ikana_canyon', 'stone_tower'].map(o => ['owl_' + o, 'others/OwlFace.png'])),
+  // âmes : une icône commune aux boss, une aux ennemis (le nom au survol)
+  ...Object.fromEntries(CHECKS_DATA.items.filter(i => /^RI_SOUL_(BOSS|ENEMY)_/.test(i.id))
+    .map(i => [i.id.replace(/^RI_/, '').toLowerCase(), /BOSS/.test(i.id) ? 'dungeons/soulBoss.png' : 'others/soulEnemy.png'])),
+};
 const ITEM_BY_KEY = {};
-ITEM_GROUPS.forEach(g => g.items.forEach(it => { it.group = g.id; ITEM_BY_KEY[it.key] = it; }));
+ITEM_GROUPS.forEach(g => g.items.forEach(it => {
+  it.group = g.id; ITEM_BY_KEY[it.key] = it;
+  const ic = ITEM_ICONS[it.key];
+  if (Array.isArray(ic)) it.icons = ic; else if (ic) it.icon = ic;
+}));
 // objet de 2Ship → objet du panneau (et palier précis, pour les objets à paliers)
 const ITEM_BY_RI = {};
 ITEM_GROUPS.forEach(g => g.items.forEach(it => {
@@ -104,7 +146,8 @@ DUNGEONS.forEach(d => {
 ITEM_BY_RI.RI_CLOCK_TOWN_STRAY_FAIRY = { townFairy:true };
 ITEM_BY_RI.RI_GS_TOKEN_SWAMP = { tokens:'swamp' };
 ITEM_BY_RI.RI_GS_TOKEN_OCEAN = { tokens:'ocean' };
-const SPIDER_HOUSES = [{ id:'swamp', label:t('Maison des Araignées des Marais') }, { id:'ocean', label:t('Maison des Araignées de la Côte') }];
+const SPIDER_HOUSES = [{ id:'swamp', label:t('Maison des Araignées des Marais'), icon:'others/SwampSkulltula.png' },
+  { id:'ocean', label:t('Maison des Araignées de la Côte'), icon:'others/OceanSkulltula.png' }];
 
 const itemMax = it => typeof it.max === 'function' ? it.max(store.settings) : it.max ?? it.stages?.length - 1;
 const itemVisible = it => !it.visible || it.visible(store.settings);

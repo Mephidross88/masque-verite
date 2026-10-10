@@ -400,7 +400,6 @@
   'pas encore exporté':'not exported yet',
   'pas encore faisable':'not doable yet',
   'Passe-partout':'Skeleton Key',
-  'PC':'SK',
   'Personnages':'NPCs',
   'Petites clés':'Small keys',
   'Petites clés : {n} / {max}':'Small keys: {n} / {max}',

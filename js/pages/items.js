@@ -11,28 +11,28 @@ const DUNGEONS_TPL = `
           <div class="dg-name">{{d.label}}</div>
           <div class="dg-cells">
             <div class="dg-line">
-              <button type="button" class="dg-flag" :class="{on:store.game.dungeons[d.id].map}" title="Carte du Donjon" @click="setDg(d.id,'map',true)" @contextmenu.prevent="setDg(d.id,'map',false)" v-html="ICONS.map"></button>
-              <button type="button" class="dg-flag" :class="{on:store.game.dungeons[d.id].compass}" title="Boussole" @click="setDg(d.id,'compass',true)" @contextmenu.prevent="setDg(d.id,'compass',false)" v-html="ICONS.compass"></button>
-              <button type="button" class="dg-flag dg-txt" :class="{on:store.game.dungeons[d.id].bossKey}" title="Clé d’Or" @click="setDg(d.id,'bossKey',true)" @contextmenu.prevent="setDg(d.id,'bossKey',false)">CO</button>
+              <button type="button" class="dg-flag" :class="{on:store.game.dungeons[d.id].map}" title="Carte du Donjon" @click="setDg(d.id,'map',true)" @contextmenu.prevent="setDg(d.id,'map',false)"><img src="icons/dungeons/DungeonMap.png" alt=""></button>
+              <button type="button" class="dg-flag" :class="{on:store.game.dungeons[d.id].compass}" title="Boussole" @click="setDg(d.id,'compass',true)" @contextmenu.prevent="setDg(d.id,'compass',false)"><img src="icons/dungeons/Compass.png" alt=""></button>
+              <button type="button" class="dg-flag" :class="{on:store.game.dungeons[d.id].bossKey}" title="Clé d’Or" @click="setDg(d.id,'bossKey',true)" @contextmenu.prevent="setDg(d.id,'bossKey',false)"><img src="icons/dungeons/BossKey.png" alt=""></button>
             </div>
             <div class="dg-line">
               <button type="button" class="dg-keys" :class="{none:!store.game.dungeons[d.id].keys, done:store.game.dungeons[d.id].keys>=d.keys}"
                 :title="t('Petites clés : {n} / {max}', {n:store.game.dungeons[d.id].keys, max:d.keys})" @click="addDg(d.id,'keys',1,d.keys)" @contextmenu.prevent="addDg(d.id,'keys',-1,d.keys)">
-                <span class="dg-k">PC</span>{{store.game.dungeons[d.id].keys}}/{{d.keys}}</button>
+                <img src="icons/dungeons/SmallKey.png" alt="">{{store.game.dungeons[d.id].keys}}/{{d.keys}}</button>
               <button type="button" class="dg-keys" :class="{none:!store.game.dungeons[d.id].fairies, done:store.game.dungeons[d.id].fairies>=fairyGoal}"
                 :title="t('Fées perdues : {n} / {max}', {n:store.game.dungeons[d.id].fairies, max:fairyGoal})" @click="addDg(d.id,'fairies',1,15)" @contextmenu.prevent="addDg(d.id,'fairies',-1,15)">
-                <span class="dg-k" v-html="CI.fairy"></span>{{store.game.dungeons[d.id].fairies}}/{{fairyGoal}}</button>
+                <img :src="'icons/dungeons/' + d.fairy + '.png'" alt="">{{store.game.dungeons[d.id].fairies}}/{{fairyGoal}}</button>
             </div>
           </div>
         </div>
       </div>
       <div class="dg-extra">
         <button type="button" class="dg-keys" :class="{none:!store.game.townFairy, done:store.game.townFairy}" title="Fée perdue de Bourg-Clocher"
-          @click="store.game.townFairy=true" @contextmenu.prevent="store.game.townFairy=false"><span class="dg-k" v-html="CI.fairy"></span>Bourg-Clocher</button>
+          @click="store.game.townFairy=true" @contextmenu.prevent="store.game.townFairy=false"><img src="icons/others/StrayFairyClockTown.png" alt="">Bourg-Clocher</button>
         <button v-for="h in SPIDER_HOUSES" :key="h.id" v-show="s.RO_SHUFFLE_GOLD_SKULLTULAS" type="button" class="dg-keys"
           :class="{none:!store.game.tokens[h.id], done:store.game.tokens[h.id]>=s.RO_SKULLTULA_TOKENS_REQUIRED}"
           :title="t('{house} : {n} / {max} jetons', {house:h.label, n:store.game.tokens[h.id], max:s.RO_SKULLTULA_TOKENS_REQUIRED})"
-          @click="addTokens(h.id,1)" @contextmenu.prevent="addTokens(h.id,-1)"><span class="dg-k" v-html="CI.skull"></span>{{store.game.tokens[h.id]}}/{{s.RO_SKULLTULA_TOKENS_REQUIRED}}</button>
+          @click="addTokens(h.id,1)" @contextmenu.prevent="addTokens(h.id,-1)"><img :src="'icons/' + h.icon" alt="">{{store.game.tokens[h.id]}}/{{s.RO_SKULLTULA_TOKENS_REQUIRED}}</button>
       </div>
       </section>
 `;

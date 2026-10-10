@@ -338,7 +338,11 @@ Rangé comme l'écran de pause du jeu (`js/items.js`, `ITEM_GROUPS`) :
   perdue de Bourg-Clocher ; jetons de Skulltula d'or par maison (si mélangées).
 - Chaque objet est relié à ses objets de 2Ship (`ri`, `levelOf` pour un palier précis) : objets de départ du spoiler,
   logique et auto-tracking ensuite. Clic : activer / palier suivant / +1 ; clic droit : l'inverse.
-- **Icônes** : `icons/items/<clé>.png` (ou chemin propre, `icon` / `icons`), 192 px ; à défaut, un sigle (initiales).
+- **Icônes** : PNG 192 px, fond transparent, rangés par dossier dans `icons/` (`items`, `equipment`, `masks`, `songs`,
+  `trade_items`, `boss_remains`, `dungeons`, `others`) ; table `ITEM_ICONS` de `js/items.js` (clé → chemin, ou un chemin par
+  palier), sinon `icons/items/<clé>.png` ; à défaut, un sigle (initiales). Icônes partagées : statues de hibou, âmes des
+  boss, âmes des ennemis. Prélude de la Berceuse : icône à moitié estompée. Temples : carte, boussole, Clé d'Or, petites
+  clés, fées perdues de chaque temple et de Bourg-Clocher, Skulltulas de chaque maison.
 
 ## Étapes
 Même démarche que pour l'Œil Sheikah : chaque étape est utilisable et vérifiée avant la suivante ; la SPEC est complétée

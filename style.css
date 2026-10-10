@@ -369,7 +369,7 @@ svg{display:block}
 .dg-badge.mq{background:#2462b8}
 .dg-badge.unknown{background:var(--surface);color:var(--text);border:1.5px dashed var(--text)}
 .dg-flag{width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--muted);display:grid;place-items:center;padding:0}
-.dg-flag svg,.dg-flag img{width:20px;height:20px;object-fit:contain}
+.dg-flag svg,.dg-flag img{width:26px;height:26px;object-fit:contain}
 .dg-flag:hover{border-color:var(--gold)}
 .dg-flag.on{border-color:var(--gold);background:var(--gold-soft);color:var(--gold-deep)}
 .dg-flag.fixed,.dg-keys.fixed{cursor:default}
@@ -382,7 +382,7 @@ svg{display:block}
 .dg-flag.fixed:hover,.dg-keys.fixed:hover{border-color:var(--gold)}
 .dg-keys{display:flex;align-items:center;justify-content:center;gap:4px;height:36px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--muted);
   padding:0 8px;font-size:13px;font-variant-numeric:tabular-nums}
-.dg-keys svg,.dg-keys img{width:16px;height:16px;flex:none;object-fit:contain}
+.dg-keys svg,.dg-keys img{width:22px;height:22px;flex:none;object-fit:contain}
 .dg-keys:hover{border-color:var(--gold)}
 /* Même logique que les tuiles d'objet : icône grisée tant que rien n'est trouvé (case non cochée, compteur
    à 0) ; compteur « obtenus/total » en doré une fois complet. */

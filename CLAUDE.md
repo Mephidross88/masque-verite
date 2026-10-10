@@ -58,6 +58,8 @@ fonctionnelle, et le mettre à jour quand une règle change.
   spoilers de `../randomizer`) — à relancer après toute modification de `js/logic.js`, de l'extraction ou de `js/items.js`.
 - `data/checks-data.js` : **fichier généré** par `tools/2ship-checks/extract_checks.mjs` (scènes, checks, objets, options
   de 2Ship, libellés anglais et français) ; ne pas l'éditer à la main, relancer le générateur.
+- `icons/` : icônes du panneau Objets et des temples (PNG 192 px, un dossier par famille), reliées aux objets par
+  `ITEM_ICONS` (`js/items.js`) ; publiées avec l'appli. Sources en 1024 px hors du dépôt (`../raw`).
 - `style.css` : styles (repris de L'Œil Sheikah), variables de thème dans `:root` (clair + sombre). Des règles des pages
   pas encore portées (Carte, stream…) y sont gardées pour la suite ; retirer celles qui ne serviront pas.
 - `data/i18n/en.js` : dictionnaire anglais.
