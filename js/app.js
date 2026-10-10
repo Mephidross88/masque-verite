@@ -1,4 +1,6 @@
 /* ---------- Application ---------- */
+// Fenêtre de stream (js/stream.js) : son gabarit reprend le panneau Objets et les temples
+const STREAM_TPL = streamTemplate({ items:ITEMS_TPL, dungeons:DUNGEONS_TPL });
 /* Coque de l'appli : menu, barres latérales, fenêtres communes (sauvegarde, remise à zéro), assemblage des pages
    (js/pages/*.js : gabarit et logique de chaque page, chargés avant ce fichier). */
 
@@ -73,7 +75,13 @@ function useShellEnd(ctx){
   window.addEventListener('keydown', onKey);
 
   const savedAt = computed(() => lastSaved.value ? lastSaved.value.toLocaleTimeString(LANG === 'fr' ? 'fr-FR' : LANG, { hour:'2-digit', minute:'2-digit', second:'2-digit' }) : null);
-  return { openBackup, copyBackup, importBackup, resetGame, resetAll, onKey, savedAt };
+  // Fenêtre de stream (index.html?stream) : widgets, dispositions et éditeur (js/stream.js) ; valeurs de l'appli lues par
+  // les widgets
+  const streamCtx = useStream(STREAM_MODE, { checkStats:() => ctx.checkStats.value, statsC:() => ctx.statsC.value, hintsAll:() => ctx.hintsAll.value });
+  // fenêtre ouverte à la taille de la toile de la disposition affichée (le navigateur la limite à l'écran)
+  const openStream = () => { const c = streamCtx.sp.value.canvas;
+    window.open('index.html?stream', 'masque-verite-stream', `width=${c.w},height=${c.h}`); };
+  return { openBackup, copyBackup, importBackup, resetGame, resetAll, onKey, savedAt, openStream, ...streamCtx };
 }
 
 const App = {
@@ -89,7 +97,8 @@ const App = {
       SPIDER_HOUSES, ITEM_BY_KEY, CHECK_SCENE, brokenIcons, ...ctx };
   },
   template:`
-<div class="shell" :class="{'nav-open':navOpen, split:splitOn, 'items-folded':ui.itemsFolded, 'items-drawer':itemsDrawer, 'nav-folded':ui.navFolded}">
+${STREAM_TPL}
+<div v-if="!STREAM" class="shell" :class="{'nav-open':navOpen, split:splitOn, 'items-folded':ui.itemsFolded, 'items-drawer':itemsDrawer, 'nav-folded':ui.navFolded}">
   <header class="topbar">
     <button @click="navOpen=!navOpen" aria-label="Menu" v-html="ICONS.menu"></button>
     <span class="brand-mark" v-html="ICONS.mask"></span><span>Le Masque de Vérité</span>
@@ -127,6 +136,7 @@ ${NOTEBOOK_SIDE_TPL}
         </div>
       </div>
 ${LINK_BTN_TPL}
+      <button class="side-btn" @click="openStream" title="Fenêtre à part pour un stream (OBS) : objets, progression, moment du cycle… disposés librement">Fenêtre de stream ↗</button>
       <button class="side-btn" @click="openBackup">Exporter ou importer la partie</button>
       <button class="danger-btn" @click="modal='reset'">Tout remettre à zéro</button>
     </div>

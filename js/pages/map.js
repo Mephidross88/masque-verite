@@ -257,7 +257,8 @@ const MapView = {
   // placés à la main dans la scène [{ c, x, y, z, moving }]
   // holes : trous de grotte [{ x, z, to, label }] ; home : lieu extérieur d'une grotte (sa sortie y ramène)
   props:{ scene:{ type:String, required:true }, checks:{ type:Array, default:() => [] }, placing:Boolean, placed:{ type:Array, default:() => [] }, editing:Boolean,
-    holes:{ type:Array, default:() => [] }, home:{ type:String, default:null }, stones:{ type:Array, default:() => [] } },
+    holes:{ type:Array, default:() => [] }, home:{ type:String, default:null }, stones:{ type:Array, default:() => [] },
+    compact:Boolean },   // compact : sans boutons de zoom (fenêtre de stream)
   emits:['goto', 'check', 'place', 'stone'],
   data:() => ({ view:null, drag:null, hover:null, level:null }),
   computed:{
@@ -327,7 +328,7 @@ const MapView = {
       return best != null ? best : this.lvl != null ? this.sc.lv[this.lvl] : null;
     },
   },
-  template:`<div class="zmap">
+  template:`<div class="zmap" :class="{compact}">
     <div v-if="!geo" class="zmap-empty">Pas de carte pour cette scène.</div>
     <div v-else class="zmap-frame">
       <svg ref="svg" :viewBox="vb.join(' ')" class="zmap-svg" :class="{dragging:drag && drag.moved, placing}" @wheel.prevent="wheel"
@@ -357,7 +358,7 @@ const MapView = {
       </svg>
       <div v-if="levels" class="zmap-levels"><button v-for="l in levels" :key="l.i" type="button" :class="{on:l.i===lvl}" @click="level=l.i"
         :title="t('Étage {n}', {n:l.name}) + (l.todo ? ' — ' + tn(l.todo, '{n} check à faire', '{n} checks à faire') : '')">{{l.name}}<i v-if="l.todo">{{l.todo}}</i></button></div>
-      <div class="zmap-zoom"><button type="button" title="Zoomer" @click="zoom(1 / 1.5)">+</button><button type="button" title="Dézoomer" @click="zoom(1.5)">−</button>
+      <div v-if="!compact" class="zmap-zoom"><button type="button" title="Zoomer" @click="zoom(1 / 1.5)">+</button><button type="button" title="Dézoomer" @click="zoom(1.5)">−</button>
         <button type="button" title="Tout le terrain" @click="view = null">▢</button></div>
     </div>
   </div>`,

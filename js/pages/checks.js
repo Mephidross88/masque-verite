@@ -167,7 +167,7 @@ function useChecksPage(ctx){
     const acc = all.reduce((n, x) => n + x.accessible, 0);
     const done = all.filter(x => x.complete).length, scenes = all.filter(x => x.total).length;
     return { got, total, sub:tn(total - got, '{n} restant', '{n} restants') + ' · ' + tn(acc, '{n} faisable', '{n} faisables')
-      + ' · ' + t('{a} / {b} scènes terminées', { a:done, b:scenes }), groups:[] };
+      + ' · ' + t('{a} / {b} scènes terminées', { a:done, b:scenes }), groups:[], avail:acc };
   });
   const catCounts = computed(() => {
     const out = Object.fromEntries(CHECK_CATS.map(k => [k.id, { total:0, left:0 }]));

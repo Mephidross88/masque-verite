@@ -70,8 +70,11 @@ const ITEM_GROUPS = [
     // demi-journées (temps mélangé) : au hasard, une par une ; progressif : un compteur
     ...['DAY_1', 'NIGHT_1', 'DAY_2', 'NIGHT_2', 'DAY_3', 'NIGHT_3'].map(h => B('RI_TIME_' + h,
       { visible:s => !!s.RO_CLOCK_SHUFFLE && s.RO_CLOCK_SHUFFLE_PROGRESSIVE === RO.RO_CLOCK_SHUFFLE_RANDOM })),
+    // stageOf : palier v (1 à 6) → la demi-journée obtenue (dans l'ordre ou à rebours), dont l'objet prête son icône et son
+    // nom (chronologie, fenêtre de stream)
     { key:'time_progressive', ri:['RI_TIME_PROGRESSIVE'], kind:'count', max:6, label:nm('RI_TIME_PROGRESSIVE'),
-      visible:s => !!s.RO_CLOCK_SHUFFLE && s.RO_CLOCK_SHUFFLE_PROGRESSIVE !== RO.RO_CLOCK_SHUFFLE_RANDOM },
+      visible:s => !!s.RO_CLOCK_SHUFFLE && s.RO_CLOCK_SHUFFLE_PROGRESSIVE !== RO.RO_CLOCK_SHUFFLE_RANDOM,
+      stageOf:(v, s) => 'time_' + TIME_HALVES[s.RO_CLOCK_SHUFFLE_PROGRESSIVE === RO.RO_CLOCK_SHUFFLE_DESCENDING ? 6 - v : v - 1] },
     // grenouilles et statues de hibou : des objets même sans mélange (la logique en a besoin)
     ...['WHITE', 'BLUE', 'CYAN', 'PINK'].map(c => B('RI_FROG_' + c)),
   ]},
@@ -205,6 +208,7 @@ const itemActive = (it, v) => it.kind === 'bool' ? !!v : it.key === 'wallet' ? t
 const itemMaxed = it => { const v = store.game.items[it.key]; return it.kind === 'count' ? v >= (it.goal ? it.goal(store.settings) : itemMax(it)) : v >= itemMax(it); };
 function iconSrc(it){
   const v = store.game.items[it.key];
+  if (it.stageOf) return iconSrc(ITEM_BY_KEY[it.stageOf(Math.min(6, Math.max(1, v)), store.settings)]);   // (temps progressif)
   if (it.kind === 'level' && it.icons) return 'icons/' + it.icons[Math.max(1, v) - 1];
   return 'icons/' + (it.icon || 'items/' + it.key + '.png');
 }
@@ -214,7 +218,7 @@ const itemAbbr = it => (it.label.replace(/\(.*?\)/g, '').match(/[A-Za-zÀ-ÿ0-9]
 function itemTitle(it){
   const v = store.game.items[it.key];
   if (it.kind === 'level') return it.label + (it.stages[v] ? ' : ' + it.stages[v] : '');
-  if (it.kind === 'count') return it.label + ' : ' + v + ' / ' + itemMax(it);
+  if (it.kind === 'count') return it.label + ' : ' + v + ' / ' + itemMax(it) + (it.stageOf && v ? ' — ' + ITEM_BY_KEY[it.stageOf(Math.min(6, v), store.settings)].label : '');
   return it.label;
 }
 // clic : active / palier suivant / +1 ; clic droit : désactive / palier précédent / −1 (comme l'Œil Sheikah)

@@ -25,12 +25,14 @@ const STATS_TPL = paneTpl('stats', `<h1>Statistiques</h1><p class="lede">Chronol
       </ul>
       <p v-else class="empty">Rien de noté pour l'instant.</p>`);
 
-// icône et libellé d'un objet du panneau à un palier ou un nombre donnés
+// icône et libellé d'un objet du panneau à un palier ou un nombre donnés (temps progressif : la demi-journée obtenue)
+const stageItem = (it, v) => ITEM_BY_KEY[it.stageOf(Math.min(6, Math.max(1, v)), store.settings)];
 function itemIconAt(it, v){
+  if (it.stageOf) return itemIconAt(stageItem(it, v), 1);
   if (it.kind === 'level' && it.icons) return 'icons/' + it.icons[Math.max(1, v) - 1];
   return 'icons/' + (it.icon || 'items/' + it.key + '.png');
 }
-const itemLabelAt = (it, v) => it.kind === 'level' ? it.stages[v] || it.label : it.kind === 'count' ? it.label + ' : ' + v : it.label;
+const itemLabelAt = (it, v) => it.stageOf && v ? stageItem(it, v).label : it.kind === 'level' ? it.stages[v] || it.label : it.kind === 'count' ? it.label + ' : ' + v : it.label;
 const fmtDur = ms => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 3600) + ':' + String(Math.floor(s % 3600 / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
 
 function useStatsPage(){

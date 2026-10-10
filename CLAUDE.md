@@ -40,19 +40,24 @@ fonctionnelle, et le mettre à jour quand une règle change.
      `whyLocked(game, settings, RC, moment)` (« Pourquoi pas encore ? » : objets du panneau au plus juste). Pur.
   5. `js/state.js` : persistance (`defaults`, `merge`, `load`, `store`, sauvegarde auto, `lastSaved`, `saveError`), objets de la
      seed `seedItems` / `setSeedItems` (localStorage `masque-verite-seed`, à part de la partie : indices), chronologie
-     (`game.timeline`, observateur synchrone ; `timelineQuiet` / `timelineSkip` / `timelinePlay` / `timelineAt`, posés par `link.js`).
+     (`game.timeline`, observateur synchrone ; `timelineQuiet` / `timelineSkip` / `timelinePlay` / `timelineAt`, posés par `link.js`),
+     `STREAM_MODE` (fenêtre de stream : relit le store via l'événement `storage`, ne sauvegarde rien, ne date rien).
   5b. `js/link.js` : auto-tracking par la sauvegarde de 2Ship — `link` (état, journal), `readSave(json)` (sauvegarde →
      checks faits, objets, prix, options, moment), `linkApply` (→ partie notée, jamais en arrière), suivi du dossier `saves`
      (`linkPick`, `linkResume`, `linkStop` ; File System Access API, poignée dans IndexedDB), `linkPickFile`, `linkAdopt`.
   6. `js/components.js` : composants Vue réutilisables (`Seg`, `ProgressCard`, `ItemTile`), `brokenIcons`, et
      `paneTpl(id, en-tête, corps)`, gabarit commun d'une page (section, barre du second panneau, en-tête).
+  6b. `js/stream.js` : fenêtre de stream (`index.html?stream`, reprise de L'Œil Sheikah) — types de widgets (`STREAM_TYPES`,
+     `STREAM_METRICS`), thèmes, dispositions (localStorage `masque-verite-stream`), gabarit (`streamTemplate(parts)`, appelé
+     par `app.js` avec `ITEMS_TPL` / `DUNGEONS_TPL`) et éditeur (`useStream(STREAM_MODE, app)` dans `useShellEnd`).
   7. `js/pages/*.js` : une page (ou partie d'écran) par fichier — `items` (panneau Objets, temples), `checks`, `notebook`, `tracking` (fenêtre de l'auto-tracking)
      (Journal des Bombers : frise des 72 h, une barre par check, d'après `logicFull` / `logicNow` de `checks`), `hints` (Indices : pierres à potins tirées comme `EnGs.cpp`, autres indices,
      révélés à la lecture `game.hints` ; `hintsByCheck` / `hintsByScene` pour Checks, `hintStones` pour la Carte), `map`, `stats` (Statistiques : chronologie, temps de jeu de 2Ship, courbe des checks), `config`. Chacun : gabarits en constantes `…_TPL` (insérés par `${…}` dans celui d'App) et, si
      besoin, logique en `use…(ctx)` : reçoit dans `ctx` les noms des pages assemblées avant elle, renvoie les siens
      (ordre d'assemblage dans `App.setup`). Page pas encore construite : bloc `.soon` (ce qu'elle fera, à quelle étape).
   8. `js/app.js` : la coque — `useShell` (navigation, panneaux côte à côte, thème), `useShellEnd` (sauvegarde, remise à
-     zéro `resetGame` / `resetAll`), le composant racine `App` + `createApp(...).mount('#app')`.
+     zéro `resetGame` / `resetAll`, fenêtre de stream `openStream`), le composant racine `App` (gabarit : `STREAM_TPL` en mode
+     stream, sinon la coque) + `createApp(...).mount('#app')`.
 - `data/logic-data.js` : **fichier généré** par `tools/2ship-logic/extract_logic.mjs` (régions, conditions en fonctions
   JS, tranches horaires, conditions des ennemis et âmes). `tools/2ship-logic/replay_spoilers.mjs` : test du moteur (rejeu des
   spoilers de `../randomizer`) — à relancer après toute modification de `js/logic.js`, de l'extraction ou de `js/items.js`.

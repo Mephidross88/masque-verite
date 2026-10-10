@@ -13,6 +13,7 @@ function defaults(){
     prices:{},   // prices : prix connus des boutiques et cartes de Tingle mélangées { RC: rubis } (la logique les compare à la bourse)
     found:{},    // found : objet trouvé dans chaque check fait, d'après la sauvegarde de 2Ship { RC: RI } (auto-tracking)
     playtime:0, playtimeAt:0,   // temps de jeu de 2Ship à la dernière sauvegarde lue (ms) et heure réelle où il a été lu
+    cycle:{},    // cycle : moment de la dernière sauvegarde lue { half (demi-journée, -1 : avant le jour 1), time, hours } (stream)
     hints:{} };  // hints : indices lus { id de l'indice : true } (page Indices : leur texte n'apparaît qu'une fois lus)
   ITEM_GROUPS.forEach(g => g.items.forEach(it => { game.items[it.key] = it.kind === 'bool' ? false : 0; }));
   DUNGEONS.forEach(d => { game.dungeons[d.id] = { map:false, compass:false, bossKey:false, keys:0, fairies:0 }; });
@@ -55,6 +56,13 @@ function load(){
 }
 
 const store = reactive(load());
+// Fenêtre de stream (index.html?stream, js/stream.js) : la partie vient de la fenêtre principale (événement « storage » à
+// chaque sauvegarde de celle-ci) ; elle ne sauvegarde rien elle-même, ne date rien et ne suit pas la sauvegarde du jeu.
+const STREAM_MODE = typeof location !== 'undefined' && /[?&]stream(&|=|$)/.test(location.search);
+if (STREAM_MODE) window.addEventListener('storage', ev => {
+  if (ev.key !== STORE_KEY || !ev.newValue) return;
+  try { const fresh = merge(defaults(), JSON.parse(ev.newValue)); for (const k of Object.keys(fresh)) store[k] = fresh[k]; } catch (e) {}
+});
 
 /* Objets de la seed (sauvegarde suivie ou spoiler importé), gardés à part de la partie (localStorage masque-verite-seed,
    jamais affichés tels quels) : la page Indices en calcule le texte de chaque indice, montré seulement une fois lu.
@@ -74,7 +82,7 @@ function setSeedItems(seed, items){
 let timelineQuiet = false, timelineSkip = false, timelinePlay = null, timelineAt = null;
 const num01 = v => typeof v === 'boolean' ? +v : v || 0;
 function timelineSnap(g){ return { game:g, items:{ ...g.items }, checks:{ ...g.checks } }; }
-{
+if (!STREAM_MODE){
   let snap = timelineSnap(store.game);
   // (la partie elle-même n'est pas observée en profondeur : la chronologie en fait partie)
   watch(() => [store.game.items, store.game.checks], () => {
@@ -99,7 +107,7 @@ function timelineSnap(g){ return { game:g, items:{ ...g.items }, checks:{ ...g.c
 const lastSaved = ref(null);
 // échec de l'enregistrement (place insuffisante, navigation privée…) : signalé dans le panneau de gauche
 const saveError = ref(false);
-watch(store, () => {
+if (!STREAM_MODE) watch(store, () => {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); lastSaved.value = new Date(); saveError.value = false; }
   catch (e){ if (!saveError.value) console.error('Partie non enregistrée :', e); saveError.value = true; }
 }, { deep:true });

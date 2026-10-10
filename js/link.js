@@ -105,6 +105,7 @@ function linkApply(sv, file, adopt){
   const half = saveHalfDay(sv);
   link.when = half >= 0 ? halfDayLabel(half) + ', ' + saveClock(sv.time) : t('Avant le premier jour');
   link.save = { half, clock:saveClock(sv.time), hours:saveHours(sv) };
+  if (g.cycle.half !== half || g.cycle.time !== sv.time) g.cycle = { half, time:sv.time, hours:link.save.hours };   // (fenêtre de stream)
   timelineSkip = true;
   try { mergeGame(saveGame(sv, true)); } finally { timelineSkip = false; }
   timelineQuiet = fresh; timelinePlay = sv.playtime || null; timelineAt = half >= 0 ? [half, sv.time] : null;
@@ -215,7 +216,7 @@ function linkAdopt(){
   if (f) linkApply(f.sv, f.file, true);
 }
 // au chargement : dossier déjà choisi → reprise directe si la permission tient encore, sinon « Reprendre » d'un clic
-if (LINK_CAN && store.ui.link.enabled && typeof indexedDB !== 'undefined'){
+if (!STREAM_MODE && LINK_CAN && store.ui.link.enabled && typeof indexedDB !== 'undefined'){
   linkDb('readonly', st => st.get('dir')).then(async d => {
     if (!d) return;
     linkDir = d; link.dir = d.name;

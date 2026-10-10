@@ -224,6 +224,47 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
 - **Contenu** : compteurs (temps de jeu de 2Ship à la dernière sauvegarde lue `game.playtime`, checks faits, masques,
   cœurs) ; courbe en escalier des checks faits au fil du temps de jeu ; chronologie (plus récent d'abord) filtrable
   Objets / Checks / Tout : temps de jeu (ou heure réelle, en plus petit), moment du cycle, objet trouvé dans le check.
+  Temps progressif : chaque palier affiché comme la demi-journée obtenue (icône et nom ; dans l'ordre ou à rebours,
+  `stageOf` de l'objet), comme dans le panneau et la fenêtre de stream.
+
+## Fenêtre de stream (js/stream.js)
+Reprise de L'Œil Sheikah. Bouton « Fenêtre de stream ↗ » (barre de gauche) : ouvre `index.html?stream` dans une fenêtre à
+part (`STREAM_MODE`), à la taille de la toile de la disposition affichée, à capturer dans OBS (« Capture de fenêtre » +
+filtre d'incrustation sur le fond vert ; une source « Navigateur » d'OBS a son propre stockage et ne verrait pas la partie).
+- **Widgets** disposés librement sur un fond uni (vert d'incrustation par défaut, magenta, transparent, fond du thème ou
+  couleur au choix), par rubrique :
+  - Partie : Objets (le panneau Objets, sur 1 ou 2 colonnes), Objets à la carte (`pick` : objets choisis un à un ou par
+    groupe, dans l'ordre voulu, nombre de colonnes, non obtenus estompés ou masqués, cadre en option), Temples (`dungeons`),
+    Progression (cadre Checks), Moment du cycle (`moment` : demi-journée et heure de la dernière sauvegarde lue, frise des
+    six demi-journées ; `game.cycle`, posé par l'auto-tracking), Seed (« Seed » devant en option).
+  - En direct : Dernière trouvaille (dernière ligne de la chronologie — objets, checks ou tout —, objet trouvé, temps de
+    jeu et moment du cycle ; animée à chaque nouveauté), Indices (les derniers indices marqués lus, nombre réglable).
+  - Cartes : Carte (le lieu affiché sur la page Carte de la fenêtre principale, avec ses checks et pierres ; sans boutons
+    de zoom).
+  - Statistiques : Compteurs (liste ordonnée de `STREAM_METRICS` — temps de jeu, checks faits / restants / faisables / %,
+    restes, masques, cœurs, quarts, réceptacles, fées perdues des temples, Skulltulas (si mélangées), statues de hibou,
+    fragments de Triforce (si mélangés) ; icônes en option), Jauge (compteur « obtenu / total »), Temps de jeu (celui de
+    2Ship à la dernière sauvegarde lue), Courbe des checks, Chronologie (filtre, nombre de lignes, temps de jeu).
+  - Décor : Espace vide (emplacement du jeu, cadre doré en option), Image (chemin, adresse ou fichier, gardé en data
+    URL), Texte.
+  Contenus à leur largeur naturelle mis à l'échelle de la largeur du bloc (`zoom`) ; les widgets « libres » à la taille
+  choisie. Blocs non cliquables (affichage seul).
+- **Dispositions** (profils) : plusieurs dispositions nommées, une affichée ; chacune a son fond, sa toile, son thème et ses
+  widgets (localStorage `masque-verite-stream`, `{ v:2, active, profiles:[…], ed }`). Disposition par défaut (1920 ×
+  1080) : Objets à gauche, Moment du cycle en dessous, emplacement du jeu à droite, Progression sous lui.
+- **Toile** : Full HD (défaut), HD, QHD, 4K, vertical ou personnalisée (200 à 7680 px) ; « Ajuster à la fenêtre » ou
+  100 % ; « Fenêtre à la taille de la toile ».
+- **Thème** : Appli (suit son thème clair / sombre), Appli sombre, Appli clair, Verre fumé, Lune, Termina, Minimal, ou
+  Personnalisé (fond des cadres et opacité, texte, accent, bordure, arrondi, ombre, contour du texte, polices) ; apparence
+  propre à un widget en option. Avertissement : fond semi-transparent sur un fond d'incrustation.
+- **Édition** (touche E ou double-clic) : panneau latéral (⇆ gauche / droite) — disposition (nouvelle, dupliquer,
+  supprimer, exporter, importer, par défaut, fond), taille de la toile, thème, bibliothèque, réglages du widget choisi
+  (position et taille au pixel, dupliquer, premier plan, arrière-plan, retirer), calques (masquer, verrouiller, monter,
+  descendre), aimantation (bords et centres à 8 px, grille 10 / 20 / 40 px, Alt : sans), annuler / rétablir (Ctrl+Z,
+  Ctrl+Y), clavier (flèches, Maj, Suppr, Ctrl+D, Échap).
+- La partie vient de la fenêtre principale : la fenêtre de stream relit le `store` à chaque sauvegarde de celle-ci
+  (événement `storage`, même navigateur), ne sauvegarde rien, ne date rien (chronologie) et ne suit pas la sauvegarde du
+  jeu (auto-tracking). Une disposition de L'Œil Sheikah importée garde les widgets communs.
 
 ## Carte (js/pages/map.js, js/maps-extract.js)
 - **Fabrication** : depuis la ROM de Majora's Mask du joueur (N64 US, compressée ou non, .z64 / .v64), jamais distribuée :
@@ -376,7 +417,7 @@ Même démarche que pour l'Œil Sheikah : chaque étape est utilisable et vérif
 0. **Fondations** — *fait* : dépôt, coque (navigation, côte à côte, panneau Objets, thème, langue, sauvegarde,
    export / import, remise à zéro), pages annoncées (bloc « bientôt » : ce que fera la page, à quelle étape), contrôles
    (syntaxe, noms non définis, traductions), téléchargement des sources de 2Ship.
-1. **Données** — *fait, sauf les icônes du panneau Objets* : `data/checks-data.js` (voir Données de 2Ship),
+1. **Données** — *fait* (icônes du panneau Objets comprises) : `data/checks-data.js` (voir Données de 2Ship),
    Configuration et import du spoiler, page Checks, panneau Objets. Statistiques (chronologie) dans la foulée.
 2. **Logique** — *fait* : extraction et moteur (voir Logique de 2Ship ; 7 spoilers 5.0.1 finis), checks faisables, frise
    des trois jours et moment dans la page Checks, « pourquoi pas encore ? ».
@@ -388,6 +429,5 @@ Même démarche que pour l'Œil Sheikah : chaque étape est utilisable et vérif
 
 6. **Indices** — *fait* (voir Indices ; à valider en jeu sur les pierres à potins).
 7. **Statistiques** — *fait* (voir Statistiques).
-
-Ensuite, au fil de l'eau : fenêtre de stream,
-README détaillé.
+8. **Fenêtre de stream** — *fait* (voir Fenêtre de stream).
+9. **README** — *fait* : mode d'emploi détaillé, en français et en anglais (README.md, README.en.md).
