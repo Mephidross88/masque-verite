@@ -143,6 +143,9 @@ au code (`js/i18n.js`, dictionnaires `data/i18n/<code>.js`).
   un, puis palier ou nombre au plus bas — un ensemble minimal parmi d'autres, demi-journées comprises en temps mélangé.
   Affiche aussi les moments où le check serait alors faisable ; « jamais à ce moment-là » (avec les moments possibles)
   quand même tout obtenu ne suffit pas au moment choisi. Calcul de 0,1 à 1 s, lancé après l'ouverture de la fenêtre.
+- **Formes** (pages Checks et Journal) : un point de couleur par forme avec laquelle le check est faisable (humain : beige,
+  Mojo : vert, Goron : brun, Zora : bleu ; voir Logique de 2Ship > Formes) ; aucun point si les quatre conviennent ; points
+  reliés : plusieurs formes à la suite. Détail au survol.
 - Checks faits d'après la sauvegarde (auto-tracking) : objet trouvé à la suite du libellé (`game.found`), aussi dans le
   Journal des Bombers.
 
@@ -378,7 +381,15 @@ filtre d'incrustation sur le fond vert ; une source « Navigateur » d'OBS a son
   sortie ne laisse passer que les tranches où sa condition est vraie (2Ship, lui, transmet toutes celles de la région de
   départ), puis attente comme en logique ; le Manège des Amoureux et le Coffre-fort, qui ferment à 22 h et dont on est mis
   dehors, reprennent les restrictions de séjour du Stand de tir aux mêmes horaires (`CLOSING_STAY` : absentes des sources
-  de 2Ship — à revérifier à la montée de version). « Faisable » n'en dépend pas.
+  de 2Ship — à revérifier à la montée de version). L'aire de jeu des Pestes Mojo (la Peste ne lance pas la partie de 23 h 30
+  à 6 h, `z_en_lift_nuts.c`) : ses checks et événements perdent les tranches de 23 h à 6 h (`OPEN_HOURS`, pas de tranche à
+  23 h 30). « Faisable » n'en dépend pas.
+- **Formes** (`checkForms`, affichage) : la logique de 2Ship ne suit pas la forme de Link. Pour chaque check, sa propre
+  condition (pas le chemin) est évaluée tout obtenu avec ce que chaque forme peut utiliser : humain (tout sauf les masques
+  Mojo, Goron, Zora) ; Mojo, Goron, Zora (son masque, l'ocarina, la magie, la poudre explosive pour Goron ; ni épée,
+  bouclier ni autres objets). Aucune forme seule : formes nécessaires à la suite (humain si ses objets servent, un masque
+  si le retirer bloque). Formes imposées par le jeu sans que la logique le dise (`FORMS_FORCED`) : Chasse au Trésor
+  (Humain), rubis de l'aire de jeu des Pestes Mojo.
 - **État** : d'après le panneau Objets, plus les objets donnés d'office selon la configuration (`computedStartingItems` :
   nage, touches, âmes, chants du temps non mélangés, consommables, cartes, clés et fées « au départ ») ; le Sac de Bombes
   donne aussi les Missiles Teigneux. Prix des boutiques mélangées : connus (`game.prices`), sinon 200 rubis au pire.

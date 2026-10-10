@@ -226,6 +226,12 @@ function findReachable(id, reached, times){
    logique. Lieux qui ferment et dont on est mis dehors, sans restriction de séjour dans 2Ship (CLOSING_STAY) : celles d'un
    lieu aux mêmes horaires. Sert aux moments des checks (frise, Moment, Journal), pas à « faisable ». */
 const CLOSING_STAY = { RR_HONEY_AND_DARLING:'RR_TOWN_SHOOTING_GALLERY', RR_TREASURE_SHOP:'RR_TOWN_SHOOTING_GALLERY' };
+/* Lieux où l'on n'obtient rien à certaines heures, sans restriction dans 2Ship (moments seulement, checks et événements du
+   lieu) : la Peste Mojo de l'aire de jeu ne lance pas la partie de 23 h 30 à 6 h (z_en_lift_nuts.c, EnLiftNuts_Idle) —
+   tranches de 23 h à 6 h retirées (pas de tranche à 23 h 30). */
+const OPEN_HOURS = { RR_TOWN_DEKU_PLAYGROUND:s => !/^TIME_NIGHT\d_(PM_11|AM_)/.test(s) };
+const OPEN_MASK = Object.fromEntries(Object.entries(OPEN_HOURS).map(([id, f]) =>
+  [id, LOGIC.slices.reduce((m, s, i) => f(s) ? m | bitOf(i) : m, 0n)]));
 function fineRegionTimes(reached, times){
   const fine = new Map([['RR_MAX', { t:times.get('RR_MAX').t, stay:false }]]);
   const regionOf = id => CLOSING_STAY[id] ? { ...REGION[id], stay:REGION[CLOSING_STAY[id]].stay } : REGION[id];
@@ -273,7 +279,7 @@ function computeLogic(state){
     if (!changed) break;
   }
   // tranches fines des régions (moments seulement ; événements acquis)
-  const fine = fineRegionTimes(reached, times), fineT = id => (fine.get(id) || times.get(id)).t;
+  const fine = fineRegionTimes(reached, times), fineT = id => (fine.get(id) || times.get(id)).t & (OPEN_MASK[id] ?? ALL_SLICES);
   /* Moments (affichage) : un événement de 2Ship, une fois acquis, vaut pour tout le cycle. Pour les moments, on calcule la
      première tranche où chaque événement peut avoir lieu (sa condition, tranche par tranche, avec les événements déjà
      possibles à cette tranche), jusqu'au point fixe ; à une tranche, un événement ne compte que s'il a pu avoir lieu avant
@@ -481,6 +487,51 @@ function fullState(settings){
   for (const d of DUNGEONS){ S0.keys[d.id] = d.keys; S0.bossKey[d.id] = true; S0.fairies[d.id] = 15; }
   S0.tokens = { SCENE_KINSTA1:30, SCENE_KINDAN2:30 };
   return S0;
+}
+
+/* ---------- Formes (affichage) ----------
+   La logique de 2Ship ne suit pas la forme de Link (un objet possédé sert sous toutes les formes). Pour chaque check, on
+   évalue sa propre condition (pas le chemin pour y aller) avec ce que chaque forme peut utiliser, tout étant obtenu
+   (événements et tranches de la logique « tout obtenu ») : humain, tout sauf les masques Mojo, Goron et Zora ; Mojo, Goron,
+   Zora : son masque, l'ocarina (chants), la magie (et la poudre explosive pour Goron), sans épée, bouclier ni autres objets.
+   Le reste (drapeaux, clés, quête, portefeuille, nage…) ne dépend pas de la forme. checkForms(settings, full) →
+   { RC: { f:[formes], seq } } (full : computeLogic(fullState(settings))) : f, les formes qui suffisent chacune ; seq : aucune
+   ne suffit seule, f est alors l'ensemble des formes nécessaires à la suite (humain : si les objets de Link humain servent ;
+   un masque : si le retirer bloque le check). */
+const FORMS = ['HUMAN', 'DEKU', 'GORON', 'ZORA'];
+// formes imposées par le jeu, que la logique ne dit pas : Chasse au Trésor (un check par forme, celui-ci sous forme humaine),
+// rubis de l'aire de jeu des Pestes Mojo (ramassés pendant la partie, en Mojo)
+const FORMS_FORCED = { RC_CLOCK_TOWN_EAST_TREASURE_CHEST_GAME_HUMAN:['HUMAN'],
+  ...Object.fromEntries(CHECKS_DATA.checks.filter(c => /^RC_DEKU_PLAYGROUND_DAY_/.test(c.id)).map(c => [c.id, ['DEKU']])) };
+const FORM_MASK = { DEKU:'ITEM_MASK_DEKU', GORON:'ITEM_MASK_GORON', ZORA:'ITEM_MASK_ZORA' };
+// état d'une forme (HUMAN, DEKU, GORON, ZORA), ou des trois transformations ensemble (ALL : rien de Link humain)
+function formState(S0, form, events){
+  const S = { ...S0, events };
+  if (form === 'HUMAN'){ S.items = new Set(S0.items); Object.values(FORM_MASK).forEach(m => S.items.delete(m)); return S; }
+  const masks = form === 'ALL' ? Object.values(FORM_MASK) : [FORM_MASK[form]];
+  S.items = new Set(['ITEM_OCARINA_OF_TIME', ...masks, ...(form === 'GORON' || form === 'ALL' ? ['ITEM_POWDER_KEG'] : [])]);
+  S.sword = 0; S.shield = 0;
+  return S;
+}
+// tout obtenu sauf un masque de transformation
+function withoutMask(S0, form, events){ const S = { ...S0, events, items:new Set(S0.items) }; S.items.delete(FORM_MASK[form]); return S; }
+function checkForms(settings, full){
+  const S0 = fullState(settings), ev = full.events, states = FORMS.map(f => formState(S0, f, ev)), out = {};
+  const seqStates = [formState(S0, 'ALL', ev), ...FORMS.slice(1).map(f => withoutMask(S0, f, ev))];
+  for (const [id, t] of Object.entries(full.regions)){
+    for (const [rc, f] of REGION[id].checks){
+      if (!full.checks[rc] || !full.checks[rc].ok) continue;
+      const x = out[rc] || (out[rc] = { one:new Set(), need:null });
+      LT = t;
+      states.forEach((S, i) => { LS = S; if (f()) x.one.add(FORMS[i]); });
+      // aucune forme seule (dans cette région) : formes nécessaires (humain, puis chaque masque)
+      if (!x.one.size){ const need = new Set(); seqStates.forEach((S, i) => { LS = S; if (!f()) need.add(FORMS[i]); }); x.need = need; }
+    }
+  }
+  LS = null;
+  for (const [rc, f] of Object.entries(FORMS_FORCED)) if (out[rc]){ out[rc].one = new Set(f); }
+  return Object.fromEntries(Object.entries(out).map(([rc, x]) => [rc, x.one.size ? { f:FORMS.filter(f => x.one.has(f)), seq:false }
+    : { f:FORMS.filter(f => x.need.has(f)), seq:true }]));
 }
 
 /* ---------- Pourquoi pas encore ? ----------

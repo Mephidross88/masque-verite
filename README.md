@@ -26,7 +26,7 @@ Pour commencer une partie :
 
 | Page | Pour quoi faire |
 |---|---|
-| **Checks** | Les checks de la seed, lieu par lieu : faits, faisables maintenant, pas encore — et pourquoi (objets manquants, moment). Une frise des trois jours par check ; le sélecteur **Moment** (J1 à N3) montre ce qui est faisable à ce moment-là. |
+| **Checks** | Les checks de la seed, lieu par lieu : faits, faisables maintenant, pas encore — et pourquoi (objets manquants, moment). Une frise des trois jours par check ; le sélecteur **Moment** (J1 à N3) montre ce qui est faisable à ce moment-là. Des points de couleur indiquent les formes (humain, Mojo, Goron, Zora) avec lesquelles un check se fait. |
 | **Journal des Bombers** | Toute la partie sur la frise des 72 heures : une barre par check, aux heures où il est faisable, regroupés par lieu ; avec l'auto-tracking, l'heure de la dernière sauvegarde (le temps écoulé est hachuré). |
 | **Indices** | Les pierres à potins et les autres indices de la seed (restes des boss, Grandes Fées, banque…) : leur texte apparaît une fois l'indice marqué lu, comme en jeu. |
 | **Carte** | Chaque lieu vu de dessus : sorties, checks, pierres à potins, étages des temples ; intérieurs et grottes depuis leur porte ; chemin des Bois Perdus selon le jour. |

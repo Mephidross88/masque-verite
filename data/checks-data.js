@@ -86,7 +86,7 @@ checks:[
 {"id":"RC_TRADING_POST_SHOP_ITEM_07","en":"Trading Post Shop Item 7","fr":"Troc en Trop : article 7","type":"SHOP","scene":"SCENE_ICHIBA","flag":"NONE","item":"RI_DEKU_NUTS_10"},
 {"id":"RC_TRADING_POST_SHOP_ITEM_08","en":"Trading Post Shop Item 8","fr":"Troc en Trop : article 8","type":"SHOP","scene":"SCENE_ICHIBA","flag":"NONE","item":"RI_ARROWS_50"},
 {"id":"RC_CLOCK_TOWN_GREAT_FAIRY","en":"Great Fairy","fr":"Grande Fée de Bourg-Clocher","type":"NPC","scene":"SCENE_BACKTOWN","flag":"NONE","item":"RI_PROGRESSIVE_MAGIC"},
-{"id":"RC_CLOCK_TOWN_GREAT_FAIRY_ALT","en":"Great Fairy Alt","fr":"Grande Fée de Bourg-Clocher (forme humaine)","type":"NPC","scene":"SCENE_BACKTOWN","flag":"NONE","item":"RI_MASK_GREAT_FAIRY"},
+{"id":"RC_CLOCK_TOWN_GREAT_FAIRY_ALT","en":"Great Fairy Alt","fr":"Grande Fée de Bourg-Clocher (masque de transformation)","type":"NPC","scene":"SCENE_BACKTOWN","flag":"NONE","item":"RI_MASK_GREAT_FAIRY"},
 {"id":"RC_CLOCK_TOWN_NORTH_BOMB_LADY","en":"Bomb Lady","fr":"Vieille dame : Masque d’Explosion","type":"NPC","scene":"SCENE_BACKTOWN","flag":"NONE","item":"RI_MASK_BLAST"},
 {"id":"RC_CLOCK_TOWN_NORTH_KEATON_GRASS_01","en":"Keaton Grass 1","fr":"Herbe du Renard 1","type":"GRASS","scene":"SCENE_BACKTOWN","flag":"NONE","item":"RI_JUNK"},
 {"id":"RC_CLOCK_TOWN_NORTH_KEATON_GRASS_02","en":"Keaton Grass 2","fr":"Herbe du Renard 2","type":"GRASS","scene":"SCENE_BACKTOWN","flag":"NONE","item":"RI_JUNK"},

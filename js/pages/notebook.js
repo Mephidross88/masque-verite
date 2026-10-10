@@ -71,6 +71,7 @@ const NOTEBOOK_TPL = paneTpl('notebook', `<h1>Journal des Bombers</h1><p class="
               <button type="button" class="nb-main" :title="r.c.label + ' — ' + r.scene + (r.text ? ' · ' + r.text : '')" @click="toggleCheck(r.c)">
                 <span class="ci-cat cat-svg" v-html="CHECK_CAT[r.c.cat].icon"></span>
                 <span class="nb-name">{{r.c.label}}<i v-if="store.game.checks[r.c.id] && store.game.found[r.c.id]" class="ci-found" title="Objet trouvé (d’après la sauvegarde)">{{foundLabel(r.c.id)}}</i><small v-if="!g.id">{{r.scene}}</small></span>
+                <span v-if="formsOf[r.c.id]" class="ci-forms" :class="{seq:formsOf[r.c.id].seq}" :title="formsOf[r.c.id].tip"><i v-for="f in formsOf[r.c.id].f" :key="f" :class="'fm-' + f"></i></span>
                 <span v-if="store.game.checks[r.c.id]" class="cr-mark" v-html="ICONS.check"></span></button>
               <button v-if="!store.game.checks[r.c.id] && !canNow(r.c)" type="button" class="ci-ex ci-go"
                 title="Pourquoi ce check n’est pas encore faisable ?" v-html="ICONS.why" @click="openWhy(r.c)"></button>

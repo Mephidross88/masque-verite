@@ -174,7 +174,7 @@ const CHECK_FR = {
   RC_CLOCK_TOWN_WEST_BANK_PIECE_OF_HEART:'Banque : quart de cœur', RC_CLOCK_TOWN_WEST_LOTTERY:'Loterie',
   RC_CLOCK_TOWN_WEST_POSTMAN_MINIGAME:'Facteur : jeu du chronomètre', RC_CLOCK_TOWN_WEST_SISTERS_PIECE_OF_HEART:'Sœurs danseuses : quart de cœur',
   RC_CURIOSITY_SHOP_SPECIAL_ITEM:'Bazar : article spécial', RC_SWORDSMAN_SCHOOL_PIECE_OF_HEART:'Ecole du Maître d’armes : quart de cœur',
-  RC_CLOCK_TOWN_GREAT_FAIRY:'Grande Fée de Bourg-Clocher', RC_CLOCK_TOWN_GREAT_FAIRY_ALT:'Grande Fée de Bourg-Clocher (forme humaine)',
+  RC_CLOCK_TOWN_GREAT_FAIRY:'Grande Fée de Bourg-Clocher', RC_CLOCK_TOWN_GREAT_FAIRY_ALT:'Grande Fée de Bourg-Clocher (masque de transformation)',
   RC_CLOCK_TOWN_NORTH_BOMB_LADY:'Vieille dame : Masque d’Explosion', RC_CLOCK_TOWN_NORTH_TREE_PIECE_OF_HEART:'Quart de cœur (arbre)',
   RC_KEATON_QUIZ:'Quiz du Renard', RC_CLOCK_TOWN_LAUNDRY_FROG:'Grenouille', RC_CLOCK_TOWN_LAUNDRY_GURU_GURU:'Guru-Guru : Masque de Brême',
   RC_KAFEIS_HIDEOUT_KEATON_MASK:'Arrière-salle du Bazar : Masque du Renard', RC_KAFEIS_HIDEOUT_LETTER_TO_MAMA:'Arrière-salle du Bazar : Lettre Express pour Maman',

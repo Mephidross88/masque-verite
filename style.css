@@ -1143,6 +1143,17 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .ci-found{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:0 7px 0 4px;border-radius:999px;font-size:12.5px;
   color:var(--ocarina);background:var(--ocarina-soft);text-decoration:none;font-style:normal;vertical-align:1px;white-space:nowrap}
 .ci-found img{width:16px;height:16px;object-fit:contain}
+/* formes avec lesquelles le check est faisable : un point par forme (seq : à la suite, reliés) */
+.ci-forms{flex:none;display:inline-flex;align-items:center;gap:3px;align-self:center}
+.ci-forms i{width:9px;height:9px;border-radius:50%;border:1px solid rgba(0,0,0,.45)}
+.ci-forms.seq{gap:0}
+.ci-forms.seq i+i{margin-left:5px;position:relative}
+.ci-forms.seq i+i::before{content:'';position:absolute;right:100%;top:3px;width:6px;height:1.5px;background:var(--muted)}
+.fm-human{background:#e8c79a}
+.fm-deku{background:#7cb342}
+.fm-goron{background:#b5651d}
+.fm-zora{background:#3d9be0}
+.check-item.done .ci-forms,.nb-row.done .ci-forms{opacity:.45}
 .ci-found.seen{background:none;border:1px dashed color-mix(in srgb,var(--ocarina) 55%,var(--line))}
 /* prix d'une boutique / peste Mojo / marchand : connu (toujours visible), inconnu « ? » (au survol), trop cher pour la bourse */
 .ci-price{width:auto;min-width:28px;padding:0 6px;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
