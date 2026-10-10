@@ -47,6 +47,7 @@ const CHECKS_TPL = paneTpl('checks', `<h1>Checks</h1>`, `
         <button class="area-head" @click="toggleScene(x.scene.id)" :aria-expanded="!ui.checks.collapsed[x.scene.id]">
           <span class="chev" v-html="ICONS.chevron"></span>
           <h2>{{x.scene.label}}</h2>
+          <span v-if="mapOfScene(x.scene.id)" role="button" class="go-map" :title="t('Voir la carte de {lieu}', {lieu:x.scene.label})" v-html="ICONS.map" @click.stop="openMapOf(x.scene.id)"></span>
           <span v-if="hintsByScene[x.scene.id]" class="zone-hints" :title="t('Indices lus : {objets}', {objets:hintsByScene[x.scene.id].join(', ')})"><span v-html="ICONS.hint"></span>{{hintsByScene[x.scene.id].join(' · ')}}</span>
           <span class="zone-cats">
             <span v-for="b in x.byCat" v-show="b.left" :key="b.cat.id" class="zc" :title="b.cat.label + ' : ' + b.left + ' à faire'"><span class="cat-svg" v-html="b.cat.icon"></span>{{b.left}}</span>

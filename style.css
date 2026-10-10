@@ -840,6 +840,11 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .zc-place:not(.now):not(.done) rect{fill:var(--red)}
 .zc-place text{fill:#1c1a12;font-family:var(--sans);font-weight:800;text-anchor:middle;pointer-events:none}
 .zc-place.sel rect{stroke:var(--text);stroke-width:2px}
+.zm .zc-place text{stroke:none}
+/* bouton « voir la carte du lieu » (en-têtes de lieu des pages Checks et Journal) */
+.go-map{display:inline-grid;place-items:center;width:26px;height:26px;flex:none;border-radius:7px;color:var(--muted);cursor:pointer}
+.go-map:hover{color:var(--gold-deep);background:var(--gold-soft)}
+.go-map svg{width:16px;height:16px}
 .zs{cursor:pointer}
 .zs rect{fill:rgba(240,234,214,.35);stroke:#5c5340;stroke-width:1.5px;vector-effect:non-scaling-stroke}
 .zs.read rect{fill:#f0ead6;stroke:#1c1a12}

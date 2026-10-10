@@ -258,7 +258,8 @@ const MapView = {
   // holes : trous de grotte [{ x, z, to, label }] ; home : lieu extérieur d'une grotte (sa sortie y ramène)
   props:{ scene:{ type:String, required:true }, checks:{ type:Array, default:() => [] }, placing:Boolean, placed:{ type:Array, default:() => [] }, editing:Boolean,
     holes:{ type:Array, default:() => [] }, home:{ type:String, default:null }, stones:{ type:Array, default:() => [] },
-    compact:Boolean },   // compact : sans boutons de zoom (fenêtre de stream)
+    compact:Boolean,   // compact : sans boutons de zoom (fenêtre de stream)
+    counts:{ type:Object, default:() => ({}) } },   // counts : checks restants par carte d'intérieur ou de grotte { todo, total, now }
   emits:['goto', 'check', 'place', 'stone'],
   data:() => ({ view:null, drag:null, hover:null, level:null }),
   computed:{
@@ -286,7 +287,7 @@ const MapView = {
         if ((!to || to === 'SCENE_KAKUSIANA') && this.home) to = this.home;
         if (!this.onLevel(y)) return;
         if (out.some(m => m.to === to && Math.hypot(m.x - x, m.z - z) < 150)) return;
-        out.push({ id:i, to, x, z, label:to ? mapSceneName(to) : t('Destination inconnue'), self:to === this.scene });
+        out.push({ id:i, to, x, z, label:to ? mapSceneName(to) : t('Destination inconnue'), self:to === this.scene, cnt:to && to !== this.scene ? this.counts[to] || null : null });
       });
       return out;
     },
@@ -348,12 +349,18 @@ const MapView = {
         <g v-for="(h,i) in holes" :key="'h' + i" v-show="onLevel(h.y)" class="zm zg" @pointerdown.stop @click.stop="$emit('goto', h.to)">
           <rect class="zm-shape" :x="h.x - unit * 1.1" :y="h.z - unit * 1.1" :width="unit * 2.2" :height="unit * 2.2" :transform="'rotate(45 ' + h.x + ' ' + h.z + ')'"></rect>
           <text :x="h.x" :y="h.z - unit * 2" :font-size="unit * 1.7">{{h.label}}</text>
-          <title>{{t('Grotte : {lieu} — clic : voir sa carte', {lieu:h.label})}}</title></g>
+          <title>{{t('Grotte : {lieu} — clic : voir sa carte', {lieu:h.label})}}</title>
+          <g v-if="counts[h.to]" class="zc-place" :class="{now:counts[h.to].now, done:!counts[h.to].todo}">
+            <rect :x="h.x + unit * 1.1" :y="h.z + unit * 0.4" :width="unit * 2.4" :height="unit * 2" :rx="unit * 0.4"></rect>
+            <text :x="h.x + unit * 2.3" :y="h.z + unit * 1.4" dominant-baseline="central" :font-size="unit * 1.4">{{counts[h.to].todo}}</text></g></g>
         <g v-for="m in exits" :key="m.id" class="zm zx" :class="{self:m.self, sel:hover===m.id}" @pointerdown.stop @click.stop="go(m)"
           @mouseenter="hover=m.id" @mouseleave="hover=null">
           <circle class="zm-shape" :cx="m.x" :cy="m.z" :r="unit * (hover===m.id ? 1.6 : 1.2)"></circle>
           <text :x="m.x" :y="m.z - unit * 2" :font-size="unit * (hover===m.id ? 2.3 : 1.8)">{{m.label}}</text>
-          <title>{{m.self ? m.label : t('Vers {lieu} — clic : voir sa carte', {lieu:m.label})}}</title>
+          <title>{{m.self ? m.label : t('Vers {lieu} — clic : voir sa carte', {lieu:m.label})}}{{m.cnt ? ' · ' + tn(m.cnt.todo, '{n} check à faire sur {total}', '{n} checks à faire sur {total}', {total:m.cnt.total}) : ''}}</title>
+          <g v-if="m.cnt" class="zc-place" :class="{now:m.cnt.now, done:!m.cnt.todo}">
+            <rect :x="m.x + unit * 1.1" :y="m.z + unit * 0.4" :width="unit * 2.4" :height="unit * 2" :rx="unit * 0.4"></rect>
+            <text :x="m.x + unit * 2.3" :y="m.z + unit * 1.4" dominant-baseline="central" :font-size="unit * 1.4">{{m.cnt.todo}}</text></g>
         </g>
       </svg>
       <div v-if="levels" class="zmap-levels"><button v-for="l in levels" :key="l.i" type="button" :class="{on:l.i===lvl}" @click="level=l.i"
@@ -400,7 +407,7 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
         <div v-if="mapGroups.length > 1" class="zmap-tabs map-groups" title="Plusieurs grottes partagent cette salle : choisissez celle dont afficher les checks">
           <button type="button" :class="{on:!mapGroup}" @click="mapGroup = ''">Tous</button>
           <button v-for="g in mapGroups" :key="g.id" type="button" :class="{on:mapGroup===g.id}" @click="mapGroup = g.id">{{g.label}} <small>{{g.n}}</small></button></div>
-        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :stones="ui.map.checks === 'off' ? [] : hintStones(mapBase)" @stone="toggleHint" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
+        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :counts="mapPlaceCounts" :stones="ui.map.checks === 'off' ? [] : hintStones(mapBase)" @stone="toggleHint" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
           @goto="mapGoto" @check="toggleCheck" @place="mapPlace"></map-view>
         <div v-if="mapEdit" class="zmap-edit">
           <div class="ze-head"><b>Placer les checks sans position</b>
@@ -464,6 +471,29 @@ function useMapPage(ctx){
   // checks de la scène affichée : ceux de la seed (non exclus) placés sur cette carte, filtrés comme la page Checks
   // (catégories masquées, checks faits masqués, seulement les faisables)
   const { canNow, seedChecks, logicFull } = ctx;
+  /* Badges des portes : checks restants de chaque intérieur (scènes rattachées à leur extérieur par 2Ship : boutiques,
+     maisons, fontaines… — HINT_PARENT) et de chaque grotte, mêmes checks que les repères (réglage Checks) ; vert : un
+     faisable, rouge : aucun, gris : tout fait. Salle commune à plusieurs grottes : par grotte (sur leurs trous) seulement. */
+  const mapPlaceCounts = computed(() => {
+    const out = {};
+    if (!mapsData.value || ui.map.checks === 'off' || ui.map.editTool) return out;
+    const f = ui.checks, filters = ui.map.checks === 'filters', rooms = GROTTO_MAPS.value.roomKeys;
+    for (const c of seedChecks.value){
+      const p = checkPos(c.id);
+      if (!p || store.settings.excluded[c.id]) continue;
+      const base = p[0], grotto = String(base).startsWith('SCENE_KAKUSIANA');
+      if (!grotto && !HINT_PARENT.has(base)) continue;
+      const done = !!store.game.checks[c.id], now = !done && canNow(c);
+      if (filters && (f.hiddenCats[c.cat] || (f.hideDone && done) || (f.onlyAvailable && !done && !now))) continue;
+      const k = grotto && rooms[base] ? base + '|' + checkGroupOf(c) : base, o = out[k] = out[k] || { todo:0, total:0, now:false };
+      o.total++;
+      if (!done){ o.todo++; if (now) o.now = true; }
+    }
+    return out;
+  });
+  // carte d'un lieu de la page Checks (bouton des pages Checks et Journal) : sa scène, si elle a une carte
+  const mapOfScene = id => mapsData.value && mapsData.value.scenes[id] ? id : null;
+  function openMapOf(id){ if (!mapOfScene(id)) return; ui.map.scene = id; ctx.go('map'); }
   const normMap = x => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const mapChecks = computed(() => mapGroup.value ? mapChecksAll.value.filter(m => groupOf(m.c) === mapGroup.value) : mapChecksAll.value);
   const mapChecksAll = computed(() => {
@@ -577,6 +607,6 @@ function useMapPage(ctx){
     mapsJob.busy = false;
   }
   function mapsForgetAsk(){ if (confirm(t('Oublier les cartes gardées dans ce navigateur ?'))) mapsForget(); }
-  return { mapBase, mapHoles, mapHome, mapValidate, mapApprox, mapGroup, mapGroups, mapCheckHelp, mapMissing, mapEdit, mapPick, mapPicked, mapToPlace, mapPlacedList, mapPlacedHere, mapPlace, mapEditCount, mapExport, mapClearEdits, mapEdits,
+  return { mapPlaceCounts, mapOfScene, openMapOf, mapBase, mapHoles, mapHome, mapValidate, mapApprox, mapGroup, mapGroups, mapCheckHelp, mapMissing, mapEdit, mapPick, mapPicked, mapToPlace, mapPlacedList, mapPlacedHere, mapPlace, mapEditCount, mapExport, mapClearEdits, mapEdits,
     mapChecks, mapsData, MAPS_INFO, mapScene, mapBack, mapGoto, mapGoBack, mapSceneGroups, mapExitCount, mapSceneName, mapsJob, mapsMake, mapsForgetAsk };
 }

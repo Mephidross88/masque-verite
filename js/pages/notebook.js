@@ -52,6 +52,7 @@ const NOTEBOOK_TPL = paneTpl('notebook', `<h1>Journal des Bombers</h1><p class="
             <button type="button" class="nb-lab" :aria-expanded="!ui.notebook.collapsed[g.id]" @click="toggleNbScene(g.id)">
               <span class="chev" v-html="ICONS.chevron"></span>
               <span class="nb-name">{{g.label}}</span>
+              <span v-if="mapOfScene(g.id)" role="button" class="go-map" :title="t('Voir la carte de {lieu}', {lieu:g.label})" v-html="ICONS.map" @click.stop="openMapOf(g.id)"></span>
               <span class="nb-count" :title="t('{got} faits sur {total}', {got:g.done, total:g.rows.length})">{{g.done}}/{{g.rows.length}}</span></button>
             <div class="nb-track">
               <span v-for="(m,i) in MOMENTS" :key="i" class="nb-bg" :class="[i%2 ? 'n' : 'd', {mo:ui.checks.moment===i, lock:!owned[i]}]"

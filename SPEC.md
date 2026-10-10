@@ -111,7 +111,8 @@ au code (`js/i18n.js`, dictionnaires `data/i18n/<code>.js`).
   Bombes toujours), pas les pots de l'antre de Majora. Les Skulltulas d'or laissées en place restent des checks (2Ship les
   marque mélangées, avec leur jeton). Vérifié sur 7 spoilers 5.0.1 : seuls écartent les checks exclus à la génération
   (absents des réglages, connus par le spoiler).
-- **Par scène** (cartes repliables, dans l'ordre du tracker) : nom, restants par catégorie, progression (faits / total) ;
+- **Par scène** (cartes repliables, dans l'ordre du tracker) : nom, bouton « voir la carte du lieu » (s'il a une carte :
+  page Carte sur ce lieu), restants par catégorie, progression (faits / total) ;
   checks sur deux colonnes : icône de catégorie, libellé (nom anglais de 2Ship au survol), coche ; ⊘ / ↺ : exclure /
   réintégrer (un check exclu ne compte plus ; `settings.excluded`).
 - **Catégories** : une par type de check de 2Ship (coffres, personnages, mini-jeux, quarts de cœur, chants, fées perdues,
@@ -161,7 +162,8 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
 - **Moment** : le même que dans Checks (`ui.checks.moment`) : colonne mise en évidence ; « Seulement les faisables »
   partagé aussi. Temps mélangé : demi-journées pas encore possédées hachurées. Recherche et « Masquer les checks faits »
   propres à la page (`ui.notebook`).
-- **Grouper par scène** (`ui.notebook.byScene`, coché par défaut) : une section par scène, dans l'ordre du tracker ;
+- **Grouper par scène** (`ui.notebook.byScene`, coché par défaut) : une section par scène, dans l'ordre du tracker
+  (bouton « voir la carte du lieu » à côté de son nom, comme la page Checks) ;
   ligne d'en-tête repliable (`ui.notebook.collapsed`) avec faits / total et, repliée, sur sa piste, la réunion des horaires de ses
   checks (dorée : checks restants faisables avec l'inventaire noté) ; barre de gauche : tout déplier / replier. Checks triés par heure dans chaque section.
   Toute la largeur du panneau (la frise gagne en précision).
@@ -271,6 +273,10 @@ filtre d'incrustation sur le fond vert ; une source « Navigateur » d'OBS a son
   jeu (auto-tracking). Une disposition de L'Œil Sheikah importée garde les widgets communs.
 
 ## Carte (js/pages/map.js, js/maps-extract.js)
+- **Portes des intérieurs et trous des grottes** : badge des checks restants du lieu derrière (`mapPlaceCounts`) — vert :
+  au moins un faisable, rouge : aucun, gris : tout fait ; mêmes checks que les repères (réglage « Checks »). Intérieurs :
+  scènes que 2Ship rattache à leur extérieur (boutiques, maisons, fontaines… : `HINT_PARENT`). Salle commune à plusieurs
+  grottes : badge par grotte, sur son trou seulement.
 - **Fabrication** : depuis la ROM de Majora's Mask du joueur (N64 US, compressée ou non, .z64 / .v64), jamais distribuée :
   choisie sur la page Carte, lue dans le navigateur (`js/maps-extract.js`, chargé à la demande), cartes gardées dans
   IndexedDB (`masque-verite-maps`), « Oublier ces cartes ». En ligne de commande : `tools/2ship-maps/extract_maps.mjs`
