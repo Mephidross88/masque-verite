@@ -118,6 +118,15 @@ for (const f of files){
     for (const e of body.matchAll(/\{\s*\{\s*(SCENE_\w+)\s*,\s*(\d+)\s*\}\s*,\s*\{\s*(\d+)\s*,\s*(RC_\w+)\s*\}\s*\}/g)) ROOM_GRASS.push([e[1], +e[2], e[4]]);
   }
 }
+/* Même acteur, autre check selon l'entrée empruntée : « if (randoCheckId == X && …) { randoCheckId = Y; » (ObjComb.cpp : la
+   ruche de la salle des grottes aux vaches, commune à la Plage de la Grande Baie et à la Plaine Termina) → Y à la place de X
+   (alias : l'appli s'en sert aussi pour des cartes fabriquées avant). */
+const alias = {};
+for (const f of files){
+  const s = stripComments(fs.readFileSync(path.join(AB, f), 'utf8'));
+  for (const m of s.matchAll(/randoCheckId\s*==\s*(RC_\w+)\s*&&[^{;]*\{\s*randoCheckId\s*=\s*(RC_\w+)\s*;/g))
+    if (loc[m[1]] && CHECKS.has(m[2])){ set(m[2], loc[m[1]]); alias[m[2]] = m[1]; }
+}
 /* Grottes (SCENE_KAKUSIANA) : une salle pour toutes les grottes à coffre (salle 4) et une pour les grottes à vache (salle
    10) ; 2Ship reconnaît la grotte à son entrée (données de réapparition) : tables chestGrottoMap (herbe de base de la
    grotte), chestGrottoActorIdsToBaseRc (n-ième acteur de la salle → décalage depuis l'herbe de base), cowGrottoMap
@@ -249,6 +258,7 @@ actors:${JSON.stringify(actors)},
 variants:${JSON.stringify(variants)},
 loc:${JSON.stringify(loc)},
 alt:${JSON.stringify(alt)},
+alias:${JSON.stringify(alias)},
 grottos:${JSON.stringify(grottos)},
 exact:${JSON.stringify(Object.keys(loc).filter(id => loc[id][0] === 'a' && /^RCTYPE_(OWL|TREE|BUTTERFLY|BEEHIVE|COW)$/.test(CHECKS.get(id).type)))},
 spawners:${JSON.stringify(spawners)},

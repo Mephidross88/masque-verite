@@ -48,7 +48,8 @@ const NOTEBOOK_TPL = paneTpl('notebook', `<h1>Journal des Bombers</h1><p class="
           </div>
           <template v-for="g in notebookGroups" :key="g.id || '-'">
           <!-- en-tête de scène (regroupement) : nom, faits / total, horaires réunis de ses checks -->
-          <div v-if="g.id" class="nb-row nb-scene" :class="{collapsed:ui.notebook.collapsed[g.id], done:g.done===g.rows.length}">
+          <div v-if="g.id" class="nb-row nb-scene" :class="{collapsed:ui.notebook.collapsed[g.id], done:g.done===g.rows.length, can:g.can}"
+            :title="g.can ? t('Tous les checks restants de ce lieu sont faisables') : null">
             <button type="button" class="nb-lab" :aria-expanded="!ui.notebook.collapsed[g.id]" @click="toggleNbScene(g.id)">
               <span class="chev" v-html="ICONS.chevron"></span>
               <span class="nb-name">{{g.label}}</span>
@@ -96,7 +97,7 @@ const NOTEBOOK_TPL = paneTpl('notebook', `<h1>Journal des Bombers</h1><p class="
 const NB_TICKS = Array.from({ length:13 }, (_, k) => ({ at:k * 6, label:((6 + k * 6) % 24) + ' h' }));
 
 function useNotebookPage(ctx){
-  const { ui, logicNow, logicFull, canNow, seedChecks, owned } = ctx;   // (openWhy : de la page Checks, dans le gabarit)
+  const { ui, logicNow, logicFull, canNow, seedChecks, owned, sceneStats } = ctx;   // (openWhy : de la page Checks, dans le gabarit)
   const s = store.settings;
   const norm = x => x.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   // lignes : checks de la seed (non exclus) à horaire limité (ou tous avec l'option), triés par heure de début
@@ -128,6 +129,12 @@ function useNotebookPage(ctx){
     return out;
   };
   // sections : une par scène (ordre du tracker) avec le regroupement, sinon une seule, sans en-tête
+  /* lieu complétable : tous ses checks restants (non exclus, à horaire ou non) faisables avec les objets notés, à un moment ou
+     un autre du cycle — en-tête souligné de vert */
+  const sceneCan = computed(() => Object.fromEntries(sceneStats.value.map(x => {
+    const left = x.list.filter(c => !s.excluded[c.id] && !store.game.checks[c.id]);
+    return [x.scene.id, left.length > 0 && left.every(c => logicNow.value.checks[c.id] && logicNow.value.checks[c.id].ok)];
+  })));
   const notebookGroups = computed(() => {
     const rows = notebookRows.value;
     if (!ui.notebook.byScene) return [{ id:'', rows }];
@@ -135,7 +142,7 @@ function useNotebookPage(ctx){
     rows.forEach(r => (by[r.c.scene] = by[r.c.scene] || []).push(r));
     return CHECK_SCENES.filter(x => by[x.id]).map(x => {
       const list = by[x.id], open = list.filter(r => !store.game.checks[r.c.id]);
-      return { id:x.id, label:x.label, rows:list, done:list.length - open.length,
+      return { id:x.id, label:x.label, rows:list, done:list.length - open.length, can:!!sceneCan.value[x.id],
         full:unite(list.flatMap(r => r.full)), now:unite(open.flatMap(r => r.now)) };
     });
   });

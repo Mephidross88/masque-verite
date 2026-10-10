@@ -195,7 +195,16 @@ function inMap(c, id){
   const base = mapBaseOf(id);
   if (!base.startsWith('SCENE_KAKUSIANA')) return true;
   const key = mapKeyOf(id);
-  return key ? checkGroupOf(c) === key : true;
+  return key ? grottoKeyIn(c, base) === key : true;
+}
+/* grotte d'un check dans une salle commune à plusieurs grottes : sa grotte (RC_…_GROTTO), sinon celle de la salle qui est dans
+   son lieu (vaches de la Plaine Termina, RC_TERMINA_FIELD_COW_… → grotte aux vaches de la Plaine Termina) */
+const GROTTO_SCENE = {};
+function grottoKeyIn(c, base){
+  const keys = GROTTO_MAPS.value.roomKeys[base], g = checkGroupOf(c);
+  if (!keys || keys.includes(g)) return g;
+  const sceneOf = k => GROTTO_SCENE[k] ?? (GROTTO_SCENE[k] = (CHECKS.find(x => checkGroupOf(x) === k) || {}).scene || null);
+  return keys.find(k => sceneOf(k) === c.scene) || g;
 }
 
 /* Positions des checks : placées à la main dans ce navigateur (mapEdits, localStorage masque-verite-positions, pas encore
@@ -206,7 +215,11 @@ watch(mapEdits, () => { try { localStorage.setItem(POS_KEY, JSON.stringify(mapEd
 function checkPos(id){
   const e = mapEdits[id];
   if (e) return [e.scene, e.x, e.y, e.z];
-  return MAPS_RECIPE.manual[id] || (mapsData.value && mapsData.value.checks && mapsData.value.checks[id]) || null;
+  if (MAPS_RECIPE.manual[id]) return MAPS_RECIPE.manual[id];
+  // (même acteur qu'un autre check selon l'entrée empruntée : sa position, même sur des cartes fabriquées avant)
+  const a = MAPS_RECIPE.alias && MAPS_RECIPE.alias[id];
+  if (a && !mapEdits[a] && checkPos(a)) return checkPos(a);
+  return (mapsData.value && mapsData.value.checks && mapsData.value.checks[id]) || null;
 }
 
 const MAP_BANDS = 10;   // tranches de hauteur (une teinte chacune)
@@ -401,13 +414,14 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
           <span class="map-info">{{mapExitCount}}</span>
           <div class="field map-chk" title="Comme la page Checks : ses filtres (catégories, checks faits masqués, seulement les faisables, moment, recherche). Tous : tous les checks de la seed, faits compris. Les checks exclus n’apparaissent jamais (sauf avec l’outil de placement : tous les checks du jeu)."><span class="lbl">Checks</span>
             <seg v-model="ui.map.checks" :options="[['filters', t('Comme la page Checks')], ['all', t('Tous')], ['off', t('Aucun')]]"></seg></div>
+          <label class="check map-stones" title="Pierres à potins sur la carte (clic sur l'une d'elles : lue / non lue)"><input type="checkbox" v-model="ui.map.stones">Pierres à potins</label>
           <button v-if="ui.map.editTool" type="button" class="btn zmap-edit-btn" :class="{on:mapEdit}" @click="mapEdit = !mapEdit; mapPick = {}"
             title="Placer à la main les checks qui n'ont pas de position">✎ Placer les checks</button>
         </div>
         <div v-if="mapGroups.length > 1" class="zmap-tabs map-groups" title="Plusieurs grottes partagent cette salle : choisissez celle dont afficher les checks">
           <button type="button" :class="{on:!mapGroup}" @click="mapGroup = ''">Tous</button>
           <button v-for="g in mapGroups" :key="g.id" type="button" :class="{on:mapGroup===g.id}" @click="mapGroup = g.id">{{g.label}} <small>{{g.n}}</small></button></div>
-        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :counts="mapPlaceCounts" :stones="ui.map.checks === 'off' ? [] : hintStones(mapBase)" @stone="toggleHint" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
+        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :counts="mapPlaceCounts" :stones="ui.map.stones ? hintStones(mapBase) : []" @stone="toggleHint" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
           @goto="mapGoto" @check="toggleCheck" @place="mapPlace"></map-view>
         <div v-if="mapEdit" class="zmap-edit">
           <div class="ze-head"><b>Placer les checks sans position</b>
@@ -485,7 +499,7 @@ function useMapPage(ctx){
       if (!grotto && !HINT_PARENT.has(base)) continue;
       const done = !!store.game.checks[c.id], now = !done && canNow(c);
       if (filters && (f.hiddenCats[c.cat] || (f.hideDone && done) || (f.onlyAvailable && !done && !now))) continue;
-      const k = grotto && rooms[base] ? base + '|' + checkGroupOf(c) : base, o = out[k] = out[k] || { todo:0, total:0, now:false };
+      const k = grotto && rooms[base] ? base + '|' + grottoKeyIn(c, base) : base, o = out[k] = out[k] || { todo:0, total:0, now:false };
       o.total++;
       if (!done){ o.todo++; if (now) o.now = true; }
     }

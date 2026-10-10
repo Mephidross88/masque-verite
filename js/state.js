@@ -29,8 +29,8 @@ function defaults(){
       // sinon 'file1.json'…), moment repris de la sauvegarde
       link:{ enabled:false, slot:'', moment:true },
       // map : lieu affiché sur la page Carte, checks affichés (filters : comme la page Checks, all : tous ceux de la seed,
-      // off : aucun), outil de placement des checks affiché
-      map:{ scene:'SCENE_CLOCKTOWER', checks:'filters', editTool:false },
+      // off : aucun), pierres à potins affichées, outil de placement des checks affiché
+      map:{ scene:'SCENE_CLOCKTOWER', checks:'filters', stones:true, editTool:false },
       // notebook : page Journal des Bombers (recherche, masquer les faits, aussi les checks sans horaire, regroupement
       // par scène et scènes repliées { scène: true })
       notebook:{ q:'', hideDone:false, all:false, byScene:true, collapsed:{} },

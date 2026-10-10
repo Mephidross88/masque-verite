@@ -238,7 +238,7 @@ function streamTemplate(parts){ return `
         <ul v-if="swHints(w).length" class="sw-hlist"><li v-for="h in swHints(w)" :key="h.id"><small>{{h.title}}<template v-if="h.sub"> · {{h.sub}}</template></small><span>{{h.text}}</span></li></ul>
         <p v-else class="sw-empty">Aucun indice lu (page Indices).</p></div>
       <map-view v-else-if="w.type==='map'" class="sw-map" :compact="true" :scene="mapBase" :checks="mapChecks" :holes="mapHoles" :home="mapHome" :counts="mapPlaceCounts"
-        :stones="ui.map.checks === 'off' ? [] : hintStones(mapBase)"></map-view>
+        :stones="ui.map.stones ? hintStones(mapBase) : []"></map-view>
       <img v-else-if="w.type==='image' && w.src" class="sw-img" :src="w.src" alt="" :style="{objectFit:w.fit || 'contain'}">
       <div v-else-if="w.type==='text'" class="sw-text" :style="{fontSize:(w.size || 32) + 'px'}">{{w.text}}</div>
     </div>

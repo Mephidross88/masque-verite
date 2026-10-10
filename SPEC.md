@@ -163,7 +163,8 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   partagé aussi. Temps mélangé : demi-journées pas encore possédées hachurées. Recherche et « Masquer les checks faits »
   propres à la page (`ui.notebook`).
 - **Grouper par scène** (`ui.notebook.byScene`, coché par défaut) : une section par scène, dans l'ordre du tracker
-  (bouton « voir la carte du lieu » à côté de son nom, comme la page Checks) ;
+  (bouton « voir la carte du lieu » à côté de son nom, comme la page Checks ; lieu complétable — tous ses checks restants,
+  à horaire ou non, faisables avec les objets notés à un moment du cycle — : en-tête souligné de vert) ;
   ligne d'en-tête repliable (`ui.notebook.collapsed`) avec faits / total et, repliée, sur sa piste, la réunion des horaires de ses
   checks (dorée : checks restants faisables avec l'inventaire noté) ; barre de gauche : tout déplier / replier. Checks triés par heure dans chaque section.
   Toute la largeur du panneau (la frise gagne en précision).
@@ -215,7 +216,7 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   (poudre d'or), pancarte de la banque, récompenses des Maisons des Araignées, du forgeron et des Grandes Fées.
 - **Ignoré** : le Chant de Saria (indice dynamique, vers le prochain check utile : il dépend de la partie en cours).
 - **Ailleurs** : page Checks, objet indiqué sur son check (indice précis : récompense, pierre à poids propre) ou en tête du
-  lieu (indice de lieu seulement) ; Carte, pierres en losanges (claires : non lues, pleines : lues ; masquées avec les checks).
+  lieu (indice de lieu seulement) ; Carte, pierres en losanges (claires : non lues, pleines : lues ; case « Pierres à potins » de la Carte, `ui.map.stones`).
 
 ## Statistiques (js/pages/stats.js)
 - **Chronologie** (`game.timeline`, sauvegardée, remise à zéro avec la partie) : chaque hausse d'un objet du panneau
@@ -276,7 +277,11 @@ filtre d'incrustation sur le fond vert ; une source « Navigateur » d'OBS a son
 - **Portes des intérieurs et trous des grottes** : badge des checks restants du lieu derrière (`mapPlaceCounts`) — vert :
   au moins un faisable, rouge : aucun, gris : tout fait ; mêmes checks que les repères (réglage « Checks »). Intérieurs :
   scènes que 2Ship rattache à leur extérieur (boutiques, maisons, fontaines… : `HINT_PARENT`). Salle commune à plusieurs
-  grottes : badge par grotte, sur son trou seulement.
+  grottes : badge par grotte, sur son trou seulement ; un check de cette salle sans nom de grotte (vaches de la Plaine
+  Termina) va à la grotte de la salle qui est dans son lieu (`grottoKeyIn`). Même acteur, autre check selon l'entrée
+  empruntée (ruche des grottes aux vaches, `ObjComb.cpp`) : même position (`alias` de la recette, utilisé aussi sur les
+  cartes déjà fabriquées).
+- **Pierres à potins** : case « Pierres à potins » (`ui.map.stones`, cochée par défaut), indépendante du réglage Checks.
 - **Fabrication** : depuis la ROM de Majora's Mask du joueur (N64 US, compressée ou non, .z64 / .v64), jamais distribuée :
   choisie sur la page Carte, lue dans le navigateur (`js/maps-extract.js`, chargé à la demande), cartes gardées dans
   IndexedDB (`masque-verite-maps`), « Oublier ces cartes ». En ligne de commande : `tools/2ship-maps/extract_maps.mjs`
