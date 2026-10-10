@@ -29,26 +29,38 @@ const ProgressCard = {
 
 // Tuile d'objet (panneau Objets) : clic gauche / droit pour augmenter / diminuer / activer. Icône seule (nom au survol) ;
 // sans image (icons/items/<clé>.png), un sigle. Badge : taille (paliers), nombre (compteurs).
+// stage : une case par palier d'un objet à paliers ou d'un compteur (chaîne des épées, temps progressif) — allumée à partir
+// de ce palier ; clic : monter jusqu'à lui, ou redescendre juste en dessous s'il est déjà atteint ; clic droit :
+// redescendre en dessous. icon / label : image (sous icons/) et nom propres à la case.
 const brokenIcons = reactive({});
 const ItemTile = {
-  props:{ k:{ type:String, required:true } },
+  props:{ k:{ type:String, required:true }, stage:{ type:Number, default:0 }, icon:{ type:String, default:'' }, label:{ type:String, default:'' } },
   data:() => ({ brokenIcons }),
   computed:{
     item(){ return ITEM_BY_KEY[this.k]; },
     value(){ return store.game.items[this.k]; },
-    src(){ return iconSrc(this.item); },
+    src(){ return this.icon ? 'icons/' + this.icon : this.stage && this.item.icons ? 'icons/' + this.item.icons[this.stage - 1] : iconSrc(this.item); },
+    on(){ return this.stage ? this.value >= this.stage : itemActive(this.item, this.value); },
+    title(){ return this.label || (!this.stage ? itemTitle(this.item) : this.item.stages ? this.item.stages[this.stage] : this.item.label + ' : ' + this.stage); },
     abbr(){ return itemAbbr(this.item); },
   },
   methods:{
-    onClick(ev){ clickItem(ev, this.item); },
-    onRight(ev){ rightClickItem(ev, this.item); },
-    itemActive, itemTitle, itemMaxed,
+    onClick(ev){
+      if (this.stage) store.game.items[this.k] = this.value >= this.stage ? this.stage - 1 : this.stage;
+      else clickItem(ev, this.item);
+    },
+    onRight(ev){
+      if (this.stage) store.game.items[this.k] = Math.min(this.value, this.stage - 1);
+      else rightClickItem(ev, this.item);
+    },
+    itemMaxed,
   },
-  template:`<button type="button" class="icon-tile" :class="{off:!itemActive(item,value)}" :aria-label="item.label" :title="itemTitle(item)"
+  template:`<button type="button" class="icon-tile" :class="{off:!on}" :aria-label="item.label" :title="title"
     @click="onClick" @contextmenu.prevent="onRight">
     <img v-if="!brokenIcons[src]" :src="src" :alt="item.label" @error="brokenIcons[src]=true">
     <span v-else class="icon-abbr">{{abbr}}</span>
-    <span v-if="item.kind==='count'" class="icon-badge" :class="{maxed:itemMaxed(item)}">{{value}}</span>
+    <span v-if="stage"></span>
+    <span v-else-if="item.kind==='count'" class="icon-badge" :class="{maxed:itemMaxed(item)}">{{value}}</span>
     <span v-else-if="item.sizes && item.sizes[value]" class="icon-badge" :class="{maxed:itemMaxed(item)}">{{item.sizes[value]}}</span>
   </button>`,
 };

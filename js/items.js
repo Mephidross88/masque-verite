@@ -64,7 +64,9 @@ const ITEM_GROUPS = [
   { id:'abilities', title:'Capacités', items:[
     B('RI_ABILITY_SWIM', { visible:shuffled('RO_SHUFFLE_SWIM') }),
     ...['A', 'C_UP', 'C_DOWN', 'C_LEFT', 'C_RIGHT'].map(b => B('RI_OCARINA_BUTTON_' + b, { visible:shuffled('RO_SHUFFLE_OCARINA_BUTTONS') })),
-    B('RI_SKELETON_KEY', { visible:shuffled('RO_SHUFFLE_SKELETON_KEY') }),
+    // passe-partout : ajouté au pool (pas à la place des petites clés), sauf petites clés données au départ ; donne d'un coup
+    // le maximum de petites clés de chaque temple (GiveItem.cpp) — case sous les temples
+    B('RI_SKELETON_KEY', { visible:s => !!s.RO_SHUFFLE_SKELETON_KEY && s.RO_PLACEMENT_SMALL_KEYS !== RO.RO_DUNGEON_ITEM_START_WITH }),
     // demi-journées (temps mélangé) : au hasard, une par une ; progressif : un compteur
     ...['DAY_1', 'NIGHT_1', 'DAY_2', 'NIGHT_2', 'DAY_3', 'NIGHT_3'].map(h => B('RI_TIME_' + h,
       { visible:s => !!s.RO_CLOCK_SHUFFLE && s.RO_CLOCK_SHUFFLE_PROGRESSIVE === RO.RO_CLOCK_SHUFFLE_RANDOM })),
@@ -80,12 +82,13 @@ const ITEM_GROUPS = [
 ].map(g => ({ ...g, title:t(g.title) }));
 
 /* Temples : carte, boussole, petites clés (nombre de la version d'origine), Clé d'Or, fées perdues (15), Skulltulas d'or
-   pour les deux maisons. ri : objets de 2Ship de chaque case. fairy : icône des fées perdues (icons/dungeons). */
+   pour les deux maisons. ri : objets de 2Ship de chaque case. fairy : icône des fées perdues (icons/dungeons) ; soul : âme
+   du boss (objet du panneau, case du temple si les âmes sont mélangées ; celle de Majora, sous les temples). */
 const DUNGEONS = [
-  { id:'woodfall', label:'Bois-Cascade', keys:1, color:'#4f8a3a', p:'WOODFALL', fairy:'StrayFairyWoodfall' },
-  { id:'snowhead', label:'Pic des Neiges', keys:3, color:'#5b8fc7', p:'SNOWHEAD', fairy:'StrayFairySnowhead' },
-  { id:'greatBay', label:'Grande Baie', keys:1, color:'#2f8f99', p:'GREAT_BAY', fairy:'StrayFairyGreatBay' },
-  { id:'stoneTower', label:'Forteresse de Pierre', keys:4, color:'#b8892e', p:'STONE_TOWER', fairy:'StrayFairyStoneTower' },
+  { id:'woodfall', label:'Bois-Cascade', keys:1, color:'#4f8a3a', p:'WOODFALL', fairy:'StrayFairyWoodfall', soul:'soul_boss_odolwa' },
+  { id:'snowhead', label:'Pic des Neiges', keys:3, color:'#5b8fc7', p:'SNOWHEAD', fairy:'StrayFairySnowhead', soul:'soul_boss_goht' },
+  { id:'greatBay', label:'Grande Baie', keys:1, color:'#2f8f99', p:'GREAT_BAY', fairy:'StrayFairyGreatBay', soul:'soul_boss_gyorg' },
+  { id:'stoneTower', label:'Forteresse de Pierre', keys:4, color:'#b8892e', p:'STONE_TOWER', fairy:'StrayFairyStoneTower', soul:'soul_boss_twinmold' },
 ].map(d => ({ ...d, label:tl(d.label) }));
 const DUNGEON_BY_ID = Object.fromEntries(DUNGEONS.map(d => [d.id, d]));
 
@@ -123,9 +126,10 @@ const ITEM_ICONS = {
   time_day_3:'others/Day3.png', time_night_3:'others/Night3.png',
   ...Object.fromEntries(['clock_town_south', 'milk_road', 'southern_swamp', 'woodfall', 'mountain_village', 'snowhead', 'great_bay_coast', 'zora_cape',
     'ikana_canyon', 'stone_tower'].map(o => ['owl_' + o, 'others/OwlFace.png'])),
-  // âmes : une icône commune aux boss, une aux ennemis (le nom au survol)
+  // âmes : une icône commune aux boss (Majora : la sienne), une aux ennemis (le nom au survol)
   ...Object.fromEntries(CHECKS_DATA.items.filter(i => /^RI_SOUL_(BOSS|ENEMY)_/.test(i.id))
     .map(i => [i.id.replace(/^RI_/, '').toLowerCase(), /BOSS/.test(i.id) ? 'dungeons/soulBoss.png' : 'others/soulEnemy.png'])),
+  soul_boss_majora:'others/MajoraSoul.png',
 };
 const ITEM_BY_KEY = {};
 ITEM_GROUPS.forEach(g => g.items.forEach(it => {
@@ -133,6 +137,52 @@ ITEM_GROUPS.forEach(g => g.items.forEach(it => {
   const ic = ITEM_ICONS[it.key];
   if (Array.isArray(ic)) it.icons = ic; else if (ic) it.icon = ic;
 }));
+/* Mise en page du panneau Objets : quels objets dans quel bloc visuel (métadonnées : ITEM_GROUPS). En tête : restes des
+   boss en cercle autour de la Triforce, placés comme sur la carte de Termina (Rhork au nord, Skorn à l'est, Odolwa au sud,
+   Gyorg à l'ouest). Équipement : grille de lignes (« clé » ou « clé:palier » — une case par palier d'un objet à paliers ;
+   cases voisines du même objet reliées, comme la chaîne des épées). Les objets placés ici ne sont plus repris dans les
+   cartes par groupe (ITEMS_PLACED). À droite de l'équipement : les six demi-journées (temps mélangé ; js/pages/items.js,
+   timeCells). Masques, juste sous l'équipement et sans titre : les masques de transformation en grand sur une ligne,
+   reliés, puis les autres (ordre de l'écran de pause). Objets, sous les masques et sans titre : cadres deux par ligne
+   (comme l'Œil Sheikah ; sub : petite ligne reliée sous le cadre, les flèches sous l'arc ; cols:2 : 2 × 2). Musique, sous
+   les objets et sans titre, en cadres aussi : l'Ocarina (et ses touches en petit à côté, comme sur la manette : pad) et les
+   chants du temps, puis ceux des donjons, du scénario, annexes (big : case plus grande ; small : cases un peu plus petites,
+   pour tenir sur la ligne). Cases non visibles (Chant de Saria, touches non mélangées) : retirées du cadre. lists : groupes
+   longs ramenés à un bouton avec compteur, qui ouvre une fenêtre à cocher (statues de hibou, âmes des ennemis). Âmes des boss : dans leur temple (DUNGEONS, soul). */
+const ITEMS_PAGE = {
+  quest:{ ring:['remains_goht', 'remains_twinmold', 'remains_odolwa', 'remains_gyorg'], center:'triforce' },
+  equipment:[
+    ['double_defense', 'heart_containers', 'heart_pieces', 'magic'],
+    ['sword:1', 'sword:2', 'sword:3', 'great_spin_attack'],
+    ['shield_hero', 'shield_mirror', 'wallet', 'bombers_notebook'],
+  ].map(row => row.map(c => { const [k, n] = c.split(':'); return { k, stage:+n || 0 }; })),
+  masks:{ big:['mask_deku', 'mask_goron', 'mask_zora', 'mask_fierce_deity'] },
+  boxRows:[
+    [{ items:['deku_stick', 'deku_nut'] }, { items:['bomb_bag', 'bombchu', 'powder_keg'] }],
+    [{ items:['hookshot', 'bow', 'great_fairy_sword'], sub:['arrow_fire', 'arrow_ice', 'arrow_light'] },
+     { items:['lens', 'magic_bean', 'pictograph_box', 'bottles'], cols:2 }],
+  ],
+  songRows:[
+    [{ items:['ocarina'], big:'ocarina', pad:true, small:true },
+     { items:['song_inverted_time', 'song_time', 'song_double_time'], big:'song_time', small:true }],
+    [{ items:['song_sonata', 'lullaby', 'song_nova', 'song_elegy'] }, { items:['song_healing', 'song_oath'] }],
+    [{ items:['song_epona', 'song_soaring', 'song_storms', 'song_sun', 'song_saria'] }],
+  ],
+  lists:[{ id:'owls', icon:'others/OwlFace.png' }, { id:'enemySouls', icon:'others/soulEnemy.png', sort:true }],
+  // grenouilles du chœur de Don Gero : dans la carte à part (fée de Bourg-Clocher, Nage, Skulltulas), en dernière ligne
+  frogs:['frog_white', 'frog_blue', 'frog_cyan', 'frog_pink'],
+  // échanges : Larme de Lune et titres de propriété, puis la quête d'Anju et Kafei
+  tradeRows:[
+    [{ items:['moons_tear', 'deed_land', 'deed_swamp', 'deed_mountain', 'deed_ocean'] }],
+    [{ items:['room_key', 'letter_to_kafei', 'letter_to_mama', 'pendant_of_memories'] }],
+  ],
+};
+const TIME_HALVES = ['day_1', 'night_1', 'day_2', 'night_2', 'day_3', 'night_3'];
+const ITEMS_PLACED = new Set([...ITEMS_PAGE.quest.ring, ITEMS_PAGE.quest.center, ...ITEMS_PAGE.equipment.flat().map(c => c.k),
+  ...TIME_HALVES.map(h => 'time_' + h), 'time_progressive', ...ITEMS_PAGE.songRows.flat().flatMap(b => b.items),
+  ...['a', 'c_up', 'c_down', 'c_left', 'c_right'].map(b => 'ocarina_button_' + b),
+  ...ITEM_GROUPS.filter(g => ['owls', 'enemySouls', 'souls'].includes(g.id)).flatMap(g => g.items.map(it => it.key)), 'skeleton_key', 'ability_swim',
+  ...ITEMS_PAGE.frogs]);
 // objet de 2Ship → objet du panneau (et palier précis, pour les objets à paliers)
 const ITEM_BY_RI = {};
 ITEM_GROUPS.forEach(g => g.items.forEach(it => {
@@ -146,8 +196,8 @@ DUNGEONS.forEach(d => {
 ITEM_BY_RI.RI_CLOCK_TOWN_STRAY_FAIRY = { townFairy:true };
 ITEM_BY_RI.RI_GS_TOKEN_SWAMP = { tokens:'swamp' };
 ITEM_BY_RI.RI_GS_TOKEN_OCEAN = { tokens:'ocean' };
-const SPIDER_HOUSES = [{ id:'swamp', label:t('Maison des Araignées des Marais'), icon:'others/SwampSkulltula.png' },
-  { id:'ocean', label:t('Maison des Araignées de la Côte'), icon:'others/OceanSkulltula.png' }];
+const SPIDER_HOUSES = [{ id:'swamp', label:t('Maison des Araignées des Marais'), short:t('Marais'), icon:'others/SwampSkulltula.png' },
+  { id:'ocean', label:t('Maison des Araignées de la Côte'), short:t('Côte'), icon:'others/OceanSkulltula.png' }];
 
 const itemMax = it => typeof it.max === 'function' ? it.max(store.settings) : it.max ?? it.stages?.length - 1;
 const itemVisible = it => !it.visible || it.visible(store.settings);

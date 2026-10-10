@@ -324,18 +324,43 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
 
 ## Panneau Objets (droite)
 Rangé comme l'écran de pause du jeu (`js/items.js`, `ITEM_GROUPS`) :
-- **Objets** (6 colonnes) : Ocarina, Arc (paliers : 30, 40, 50 flèches), flèches de feu / glace / lumière, Sac de Bombes
-  (20, 30, 40), Missiles Teigneux, Bâton et Noix Mojo, Haricot Magique, Baril de Poudre, Boîte à Images, Monocle de Vérité,
-  Grappin, Grande Epée des Fées, bouteilles (compteur, 6) ; **objets d'échange** (Larme de Lune et titres en une chaîne,
-  Clé de Chambre, lettres, Pendentif).
-- **Masques** (6 × 4, ordre du jeu, masques de transformation en dernière colonne).
+- **En tête** (`ITEMS_PAGE`, en cours de réorganisation) : les quatre restes des boss en cercle autour de la Triforce
+  (si elle est mélangée), placés comme sur la carte de Termina — Rhork au nord, Skorn à l'est, Odolwa au sud, Gyorg à
+  l'ouest.
+- **Équipement** (grille de 4 colonnes) : Double Défense, Réceptacles, Quarts de cœur, Magie ; les trois épées reliées
+  (une case par palier de l'épée progressive ; clic : monter jusqu'à elle, ou redescendre juste en dessous ; clic droit :
+  en dessous) et l'Attaque Cyclone ; Bouclier du Brave, Bouclier Miroir, Bourse (paliers en badge), Journal des Bombers.
+  À droite (temps mélangé seulement), séparées par un trait : les six demi-journées, une ligne par jour (jour, nuit) — au
+  hasard, un objet chacune ; progressif, les paliers du compteur dans l'ordre d'obtention, reliés par un trait (dans
+  l'ordre : jour 1 en haut à gauche ; à rebours, affichage inversé : nuit 3 en haut à gauche, jour 1 en bas à droite).
+  Les objets placés en tête et dans l'équipement ne sont plus repris dans les cartes par groupe (`ITEMS_PLACED`).
+- **Masques** (juste sous l’équipement, sans titre) : les quatre masques de transformation en grand sur une ligne, reliés par un trait
+  (Mojo, Goron, Zora, Dieu Démon ; `ITEMS_PAGE.masks`), une ligne, puis les vingt autres en 5 × 4 dans l’ordre de l’écran de pause.
+- **Objets** (sous les masques, sans titre ; `ITEMS_PAGE.boxRows`) : cadres deux par ligne, comme l’Œil Sheikah — Bâton et Noix
+  Mojo ; Sac de Bombes (20, 30, 40), Missiles Teigneux, Baril de Poudre ; Grappin, Arc (30, 40, 50 flèches) et Grande Épée des
+  Fées, avec les flèches de feu / glace / lumière en petit sous l’arc, reliées ; Monocle de Vérité, Haricot Magique, Boîte à
+  Images, bouteilles (compteur, 6) en 2 × 2.
+- **Musique** (sous les objets, sans titre ; `ITEMS_PAGE.songRows`) : cadres — l’Ocarina, avec ses cinq touches en petit à côté
+  si elles sont mélangées (les touches C en croix, A au centre), et les chants du temps (Inversé, Chant du
+  Temps en plus grand, Accéléré) ; chants des donjons (Sonate, Berceuse, Bossa Nova, Hymne du Vide) et du scénario
+  (Apaisement, Appel) ; chants annexes (Epona, Envol, Tempêtes, Soleil, Saria si mélangé).
+- **Objets d’échange** (sous la musique, sans titre ; `ITEMS_PAGE.tradeRows`) : deux cadres — Larme de Lune et les quatre titres
+  de propriété ; Clé de Chambre, Lettre pour Kafei, Lettre Express pour Maman, Pendentif des Amoureux.
 - **Équipement** : Épée (Kokiri, Rasoir, Dorée), boucliers, Bourse (99 d'office, puis 200, 500, 5000), Magie, Double
   Défense, Attaque Cyclone, Journal des Bombers, quarts et réceptacles de cœur ; **chants** (Berceuse : intro puis
   complète ; Chant de Saria seulement s'il est mélangé) ; **restes des boss** (et fragments de Triforce en chasse).
-- **Selon la configuration** : nage, touches de l'ocarina, passe-partout, demi-journées (au hasard : une tuile chacune ;
-  progressif : compteur), grenouilles, statues de hibou, âmes des boss, âmes des ennemis.
-- **Temples** : carte, boussole, Clé d'Or, petites clés (nombre d'origine), fées perdues (sur le nombre demandé) ; fée
-  perdue de Bourg-Clocher ; jetons de Skulltula d'or par maison (si mélangées).
+- **Listes** (`ITEMS_PAGE.lists`, sous les échanges) : statues de hibou et âmes des ennemis (si mélangées) — un bouton
+  chacune avec son titre et son compteur ; clic : fenêtre à cocher (icône et nom court — lieu, ennemi ; clic : cocher / décocher, clic
+  droit : décocher), lue colonne par colonne ; âmes des ennemis triées par ordre alphabétique des noms affichés, dans la
+  langue de l'interface (tri fait à l'affichage : vaut pour toute langue, importée comprise).
+- **Temples** : carte, boussole, Clé d'Or, âme du boss (si les âmes sont mélangées), petites clés (nombre d'origine), fées
+  perdues (sur le nombre demandé) ; sous les temples : passe-partout (s'il est mélangé et que
+  les petites clés ne sont pas données au départ : il s'ajoute au pool et donne d'un coup le maximum de petites clés de
+  chaque temple ; obtenu, les compteurs de petites clés s'affichent complets, le nombre noté est gardé), âme de Majora (si
+  mélangées).
+- **À part** (« fourre-tout », carte juste avant les temples, en 2 colonnes) : fée perdue de Bourg-Clocher, Nage (si
+  mélangée, à cocher) ; jetons de Skulltula d'or par maison (si mélangées), nom court (« Marais », « Côte ») et compteur ;
+  les quatre grenouilles du chœur de Don Gero sur toute la largeur (`ITEMS_PAGE.frogs`).
 - Chaque objet est relié à ses objets de 2Ship (`ri`, `levelOf` pour un palier précis) : objets de départ du spoiler,
   logique et auto-tracking ensuite. Clic : activer / palier suivant / +1 ; clic droit : l'inverse.
 - **Icônes** : PNG 192 px, fond transparent, rangés par dossier dans `icons/` (`items`, `equipment`, `masks`, `songs`,

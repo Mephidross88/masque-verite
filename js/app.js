@@ -178,6 +178,7 @@ ${ITEMS_PANEL_TPL}
       </template>
 ${WHY_TPL}
 ${LINK_MODAL_TPL}
+${ITEM_LIST_TPL}
     </div>
   </div>
 </div>`,
