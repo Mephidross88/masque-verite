@@ -226,12 +226,26 @@ function findReachable(id, reached, times){
    logique. Lieux qui ferment et dont on est mis dehors, sans restriction de séjour dans 2Ship (CLOSING_STAY) : celles d'un
    lieu aux mêmes horaires. Sert aux moments des checks (frise, Moment, Journal), pas à « faisable ». */
 const CLOSING_STAY = { RR_HONEY_AND_DARLING:'RR_TOWN_SHOOTING_GALLERY', RR_TREASURE_SHOP:'RR_TOWN_SHOOTING_GALLERY' };
-/* Lieux où l'on n'obtient rien à certaines heures, sans restriction dans 2Ship (moments seulement, checks et événements du
-   lieu) : la Peste Mojo de l'aire de jeu ne lance pas la partie de 23 h 30 à 6 h (z_en_lift_nuts.c, EnLiftNuts_Idle) —
-   tranches de 23 h à 6 h retirées (pas de tranche à 23 h 30). */
-const OPEN_HOURS = { RR_TOWN_DEKU_PLAYGROUND:s => !/^TIME_NIGHT\d_(PM_11|AM_)/.test(s) };
-const OPEN_MASK = Object.fromEntries(Object.entries(OPEN_HOURS).map(([id, f]) =>
-  [id, LOGIC.slices.reduce((m, s, i) => f(s) ? m | bitOf(i) : m, 0n)]));
+/* Heures où l'on n'obtient rien, sans restriction dans 2Ship (moments seulement) : par région (ses checks et événements) ou
+   par check. CLOSED_HOURS : [[de, à (heures d'horloge, à cheval sur minuit possible), jours ?], …] ; une tranche qui en
+   croise une est retirée en entier (prudent : les tranches ne tombent pas toujours sur ces heures). Relevé dans le code du
+   jeu (décompilation) — à revérifier à la montée de version :
+   - aire de jeu des Pestes Mojo : pas de partie de 23 h 30 à 6 h (z_en_lift_nuts.c, EnLiftNuts_Idle) ;
+   - Boutique Curiosités : porte ouverte de 22 h à 5 h seulement (z_en_door.c, sDoorSch_CuriosityShop ; 2Ship laisse
+     y attendre toute la journée) ;
+   - Poste d'échange : porte fermée de 21 h à 22 h (sDoorSch_TradingPost), pas de vendeur la nuit 3 après 22 h
+     (z_en_ossan.c, EnOssan_CheckValidSpawn) — les articles seulement (pas le pot) ;
+   - pêcheur de la Grande Baie : ne fait pas jouer de 4 h à 7 h ni de 16 h à 19 h (z_en_jgame_tsn.c ; 2Ship : la
+     première plage seulement). */
+const TRADING_POST_CLOSED = [[21, 22], [22, 6, [3]]];
+const CLOSED_HOURS = { RR_TOWN_DEKU_PLAYGROUND:[[23.5, 6]], RR_CURIOSITY_SHOP_FRONT:[[5, 22]],
+  RC_GREAT_BAY_COAST_FISHERMAN_MINIGAME:[[4, 7], [16, 19]],
+  ...Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8].map(i => ['RC_TRADING_POST_SHOP_ITEM_0' + i, TRADING_POST_CLOSED])) };
+// tranche → [début, fin[ en heures d'horloge (la dernière finit à 6 h) ; x dans [a, b[ sur le cadran de 24 h
+const SLICE_SPAN = SLICE_INFO.map((x, i) => { const n = SLICE_INFO[i + 1]; return [x.h + x.m / 60, n ? n.h + n.m / 60 : 6]; });
+const onDial = (x, a, b) => ((x - a) % 24 + 24) % 24 < ((b - a) % 24 + 24) % 24;
+const OPEN_MASK = Object.fromEntries(Object.entries(CLOSED_HOURS).map(([id, closed]) => [id, SLICE_SPAN.reduce((m, [s, e], i) =>
+  closed.some(([a, b, days]) => (!days || days.includes(SLICE_INFO[i].day)) && (onDial(a, s, e) || onDial(s, a, b))) ? m : m | bitOf(i), 0n)]));
 function fineRegionTimes(reached, times){
   const fine = new Map([['RR_MAX', { t:times.get('RR_MAX').t, stay:false }]]);
   const regionOf = id => CLOSING_STAY[id] ? { ...REGION[id], stay:REGION[CLOSING_STAY[id]].stay } : REGION[id];
@@ -305,9 +319,9 @@ function computeLogic(state){
   // tranche par tranche des tranches fines de la région, événements « déjà possibles » (sinon, à défaut, comme en logique)
   const checks = {};
   for (const id of reached){
-    const r = REGION[id], rt = times.get(id).t, rf = fineT(id);
+    const r = REGION[id], rt = times.get(id).t, rfRegion = fineT(id);
     for (const [rc, f] of r.checks){
-      const c = checks[rc] || (checks[rc] = { ok:false, when:0n });
+      const c = checks[rc] || (checks[rc] = { ok:false, when:0n }), rf = rfRegion & (OPEN_MASK[rc] ?? ALL_SLICES);
       LS.events = allEvents; LT = rt;
       if (!f()) continue;
       c.ok = true;

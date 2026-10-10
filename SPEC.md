@@ -381,9 +381,13 @@ filtre d'incrustation sur le fond vert ; une source « Navigateur » d'OBS a son
   sortie ne laisse passer que les tranches où sa condition est vraie (2Ship, lui, transmet toutes celles de la région de
   départ), puis attente comme en logique ; le Manège des Amoureux et le Coffre-fort, qui ferment à 22 h et dont on est mis
   dehors, reprennent les restrictions de séjour du Stand de tir aux mêmes horaires (`CLOSING_STAY` : absentes des sources
-  de 2Ship — à revérifier à la montée de version). L'aire de jeu des Pestes Mojo (la Peste ne lance pas la partie de 23 h 30
-  à 6 h, `z_en_lift_nuts.c`) : ses checks et événements perdent les tranches de 23 h à 6 h (`OPEN_HOURS`, pas de tranche à
-  23 h 30). « Faisable » n'en dépend pas.
+  de 2Ship — à revérifier à la montée de version). Heures fermées relevées dans le code du jeu, absentes de la logique
+  (`CLOSED_HOURS`, par région ou par check ; une tranche qui croise une heure fermée est retirée en entier, par prudence) :
+  aire de jeu des Pestes Mojo, pas de partie de 23 h 30 à 6 h (`z_en_lift_nuts.c`) ; Boutique Curiosités, porte ouverte de
+  22 h à 5 h (`z_en_door.c` ; 2Ship laisse y attendre toute la journée) ; articles du Poste d'échange, porte fermée de 21 h
+  à 22 h et pas de vendeur la nuit 3 après 22 h (`z_en_ossan.c`) ; pêcheur de la Grande Baie, pas de partie de 4 h à 7 h
+  ni de 16 h à 19 h (`z_en_jgame_tsn.c` ; 2Ship : la première plage). Les autres horaires du code (portes : `z_en_door.c`,
+  personnages) sont déjà dans la logique de 2Ship (relevé du 2026-10-10). « Faisable » n'en dépend pas.
 - **Formes** (`checkForms`, affichage) : la logique de 2Ship ne suit pas la forme de Link. Pour chaque check, sa propre
   condition (pas le chemin) est évaluée tout obtenu avec ce que chaque forme peut utiliser : humain (tout sauf les masques
   Mojo, Goron, Zora) ; Mojo, Goron, Zora (son masque, l'ocarina, la magie, la poudre explosive pour Goron ; ni épée,
