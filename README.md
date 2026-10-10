@@ -29,7 +29,7 @@ Pour commencer une partie :
 | **Checks** | Les checks de la seed, lieu par lieu : faits, faisables maintenant, pas encore — et pourquoi (objets manquants, moment). Une frise des trois jours par check ; le sélecteur **Moment** (J1 à N3) montre ce qui est faisable à ce moment-là. |
 | **Journal des Bombers** | Toute la partie sur la frise des 72 heures : une barre par check, aux heures où il est faisable, regroupés par lieu ; avec l'auto-tracking, l'heure de la dernière sauvegarde (le temps écoulé est hachuré). |
 | **Indices** | Les pierres à potins et les autres indices de la seed (restes des boss, Grandes Fées, banque…) : leur texte apparaît une fois l'indice marqué lu, comme en jeu. |
-| **Carte** | Chaque lieu vu de dessus : sorties, checks, pierres à potins, étages des temples ; intérieurs et grottes depuis leur porte. |
+| **Carte** | Chaque lieu vu de dessus : sorties, checks, pierres à potins, étages des temples ; intérieurs et grottes depuis leur porte ; chemin des Bois Perdus selon le jour. |
 | **Statistiques** | Chronologie de la partie (au temps de jeu de 2Ship et au moment du cycle), courbe des checks, compteurs. |
 | **Configuration** | Les réglages du randomizer (repris du spoiler ou de la sauvegarde), la langue. |
 

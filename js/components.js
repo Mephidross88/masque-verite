@@ -41,7 +41,12 @@ const ItemTile = {
     value(){ return store.game.items[this.k]; },
     src(){ return this.icon ? 'icons/' + this.icon : this.stage && this.item.icons ? 'icons/' + this.item.icons[this.stage - 1] : iconSrc(this.item); },
     on(){ return this.stage ? this.value >= this.stage : itemActive(this.item, this.value); },
-    title(){ return this.label || (!this.stage ? itemTitle(this.item) : this.item.stages ? this.item.stages[this.stage] : this.item.label + ' : ' + this.stage); },
+    // chant obtenu mais injouable : touches de l'ocarina manquantes (barré, et nommées au survol)
+    missing(){ const m = this.on && songMissing(this.item); return m && m.length ? m : null; },
+    title(){
+      const base = this.label || (!this.stage ? itemTitle(this.item) : this.item.stages ? this.item.stages[this.stage] : this.item.label + ' : ' + this.stage);
+      return this.missing ? base + ' — ' + t('touches manquantes : {touches}', { touches:this.missing.map(b => ITEM_BY_KEY['ocarina_button_' + b.toLowerCase()].label).join(', ') }) : base;
+    },
     abbr(){ return itemAbbr(this.item); },
   },
   methods:{
@@ -55,7 +60,7 @@ const ItemTile = {
     },
     itemMaxed,
   },
-  template:`<button type="button" class="icon-tile" :class="{off:!on}" :aria-label="item.label" :title="title"
+  template:`<button type="button" class="icon-tile" :class="{off:!on, unplayable:missing}" :aria-label="item.label" :title="title"
     @click="onClick" @contextmenu.prevent="onRight">
     <img v-if="!brokenIcons[src]" :src="src" :alt="item.label" @error="brokenIcons[src]=true">
     <span v-else class="icon-abbr">{{abbr}}</span>

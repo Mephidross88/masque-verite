@@ -261,6 +261,12 @@ function mapGeo(sc, li){
   return g;
 }
 
+/* Bois Perdus (SCENE_26SARUNOMORI) : 3 × 3 clairières numérotées de 1 (sud-ouest) à 9 (nord-est), 880 unités d'écart ; on
+   entre par le bord est de la 6. Le singe suit un chemin différent chaque jour (clairières successives). */
+const WOODS_SCENE = 'SCENE_26SARUNOMORI', WOODS_DOOR = [374, 0];
+const WOODS_PATHS = { 1:[6, 3, 2, 5, 8, 7, 4], 2:[6, 9, 8, 7, 4, 5, 2], 3:[6, 5, 2, 1, 4, 7, 8] };
+const woodsXZ = n => [-1760 + (n - 1) % 3 * 880, 880 - Math.floor((n - 1) / 3) * 880];
+
 /* ---------- Carte d'une scène (composant) ----------
    Sol vu de dessus (nord en haut), murs, eau ; un repère par sortie (zone de chargement ou porte), avec le nom de la
    scène d'arrivée ; clic : aller à la carte de cette scène. Molette : zoom autour du curseur ; glisser : déplacer. */
@@ -272,6 +278,7 @@ const MapView = {
   props:{ scene:{ type:String, required:true }, checks:{ type:Array, default:() => [] }, placing:Boolean, placed:{ type:Array, default:() => [] }, editing:Boolean,
     holes:{ type:Array, default:() => [] }, home:{ type:String, default:null }, stones:{ type:Array, default:() => [] },
     compact:Boolean,   // compact : sans boutons de zoom (fenêtre de stream)
+    path:{ type:Object, default:null },   // path : chemin à suivre { pts:[[x, z], …], tip } (Bois Perdus)
     counts:{ type:Object, default:() => ({}) } },   // counts : checks restants par carte d'intérieur ou de grotte { todo, total, now }
   emits:['goto', 'check', 'place', 'stone'],
   data:() => ({ view:null, drag:null, hover:null, level:null }),
@@ -286,6 +293,14 @@ const MapView = {
     shown(){ return this.checks.filter(m => this.onLevel(m.y)); },
     placedShown(){ return this.placed.filter(m => this.onLevel(m.y)); },
     vb(){ return this.view || (this.geo ? this.geo.view : [0, 0, 1, 1]); },
+    // chemin : ligne brisée, une flèche au milieu de chaque tronçon (sens de la marche)
+    pathLine(){ return this.path ? this.path.pts.map(p => p.join(',')).join(' ') : ''; },
+    pathArrows(){
+      if (!this.path) return [];
+      const p = this.path.pts;
+      return p.slice(1).map((b, i) => { const a = p[i];
+        return { x:(a[0] + b[0]) / 2, z:(a[1] + b[1]) / 2, deg:Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI }; });
+    },
     // taille des repères : suit le zoom (sans devenir minuscule)
     unit(){ return this.geo ? this.geo.unit * Math.min(1, Math.max(0.35, this.vb[2] / this.geo.view[2])) : 1; },
     // sorties : une par zone ; même scène d'arrivée et très proches : un seul repère
@@ -351,6 +366,11 @@ const MapView = {
         <path v-for="(d,i) in geo.bands" :key="i" :d="d" :fill="bandColor(i)" :stroke="bandColor(i)" :stroke-width="geo.unit * 0.12"></path>
         <path v-if="geo.water" :d="geo.water" class="zmap-water"></path>
         <path :d="geo.walls" class="zmap-walls" :stroke-width="geo.unit * 0.35"></path>
+        <g v-if="path" class="zmap-path"><title>{{path.tip}}</title>
+          <polyline class="zp-under" :points="pathLine" :stroke-width="unit * 1.5"></polyline>
+          <polyline :points="pathLine" :stroke-width="unit * 0.8"></polyline>
+          <path v-for="(a,i) in pathArrows" :key="i" d="M-1.3 -1.2 L1.3 0 L-1.3 1.2 Z" :transform="'translate(' + a.x + ' ' + a.z + ') rotate(' + a.deg + ') scale(' + unit * 1.3 + ')'"></path>
+          <circle :cx="path.pts[path.pts.length - 1][0]" :cy="path.pts[path.pts.length - 1][1]" :r="unit * 1.4"></circle></g>
         <g v-for="m in shown" :key="m.c.id" class="zc zc-check" :class="{done:m.st==='done', now:m.st==='now', approx:placing !== undefined && m.approx && editing}" @pointerdown.stop @click.stop="$emit('check', m.c)">
           <circle :cx="m.x" :cy="m.z" :r="unit * (m.st==='done' ? 0.6 : 0.85)"></circle><title>{{m.tip}}</title></g>
         <g v-for="m in placedShown" :key="'e:' + m.c.id" class="ze-mark" :class="{moving:m.moving}">
@@ -411,17 +431,21 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
           <select class="sel map-scene" v-model="mapScene" aria-label="Lieu">
             <optgroup v-for="g in mapSceneGroups" :key="g.label" :label="g.label">
               <option v-for="s in g.list" :key="s" :value="s">{{mapSceneName(s)}}{{ui.map.editTool ? ' (' + mapMissing(s) + ')' : ''}}</option></optgroup></select>
-          <span class="map-info">{{mapExitCount}}</span>
-          <div class="field map-chk" title="Comme la page Checks : ses filtres (catégories, checks faits masqués, seulement les faisables, moment, recherche). Tous : tous les checks de la seed, faits compris. Les checks exclus n’apparaissent jamais (sauf avec l’outil de placement : tous les checks du jeu)."><span class="lbl">Checks</span>
-            <seg v-model="ui.map.checks" :options="[['filters', t('Comme la page Checks')], ['all', t('Tous')], ['off', t('Aucun')]]"></seg></div>
-          <label class="check map-stones" title="Pierres à potins sur la carte (clic sur l'une d'elles : lue / non lue)"><input type="checkbox" v-model="ui.map.stones">Pierres à potins</label>
+          <div class="map-opts">
+          <div class="field map-chk" title="Checks : comme la page Checks, ses filtres (catégories, checks faits masqués, seulement les faisables, moment, recherche). Tous : tous les checks de la seed, faits compris. Les checks exclus n’apparaissent jamais (sauf avec l’outil de placement : tous les checks du jeu)."><span class="lbl">Checks</span>
+            <seg v-model="ui.map.checks" :options="[['filters', t('Checks')], ['all', t('Tous')], ['off', t('Aucun')]]"></seg></div>
+          <div class="field map-chk map-stones" title="Pierres à potins sur la carte (clic sur l'une d'elles : lue / non lue)"><span class="lbl">Pierres à potins</span>
+            <seg v-model="ui.map.stones" :options="[[true, t('Affichées')], [false, t('Masquées')]]"></seg></div>
+          <div v-if="woodsHere" class="field map-chk" title="Chemin du singe à travers les Bois Perdus, différent chaque jour. Auto : le jour de la sauvegarde suivie (auto-tracking), sinon celui du moment choisi sur la page Checks, sinon le jour 1."><span class="lbl">Chemin</span>
+            <seg v-model="ui.map.woods" :options="[['auto', t('Auto')], ['1', t('Jour {n}', {n:1})], ['2', t('Jour {n}', {n:2})], ['3', t('Jour {n}', {n:3})], ['off', t('Masqué')]]"></seg></div>
+          </div>
           <button v-if="ui.map.editTool" type="button" class="btn zmap-edit-btn" :class="{on:mapEdit}" @click="mapEdit = !mapEdit; mapPick = {}"
             title="Placer à la main les checks qui n'ont pas de position">✎ Placer les checks</button>
         </div>
         <div v-if="mapGroups.length > 1" class="zmap-tabs map-groups" title="Plusieurs grottes partagent cette salle : choisissez celle dont afficher les checks">
           <button type="button" :class="{on:!mapGroup}" @click="mapGroup = ''">Tous</button>
           <button v-for="g in mapGroups" :key="g.id" type="button" :class="{on:mapGroup===g.id}" @click="mapGroup = g.id">{{g.label}} <small>{{g.n}}</small></button></div>
-        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :counts="mapPlaceCounts" :stones="ui.map.stones ? hintStones(mapBase) : []" @stone="toggleHint" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
+        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :counts="mapPlaceCounts" :stones="ui.map.stones ? hintStones(mapBase) : []" @stone="toggleHint" :path="woodsPath" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
           @goto="mapGoto" @check="toggleCheck" @place="mapPlace"></map-view>
         <div v-if="mapEdit" class="zmap-edit">
           <div class="ze-head"><b>Placer les checks sans position</b>
@@ -450,7 +474,8 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
         <div class="zmap-legend"><span><i class="lg-chk now"></i>Check faisable</span><span><i class="lg-chk"></i>Pas encore</span><span><i class="lg-chk done"></i>Fait</span>
           <span class="muted">{{ui.map.editTool ? t('(outil de placement : tous les checks du jeu, sans filtres)') : t('(clic : cocher)')}}</span></div>
         <div class="zmap-legend"><span><i class="lg-ground"></i>Sol, du plus bas au plus haut</span><span><i class="lg-water"></i>Eau</span>
-          <span><i class="lg-exit"></i>Sortie (clic : voir la carte du lieu d’arrivée)</span><span><i class="lg-stone"></i>Pierre à potins (clic : lue)</span></div>
+          <span><i class="lg-exit"></i>Sortie (clic : voir la carte du lieu d’arrivée)</span><span><i class="lg-stone"></i>Pierre à potins (clic : lue)</span>
+          <span v-if="woodsPath"><i class="lg-path"></i>{{woodsPath.tip}}</span></div>
         <p class="maps-src">{{MAPS_INFO.source === 'file' ? t('Cartes du fichier data/maps-data.js.') : t('Cartes fabriquées dans ce navigateur depuis {rom}.', {rom:MAPS_INFO.rom || 'la ROM'})}}
           <button v-if="MAPS_INFO.source === 'browser'" type="button" class="link" @click="mapsForgetAsk">Oublier ces cartes</button>
           <label class="check maps-tool" title="Outil pour placer à la main les checks sans position, et exporter ces positions (contributeurs)"><input type="checkbox" v-model="ui.map.editTool">Outil de placement des checks</label></p>
@@ -467,6 +492,15 @@ function useMapPage(ctx){
   const mapGoBack = () => { const s = mapBack.value.pop(); if (s) ui.map.scene = s; };
   // carte dessinée (grotte : sa salle) et grotte affichée ; trous de grotte de la carte ; lieu extérieur d'une grotte
   const mapBase = computed(() => mapBaseOf(ui.map.scene));
+  /* Bois Perdus : chemin du singe selon le jour (ui.map.woods ; auto : jour de la sauvegarde suivie, sinon du moment de la
+     page Checks, sinon jour 1). Depuis la sortie est de la clairière 6 (l'entrée), puis le centre de chaque clairière. */
+  const woodsHere = computed(() => mapBase.value === WOODS_SCENE);
+  const woodsPath = computed(() => {
+    if (!woodsHere.value || ui.map.woods === 'off') return null;
+    const half = store.game.cycle.half, m = ui.checks.moment;
+    const day = ui.map.woods !== 'auto' ? +ui.map.woods : half >= 0 ? Math.floor(half / 2) + 1 : half === -1 ? 1 : m >= 0 ? Math.floor(m / 2) + 1 : 1;
+    return { day, pts:[WOODS_DOOR, ...WOODS_PATHS[day].map(woodsXZ)], tip:t('Chemin du jour {n}', { n:day }) };
+  });
   const mapHoles = computed(() => (GROTTO_MAPS.value.holes[mapBase.value] || []).map(h => ({ ...h, label:mapSceneName(h.to) })));
   const mapHome = computed(() => (GROTTO_MAPS.value.byId[ui.map.scene] || {}).home || null);
   // choix du lieu : par région (MAP_REGIONS), lieux dans l'ordre du chemin puis grottes de la région (d'après leur trou)
@@ -513,7 +547,7 @@ function useMapPage(ctx){
   const mapChecksAll = computed(() => {
     const out = [];
     if (!mapsData.value) return out;
-    /* Checks affichés (ui.map.checks) : « Comme la page Checks » (filters) — ses filtres : catégories, checks faits masqués,
+    /* Checks affichés (ui.map.checks) : « Checks » (filters), comme la page Checks — ses filtres : catégories, checks faits masqués,
        seulement les faisables (au moment choisi), recherche ; « Tous » (all) : tous ceux de la seed non exclus, faits
        compris ; « Aucun » (off). Outil de placement affiché : tous les checks du jeu, sans filtres (vérifier les positions). */
     const f = ui.checks, s = store.settings, game = ui.map.editTool, mode = ui.map.checks;
@@ -549,12 +583,6 @@ function useMapPage(ctx){
     // (seulement là où des grottes partagent la salle : ailleurs, un check classé sous un lieu voisin ne justifie pas de choix)
     if (!Object.values(g).some(x => x.grotto)) return [];
     return Object.values(g).map(x => ({ id:x.id, n:x.n, label:x.label + (x.grotto ? ' · ' + x.grotto : '') })).sort((a, b) => a.label.localeCompare(b.label));
-  });
-  const mapExitCount = computed(() => {
-    const sc = mapsData.value && mapsData.value.scenes[mapBase.value];
-    if (!sc) return '';
-    const n = mapChecks.value.filter(m => m.st !== 'done').length;
-    return tn(sc.ex.length, '{n} sortie', '{n} sorties') + ' · ' + tn(n, '{n} check à faire', '{n} checks à faire');
   });
   /* Placement à la main (ui.map.editTool : outil affiché) : checks du lieu sans position, choisis puis placés d'un clic ;
      positions gardées dans le navigateur (mapEdits), exportées en positions-manuelles.json (avec celles de la recette) */
@@ -622,5 +650,5 @@ function useMapPage(ctx){
   }
   function mapsForgetAsk(){ if (confirm(t('Oublier les cartes gardées dans ce navigateur ?'))) mapsForget(); }
   return { mapPlaceCounts, mapOfScene, openMapOf, mapBase, mapHoles, mapHome, mapValidate, mapApprox, mapGroup, mapGroups, mapCheckHelp, mapMissing, mapEdit, mapPick, mapPicked, mapToPlace, mapPlacedList, mapPlacedHere, mapPlace, mapEditCount, mapExport, mapClearEdits, mapEdits,
-    mapChecks, mapsData, MAPS_INFO, mapScene, mapBack, mapGoto, mapGoBack, mapSceneGroups, mapExitCount, mapSceneName, mapsJob, mapsMake, mapsForgetAsk };
+    mapChecks, mapsData, MAPS_INFO, woodsHere, woodsPath, mapScene, mapBack, mapGoto, mapGoBack, mapSceneGroups, mapSceneName, mapsJob, mapsMake, mapsForgetAsk };
 }

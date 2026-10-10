@@ -238,6 +238,10 @@ svg{display:block}
 .icon-tile:disabled{cursor:default}
 .icon-tile img{width:100%;height:100%;object-fit:contain}
 .icon-tile.off{opacity:.35;filter:grayscale(1)}
+/* chant obtenu mais injouable (touches de l'ocarina manquantes) : barré d'un trait rouge */
+.icon-tile.unplayable::after{content:'';position:absolute;inset:4px;pointer-events:none;
+  background:linear-gradient(to top right,transparent calc(50% - 2px),var(--red) calc(50% - 2px),var(--red) calc(50% + 2px),transparent calc(50% + 2px))}
+.icon-tile.unplayable img{opacity:.7}
 .icon-tile:not(.off){border-color:var(--gold);background:var(--gold-soft)}
 .icon-fallback{width:60%;height:60%;color:var(--muted)}
 .icon-fallback svg{width:100%;height:100%}
@@ -738,6 +742,12 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .zmap-zoom button{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font-size:16px;line-height:1;cursor:pointer}
 .zmap-zoom button:hover{border-color:var(--gold)}
 .zmap-walls{fill:none;stroke:var(--map-wall);stroke-linecap:round;opacity:.7}
+/* chemin à suivre (Bois Perdus) : trait clair cerné de sombre, flèches dans le sens de la marche, rond à l'arrivée */
+.zmap-path{pointer-events:none}
+.zmap-path polyline{fill:none;stroke:#ffd75e;stroke-linecap:round;stroke-linejoin:round}
+.zmap-path .zp-under{stroke:#1c1a12;opacity:.55}
+.zmap-path path,.zmap-path circle{fill:#ffd75e;stroke:#1c1a12;stroke-width:1.5px;vector-effect:non-scaling-stroke}
+.zmap-legend .lg-path{width:18px;height:5px;border-radius:3px;background:#ffd75e;border:1px solid #1c1a12}
 /* eau (boîtes d'eau du jeu), sorties de la Carte (repère et nom du lieu d'arrivée) */
 .zmap-water{fill:#3f86c9;opacity:.35;pointer-events:none}
 .zx .zm-shape{fill:var(--gold)}
@@ -760,7 +770,6 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .zmap-bar .zmap-back{padding:4px 12px}
 .zmap-bar .map-chk{display:flex;align-items:center;gap:8px;margin-left:auto}
 .zmap-bar .map-chk .lbl{font-size:13px;color:var(--muted)}
-.map-info{font-size:13.5px;color:var(--muted);align-self:center}
 .maps-src{font-size:13px;color:var(--muted);margin:8px 0 0}
 .maps-src .maps-tool{display:inline-flex;margin-left:14px;font-size:13px;color:var(--muted)}
 .map-groups{margin:0 0 8px}
@@ -845,7 +854,9 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .go-map{display:inline-grid;place-items:center;width:26px;height:26px;flex:none;border-radius:7px;color:var(--muted);cursor:pointer}
 .go-map:hover{color:var(--gold-deep);background:var(--gold-soft)}
 .go-map svg{width:16px;height:16px}
-.map-stones{align-self:center;white-space:nowrap}
+/* réglages de la carte (checks, pierres à potins) : groupés à droite, ensemble sur la ligne suivante s'il le faut */
+.zmap-bar .map-opts{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-left:auto}
+.zmap-bar .map-opts .map-chk{margin-left:0}
 .zs{cursor:pointer}
 .zs rect{fill:rgba(240,234,214,.35);stroke:#5c5340;stroke-width:1.5px;vector-effect:non-scaling-stroke}
 .zs.read rect{fill:#f0ead6;stroke:#1c1a12}

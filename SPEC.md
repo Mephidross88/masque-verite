@@ -216,7 +216,7 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   (poudre d'or), pancarte de la banque, récompenses des Maisons des Araignées, du forgeron et des Grandes Fées.
 - **Ignoré** : le Chant de Saria (indice dynamique, vers le prochain check utile : il dépend de la partie en cours).
 - **Ailleurs** : page Checks, objet indiqué sur son check (indice précis : récompense, pierre à poids propre) ou en tête du
-  lieu (indice de lieu seulement) ; Carte, pierres en losanges (claires : non lues, pleines : lues ; case « Pierres à potins » de la Carte, `ui.map.stones`).
+  lieu (indice de lieu seulement) ; Carte, pierres en losanges (claires : non lues, pleines : lues ; réglage « Pierres à potins » de la Carte, `ui.map.stones`).
 
 ## Statistiques (js/pages/stats.js)
 - **Chronologie** (`game.timeline`, sauvegardée, remise à zéro avec la partie) : chaque hausse d'un objet du panneau
@@ -281,7 +281,12 @@ filtre d'incrustation sur le fond vert ; une source « Navigateur » d'OBS a son
   Termina) va à la grotte de la salle qui est dans son lieu (`grottoKeyIn`). Même acteur, autre check selon l'entrée
   empruntée (ruche des grottes aux vaches, `ObjComb.cpp`) : même position (`alias` de la recette, utilisé aussi sur les
   cartes déjà fabriquées).
-- **Pierres à potins** : case « Pierres à potins » (`ui.map.stones`, cochée par défaut), indépendante du réglage Checks.
+- **Pierres à potins** : sélecteur « Pierres à potins » : Affichées / Masquées (`ui.map.stones`, affichées par défaut), indépendant du réglage Checks.
+- **Chemin des Bois Perdus** (`SCENE_26SARUNOMORI`, 3 × 3 clairières numérotées de 1 au sud-ouest à 9 au nord-est, entrée par
+  le bord est de la 6) : chemin du singe, différent chaque jour — jour 1 : 6 3 2 5 8 7 4 ; jour 2 : 6 9 8 7 4 5 2 ; jour 3 :
+  6 5 2 1 4 7 8 (`WOODS_PATHS` de `js/pages/map.js`, relevé en jeu). Tracé jaune avec flèches, réglage « Chemin » de la
+  barre, sur cette carte seulement (`ui.map.woods`) : Auto (jour de la sauvegarde suivie, sinon du moment de la page
+  Checks, sinon jour 1), Jour 1 à 3, Masqué. Aussi dans la fenêtre de stream.
 - **Fabrication** : depuis la ROM de Majora's Mask du joueur (N64 US, compressée ou non, .z64 / .v64), jamais distribuée :
   choisie sur la page Carte, lue dans le navigateur (`js/maps-extract.js`, chargé à la demande), cartes gardées dans
   IndexedDB (`masque-verite-maps`), « Oublier ces cartes ». En ligne de commande : `tools/2ship-maps/extract_maps.mjs`
@@ -322,7 +327,7 @@ filtre d'incrustation sur le fond vert ; une source « Navigateur » d'OBS a son
   main les corrige ; « valider » une position juste la garde telle quelle, comme placée à la main (elle quitte la liste et
   part dans l'export : rien n'est oublié).
 - Repères des checks de la seed (non exclus) : faisable (vert), pas encore (rouge), fait (gris), heures au survol ; clic :
-  cocher (bandeau Annuler). Réglage « Checks » (`ui.map.checks`, comme l'Œil Sheikah) : « Comme la page Checks » (ses filtres :
+  cocher (bandeau Annuler). Réglage « Checks » (`ui.map.checks`, comme l'Œil Sheikah) : « Checks » (comme la page Checks, ses filtres :
   catégories, faits masqués, seulement les faisables au moment choisi, recherche), « Tous » (ceux de la seed non exclus,
   faits compris), « Aucun ».
 - **Grottes : une carte par grotte** (liste « Grottes »). La scène des grottes est découpée en salles (`SCENE_KAKUSIANA#n` :
@@ -403,7 +408,9 @@ Rangé comme l'écran de pause du jeu (`js/items.js`, `ITEM_GROUPS`) :
 - **Musique** (sous les objets, sans titre ; `ITEMS_PAGE.songRows`) : cadres — l’Ocarina, avec ses cinq touches en petit à côté
   si elles sont mélangées (les touches C en croix, A au centre), et les chants du temps (Inversé, Chant du
   Temps en plus grand, Accéléré) ; chants des donjons (Sonate, Berceuse, Bossa Nova, Hymne du Vide) et du scénario
-  (Apaisement, Appel) ; chants annexes (Epona, Envol, Tempêtes, Soleil, Saria si mélangé).
+  (Apaisement, Appel) ; chants annexes (Epona, Envol, Tempêtes, Soleil, Saria si mélangé). Chant obtenu mais injouable faute de touches
+  (touches de l'ocarina mélangées ; notes de chaque chant : `canPlaySong` de 2Ship, `SONG_BUTTONS`) : barré d'un trait rouge,
+  touches manquantes nommées au survol (`songMissing`).
 - **Objets d’échange** (sous la musique, sans titre ; `ITEMS_PAGE.tradeRows`) : deux cadres — Larme de Lune et les quatre titres
   de propriété ; Clé de Chambre, Lettre pour Kafei, Lettre Express pour Maman, Pendentif des Amoureux.
 - **Équipement** : Épée (Kokiri, Rasoir, Dorée), boucliers, Bourse (99 d'office, puis 200, 500, 5000), Magie, Double
