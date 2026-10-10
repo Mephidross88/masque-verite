@@ -54,6 +54,10 @@ function readSave(j){
      nuit 1… ; randoInf : mots de 16 bits, bit de poids faible d'abord), départ compris, de l'une ou l'autre partie */
   const inf = n => parts.some(p => ((p.shipSaveInfo.rando.randoInf || [])[n >> 4] >> (n & 15)) & 1);
   out.clocks = [0, 1, 2, 3, 4, 5].map(i => !!inf(66 + i));
+  /* objets de l'inventaire obtenus hors check (herbe, ennemis… quand ces lieux ne sont pas mélangés) : Bâtons et Noix Mojo
+     (emplacements 8 et 9 de inventory.items, z64item.h ; l'objet reste après le Chant du temps, sans munitions) */
+  const slot = n => parts.some(p => ((p.saveInfo && p.saveInfo.inventory && p.saveInfo.inventory.items) || [])[n] === n);
+  out.inv = [[8, 'RI_DEKU_STICK'], [9, 'RI_DEKU_NUT']].filter(([n]) => slot(n)).map(([, ri]) => ri);
   return out;
 }
 // moment de la sauvegarde : demi-journée (0 à 5, -1 : avant le jour 1) et heure (« 6 h 02 » ; heure du jeu sur 16 bits)
@@ -67,11 +71,11 @@ function saveHours(sv){
 }
 
 /* Panneau Objets d'après la sauvegarde : objets de départ (de la seed et donnés d'office, demi-journée de départ comprise)
-   et objets des checks faits (start : seulement les objets de départ) ; demi-journées : d'après les drapeaux du jeu */
+   et objets des checks faits, Bâtons et Noix Mojo de l'inventaire (start : seulement les objets de départ) ; demi-journées : d'après les drapeaux du jeu */
 function saveGame(sv, start){
   const g = defaults().game, s = store.settings;
   applyStartingItems([...sv.start, ...computedStartingItems(s), ...startingTimeItems(s, sv.start, sv.seed),
-    ...(start ? [] : Object.values(sv.obtained))], g);
+    ...(start ? [] : [...Object.values(sv.obtained), ...(sv.inv || [])])], g);
   if (!start && s.RO_CLOCK_SHUFFLE){
     if (s.RO_CLOCK_SHUFFLE_PROGRESSIVE === RO.RO_CLOCK_SHUFFLE_RANDOM) TIME_HALVES.forEach((h, i) => { if (sv.clocks[i]) g.items['time_' + h] = true; });
     else g.items.time_progressive = Math.max(g.items.time_progressive, sv.clocks.filter(Boolean).length);

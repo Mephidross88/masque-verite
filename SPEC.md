@@ -188,7 +188,8 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   - nouvelle seed (ou liste des checks vide) : réglages et checks de la seed (`shuffled`) repris ;
   - checks faits, et l'objet trouvé dans chacun (`game.found` : seul ce que le jeu a montré) ;
   - prix des boutiques, laiterie, cartes de Tingle mélangées (`game.prices`, lus par la logique) ;
-  - panneau Objets : objets de départ (de la seed et donnés d'office) + objets des checks faits (`applyStartingItems`),
+  - panneau Objets : objets de départ (de la seed et donnés d'office) + objets des checks faits + Bâtons et Noix Mojo de
+    l'inventaire (obtenus hors check quand l'herbe, les ennemis… ne sont pas mélangés ; `inventory.items`) (`applyStartingItems`),
     fusionnés au plus haut ; demi-journées possédées (temps mélangé) d'après les drapeaux du jeu (`randoInf`,
     RANDO_INF_OBTAINED_CLOCK_DAY_1 à NIGHT_3), départ compris ;
   - moment : demi-journée de la sauvegarde dans le sélecteur Moment (option `ui.link.moment`) ;
