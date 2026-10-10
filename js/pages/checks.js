@@ -29,6 +29,7 @@ const CHECKS_TPL = paneTpl('checks', `<h1>Checks</h1>`, `
           <label class="check" title="N'afficher que les checks faisables avec l'inventaire noté (au moment choisi), et ceux déjà faits"><input type="checkbox" v-model="ui.checks.onlyAvailable">Seulement les faisables</label>
           <label class="check"><input type="checkbox" v-model="ui.checks.hideDone">Masquer les checks faits</label>
           <label class="check"><input type="checkbox" v-model="ui.checks.hideDoneZones">Masquer les scènes terminées</label>
+          <label v-if="!s.RO_SHUFFLE_GOLD_SKULLTULAS" class="check" title="Lister aussi les Skulltulas d’or quand elles ne sont pas mélangées (pour les récompenses des Maisons des Araignées) ; elles comptent alors dans la progression"><input type="checkbox" v-model="ui.checks.alwaysGS">Suivre aussi les Skulltulas non mélangées</label>
         </div>
         <div class="cat-chips">
           <button v-for="k in CHECK_CATS" v-show="catCounts[k.id].total" :key="k.id" type="button" class="cat-chip" :class="{off:ui.checks.hiddenCats[k.id]}"
@@ -162,7 +163,8 @@ function useChecksPage(ctx){
   const never = computed(() => Object.fromEntries(CHECKS.filter(c => !logicFull.value.checks[c.id]?.ok).map(c => [c.id, true])));
 
   // checks de la seed (mélangés selon la configuration ou le spoiler) ; exclus : comptent à part
-  const seedChecks = computed(() => CHECKS.filter(c => checkShuffled(c, s)));
+  // (Skulltulas non mélangées : listées aussi si ui.checks.alwaysGS)
+  const seedChecks = computed(() => CHECKS.filter(c => checkShuffled(c, s) || (ui.checks.alwaysGS && c.cat === 'SKULL_TOKEN')));
   const counted = c => !s.excluded[c.id];
   // par scène : faits / faisables / total (sans les exclus), restants par catégorie, état (terminée, faisable, bloquée)
   const sceneStats = computed(() => {

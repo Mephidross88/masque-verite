@@ -37,7 +37,7 @@ function defaults(){
       notebook:{ q:'', hideDone:false, all:false, byScene:true, collapsed:{} },
       // moment : demi-journée choisie (-1 : tous ; 0 à 5 : J1, N1, J2, N2, J3, N3), partagée par Checks et le Journal ;
       // onlyAvailable : seulement les faisables
-      checks:{ q:'', hideDone:false, hideDoneZones:false, showExcluded:false, onlyAvailable:false, moment:-1, hiddenCats:{}, collapsed:{} } },
+      checks:{ q:'', hideDone:false, hideDoneZones:false, showExcluded:false, onlyAvailable:false, moment:-1, alwaysGS:false, hiddenCats:{}, collapsed:{} } },
   };
 }
 function merge(base, src){

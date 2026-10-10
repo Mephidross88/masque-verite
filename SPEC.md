@@ -111,6 +111,9 @@ au code (`js/i18n.js`, dictionnaires `data/i18n/<code>.js`).
   Bombes toujours), pas les pots de l'antre de Majora. Les Skulltulas d'or laissées en place restent des checks (2Ship les
   marque mélangées, avec leur jeton). Vérifié sur 7 spoilers 5.0.1 : seuls écartent les checks exclus à la génération
   (absents des réglages, connus par le spoiler).
+  Préférence « Suivre aussi les Skulltulas non mélangées » (`ui.checks.alwaysGS`, pages Checks et Journal, proposée quand elles ne le sont pas,
+  comme l'Œil Sheikah) : les 60 Skulltulas d'or sont alors listées et comptées partout (Checks, Journal, Carte,
+  statistiques), pour les récompenses des Maisons des Araignées.
 - **Par scène** (cartes repliables, dans l'ordre du tracker) : nom, bouton « voir la carte du lieu » (s'il a une carte :
   page Carte sur ce lieu), restants par catégorie, progression (faits / total) ;
   checks sur deux colonnes : icône de catégorie, libellé (nom anglais de 2Ship au survol), coche ; ⊘ / ↺ : exclure /
@@ -188,8 +191,9 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   - nouvelle seed (ou liste des checks vide) : réglages et checks de la seed (`shuffled`) repris ;
   - checks faits, et l'objet trouvé dans chacun (`game.found` : seul ce que le jeu a montré) ;
   - prix des boutiques, laiterie, cartes de Tingle mélangées (`game.prices`, lus par la logique) ;
-  - panneau Objets : objets de départ (de la seed et donnés d'office) + objets des checks faits + Bâtons et Noix Mojo de
-    l'inventaire (obtenus hors check quand l'herbe, les ennemis… ne sont pas mélangés ; `inventory.items`) (`applyStartingItems`),
+  - panneau Objets : objets de départ (de la seed et donnés d'office) + objets des checks faits + objets de l'inventaire
+    qu'on peut avoir hors check (herbe, ennemis, boutiques… non mélangés) : Missiles Teigneux, Bâtons et Noix Mojo, Haricots
+    Magiques, Baril de Poudre (`inventory.items`) (`applyStartingItems`),
     fusionnés au plus haut ; demi-journées possédées (temps mélangé) d'après les drapeaux du jeu (`randoInf`,
     RANDO_INF_OBTAINED_CLOCK_DAY_1 à NIGHT_3), départ compris ;
   - moment : demi-journée de la sauvegarde dans le sélecteur Moment (option `ui.link.moment`) ;

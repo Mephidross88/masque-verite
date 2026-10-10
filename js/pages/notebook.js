@@ -29,6 +29,7 @@ const NOTEBOOK_TPL = paneTpl('notebook', `<h1>Journal des Bombers</h1><p class="
           <label class="check"><input type="checkbox" v-model="ui.notebook.hideDone">Masquer les checks faits</label>
           <label class="check" title="Une section par scène, dans l'ordre du tracker ; la ligne de la scène réunit les horaires de ses checks"><input type="checkbox" v-model="ui.notebook.byScene">Grouper par scène</label>
           <label class="check" title="Lister aussi les checks faisables à toute heure (barre sur tout le cycle)"><input type="checkbox" v-model="ui.notebook.all">Aussi les checks sans horaire</label>
+          <label v-if="!s.RO_SHUFFLE_GOLD_SKULLTULAS" class="check" title="Lister aussi les Skulltulas d’or quand elles ne sont pas mélangées (pour les récompenses des Maisons des Araignées) ; elles comptent alors dans la progression"><input type="checkbox" v-model="ui.checks.alwaysGS">Suivre aussi les Skulltulas non mélangées</label>
         </div>
       </div>
 
