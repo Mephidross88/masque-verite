@@ -79,7 +79,7 @@ const ITEMS_TPL = `
           <div v-for="(row,ri) in g.boxes" :key="ri" class="box-row">
             <div v-for="(box,bi) in row" :key="bi" class="item-box">
               <div class="oc-row">
-                <div class="icon-grid" :class="{cols2:box.cols === 2, free:box.big, small:box.small}">
+                <div class="icon-grid" :class="{cols2:box.cols === 2, free:box.big, small:box.small, tight:box.items.some(timeSongLinked)}">
                   <item-tile v-for="k in box.items" :key="k" :k="k" :class="{big:k === box.big}"></item-tile></div>
                 <div v-if="box.pad && itemVisible(ITEM_BY_KEY.ocarina_button_a)" class="oc-pad">
                   <div class="oc-c"><item-tile v-for="b in ['c_up', 'c_left', 'a', 'c_right', 'c_down']" :key="b" :k="'ocarina_button_' + b" :class="'oc-' + b"></item-tile></div>
@@ -197,5 +197,5 @@ function useItemsPanel(ctx){
   };
   const itemLists = computed(() => ITEMS_PAGE.lists.map(l => listOf(l.id)).filter(l => l.total));
   const listModal = computed(() => String(modal.value).startsWith('list-') ? listOf(modal.value.slice(5)) : null);
-  return { itemCards, fairyGoal, setDg, addDg, addTokens, ITEMS_PAGE, itemVisible, timeCells, itemLists, listModal, listLabel, iconSrc, skeletonOn, dgKeys };
+  return { itemCards, fairyGoal, setDg, addDg, addTokens, ITEMS_PAGE, itemVisible, timeSongLinked, timeCells, itemLists, listModal, listLabel, iconSrc, skeletonOn, dgKeys };
 }

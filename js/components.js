@@ -40,27 +40,33 @@ const ItemTile = {
     item(){ return ITEM_BY_KEY[this.k]; },
     value(){ return store.game.items[this.k]; },
     src(){ return this.icon ? 'icons/' + this.icon : this.stage && this.item.icons ? 'icons/' + this.item.icons[this.stage - 1] : iconSrc(this.item); },
-    on(){ return this.stage ? this.value >= this.stage : itemActive(this.item, this.value); },
+    // Chant du temps inversé / accéléré non mélangé : lié au Chant du temps (allumé et cliqué avec lui)
+    linked(){ return timeSongLinked(this.k); },
+    on(){ return this.linked ? itemActive(ITEM_BY_KEY.song_time, store.game.items.song_time)
+      : this.stage ? this.value >= this.stage : itemActive(this.item, this.value); },
     // chant obtenu mais injouable : touches de l'ocarina manquantes (barré, et nommées au survol)
     missing(){ const m = this.on && songMissing(this.item); return m && m.length ? m : null; },
     title(){
       const base = this.label || (!this.stage ? itemTitle(this.item) : this.item.stages ? this.item.stages[this.stage] : this.item.label + ' : ' + this.stage);
-      return this.missing ? base + ' — ' + t('touches manquantes : {touches}', { touches:this.missing.map(b => ITEM_BY_KEY['ocarina_button_' + b.toLowerCase()].label).join(', ') }) : base;
+      const more = this.linked ? ' — ' + t('vient avec le Chant du temps') : '';
+      return !this.missing ? base + more : base + more + ' — ' + t('touches manquantes : {touches}', { touches:this.missing.map(b => ITEM_BY_KEY['ocarina_button_' + b.toLowerCase()].label).join(', ') });
     },
     abbr(){ return itemAbbr(this.item); },
   },
   methods:{
     onClick(ev){
-      if (this.stage) store.game.items[this.k] = this.value >= this.stage ? this.stage - 1 : this.stage;
+      if (this.linked) clickItem(ev, ITEM_BY_KEY.song_time);
+      else if (this.stage) store.game.items[this.k] = this.value >= this.stage ? this.stage - 1 : this.stage;
       else clickItem(ev, this.item);
     },
     onRight(ev){
-      if (this.stage) store.game.items[this.k] = Math.min(this.value, this.stage - 1);
+      if (this.linked) rightClickItem(ev, ITEM_BY_KEY.song_time);
+      else if (this.stage) store.game.items[this.k] = Math.min(this.value, this.stage - 1);
       else rightClickItem(ev, this.item);
     },
     itemMaxed,
   },
-  template:`<button type="button" class="icon-tile" :class="{off:!on, unplayable:missing}" :aria-label="item.label" :title="title"
+  template:`<button type="button" class="icon-tile" :class="{off:!on, unplayable:missing, sat:linked}" :aria-label="item.label" :title="title"
     @click="onClick" @contextmenu.prevent="onRight">
     <img v-if="!brokenIcons[src]" :src="src" :alt="item.label" @error="brokenIcons[src]=true">
     <span v-else class="icon-abbr">{{abbr}}</span>

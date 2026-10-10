@@ -249,11 +249,16 @@ function computedStartingItems(s){
   if (s.RO_STARTING_CONSUMABLES) out.push('RI_DEKU_STICK', 'RI_DEKU_NUT');
   return out;
 }
-/* Chant du panneau → chant d'ocarina (notes : SONG_BUTTONS de js/logic.js, canPlaySong de 2Ship). songMissing(it) : touches
-   de l'ocarina qui manquent pour le jouer (touches mélangées seulement) — [] s'il est jouable, null si ce n'est pas un chant. */
+/* Chant du panneau → chant d'ocarina (notes : SONG_BUTTONS de js/logic.js, canPlaySong de 2Ship). songMissing(it) : ce qui
+   manque pour le jouer : touches de l'ocarina (touches mélangées) — [] s'il est jouable, null si ce n'est pas un chant.
+   timeSongLinked(clé) : Chant du temps inversé ou accéléré non mélangé — l'ocarina ne le reconnaît qu'avec le Chant du temps
+   (z_message.c, ocarinaAvailableSongs |= 0x3000) : tuile liée à lui (plus petite, allumée et cliquée avec lui) ; mélangé,
+   2Ship le rend jouable dès qu'on l'a (Player.cpp, VB_SONG_AVAILABLE_TO_PLAY) : tuile indépendante. */
 const PANEL_OCARINA_SONG = { song_time:'TIME', song_healing:'HEALING', song_epona:'EPONAS', song_soaring:'SOARING', song_storms:'STORMS',
   song_sonata:'SONATA', lullaby:'GORON_LULLABY', song_nova:'NEW_WAVE', song_elegy:'ELEGY', song_oath:'OATH', song_sun:'SUNS',
   song_double_time:'DOUBLE_TIME', song_inverted_time:'INVERTED_TIME', song_saria:'SARIAS' };
+const SONG_NEEDS_TIME = { song_double_time:'RO_SHUFFLE_SONG_DOUBLE_TIME', song_inverted_time:'RO_SHUFFLE_SONG_INVERTED_TIME' };
+const timeSongLinked = key => !!SONG_NEEDS_TIME[key] && !store.settings[SONG_NEEDS_TIME[key]];
 function songMissing(it){
   const song = PANEL_OCARINA_SONG[it.key];
   if (!song) return null;

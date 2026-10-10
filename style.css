@@ -318,6 +318,12 @@ svg{display:block}
 .item-box .icon-grid.free .icon-tile.big{width:64px}
 .item-box .icon-grid.free.small .icon-tile{width:46px}
 .item-box .icon-grid.free.small .icon-tile.big{width:56px}
+/* Chants du temps inversé et accéléré non mélangés : petits, de part et d'autre du Chant du temps, reliés à lui */
+.item-box .icon-grid.free.tight{justify-content:center;gap:4px}
+.item-box .icon-grid.free .icon-tile.sat{width:28px;padding:2px;border-radius:6px}
+.icon-tile.sat::before{content:'';position:absolute;top:50%;width:4px;height:2px;margin-top:-1px;background:var(--line)}
+.icon-tile.sat:first-child::before{left:calc(100% + 1px)}
+.icon-tile.sat:last-child::before{right:calc(100% + 1px)}
 .oc-row{display:flex;align-items:center;justify-content:center;gap:8px}
 .oc-row > .icon-grid{flex:1}
 .oc-row:has(.oc-pad){justify-content:space-evenly}

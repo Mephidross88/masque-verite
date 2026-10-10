@@ -715,6 +715,7 @@
   'Version de la ROM non reconnue (attendu : Majora’s Mask N64, version américaine).':'ROM version not recognized (expected: Majora’s Mask N64, US version).',
   'Vert d’incrustation':'Chroma key green',
   'Vertical — 1080 × 1920':'Vertical — 1080 × 1920',
+  'vient avec le Chant du temps':'comes with the Song of Time',
   'Voir la carte de {lieu}':'Show the map of {lieu}',
   'X':'X',
   'Y':'Y',

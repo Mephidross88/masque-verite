@@ -430,7 +430,9 @@ Rangé comme l'écran de pause du jeu (`js/items.js`, `ITEM_GROUPS`) :
   Temps en plus grand, Accéléré) ; chants des donjons (Sonate, Berceuse, Bossa Nova, Hymne du Vide) et du scénario
   (Apaisement, Appel) ; chants annexes (Epona, Envol, Tempêtes, Soleil, Saria si mélangé). Chant obtenu mais injouable faute de touches
   (touches de l'ocarina mélangées ; notes de chaque chant : `canPlaySong` de 2Ship, `SONG_BUTTONS`) : barré d'un trait rouge,
-  touches manquantes nommées au survol (`songMissing`).
+  touches manquantes nommées au survol (`songMissing`). Chants du temps inversé et accéléré non mélangés (`timeSongLinked`) :
+  l'ocarina ne les reconnaît qu'avec le Chant du temps (`z_message.c`) — petites tuiles de part et d'autre de lui, reliées,
+  allumées et cliquées avec lui ; mélangés (2Ship les rend jouables dès qu'on les a) : trois tuiles indépendantes.
 - **Objets d’échange** (sous la musique, sans titre ; `ITEMS_PAGE.tradeRows`) : deux cadres — Larme de Lune et les quatre titres
   de propriété ; Clé de Chambre, Lettre pour Kafei, Lettre Express pour Maman, Pendentif des Amoureux.
 - **Équipement** : Épée (Kokiri, Rasoir, Dorée), boucliers, Bourse (99 d'office, puis 200, 500, 5000), Magie, Double
