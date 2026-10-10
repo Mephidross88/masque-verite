@@ -32,10 +32,13 @@ fonctionnelle, et le mettre à jour quand une règle change.
      `CHECK_BY_ID`, `CHECKS_BY_SCENE`, `checkShuffled(c, s)` (liste du spoiler, sinon règles de `GeneratePools.cpp`).
   4. `js/items.js` : `ITEM_GROUPS` (panneau Objets, comme l'écran de pause ; chaque objet relié à ses `RI_…`),
      `DUNGEONS`, `ITEM_BY_KEY`, `ITEM_BY_RI` (objet de 2Ship → objet, palier, case de temple), `SPIDER_HOUSES`, helpers de
-     tuile (`itemActive`, `iconSrc`, `itemAbbr`, `itemTitle`, `clickItem`, `rightClickItem`), `applyStartingItems`.
+     tuile (`itemActive`, `iconSrc`, `itemAbbr`, `itemTitle`, `clickItem`, `rightClickItem`), `applyStartingItems`,
+     `computedStartingItems`, `startingTimeItems` (demi-journée de départ), `shipRandom` (générateur de 2Ship), mise en page
+     du panneau `ITEMS_PAGE` / `ITEM_ICONS`.
   4b. `js/logic.js` : moteur de logique (notre portage de `Rando/Logic` de 2Ship) — contexte global `L` lu par les
      conditions de `logic-data.js` (macros de `Logic.h`, temps), état `LS` / tranches `LT` (champs de bits BigInt),
-     `computeLogic(état)` → `{ regions, events, evFirst, checks:{ RC:{ ok, when } } }`, `stateFromGame(game, settings,
+     `computeLogic(état)` → `{ regions, events, evFirst, checks:{ RC:{ ok, when } } }` (`when` : tranches fines,
+     `fineRegionTimes` / `CLOSING_STAY`), `stateFromGame(game, settings,
      prices)`, `fullState(settings)`, `giveItem(état, RI)`, `HALF_MASK`, `halfDaysOf`, `halfDayLabel`, `whenText`, `whenRuns`,
      `whyLocked(game, settings, RC, moment)` (« Pourquoi pas encore ? » : objets du panneau au plus juste). Pur.
   5. `js/state.js` : persistance (`defaults`, `merge`, `load`, `store`, sauvegarde auto, `lastSaved`, `saveError`), objets de la

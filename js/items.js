@@ -249,6 +249,22 @@ function computedStartingItems(s){
   if (s.RO_STARTING_CONSUMABLES) out.push('RI_DEKU_STICK', 'RI_DEKU_NUT');
   return out;
 }
+/* Générateur de nombres de 2Ship (ShipUtils.cpp : Ship_Random_Seed, Ship_Random ; PCG32, tirage par rejet) :
+   seed → tirage(min, max), entier dans [min, max[ ; même suite que le jeu (demi-journée de départ, pierres à potins). */
+function shipRandom(seed){
+  const M = 6364136223846793005n, INC = 11634580027462260723n, MASK = (1n << 64n) - 1n;
+  let state = BigInt(seed);
+  const next32 = () => {
+    state = (state * M + INC) & MASK;
+    const x = Number((((state >> 18n) ^ state) >> 27n) & 0xFFFFFFFFn) >>> 0, rot = Number(state >> 59n);
+    return ((x >>> rot) | (x << ((32 - rot) & 31))) >>> 0;
+  };
+  return (min, max) => {
+    if (min === max) return min;
+    const n = max - min, cut = 0xFFFFFFFF - (0xFFFFFFFF % n);
+    for (;;){ const r = next32(); if (r <= cut) return min + r % n; }
+  };
+}
 /* Demi-journée de départ (StartingItems.cpp) : temps mélangé sans demi-journée parmi les objets de départ choisis (start) —
    au hasard, tirée avec la seed (Ship_Random_Seed(finalSeed) puis Ship_Random(0, 6), dans l'ordre de l'énumération de
    2Ship : jours 1 à 3 puis nuits 1 à 3) ; progressif, un temps progressif. Absente du spoiler et de la sauvegarde. */

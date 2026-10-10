@@ -220,6 +220,38 @@ function findReachable(id, reached, times){
   for (const [to, f] of src.conns){ LT = cur; if (f()) go(to); }
   for (const [to, f] of src.exits){ LT = cur; if (f()) go(to); }
 }
+/* Moments (affichage seulement) : tranches « fines » des régions. 2Ship transmet à la région rejointe toutes les tranches
+   de la région de départ dès que la sortie est possible à l'une d'elles (il cherche seulement si l'on peut y aller) ; ici,
+   une sortie ne laisse passer que les tranches où sa condition est vraie (à défaut, comme 2Ship), puis attente comme en
+   logique. Lieux qui ferment et dont on est mis dehors, sans restriction de séjour dans 2Ship (CLOSING_STAY) : celles d'un
+   lieu aux mêmes horaires. Sert aux moments des checks (frise, Moment, Journal), pas à « faisable ». */
+const CLOSING_STAY = { RR_HONEY_AND_DARLING:'RR_TOWN_SHOOTING_GALLERY', RR_TREASURE_SHOP:'RR_TOWN_SHOOTING_GALLERY' };
+function fineRegionTimes(reached, times){
+  const fine = new Map([['RR_MAX', { t:times.get('RR_MAX').t, stay:false }]]);
+  const regionOf = id => CLOSING_STAY[id] ? { ...REGION[id], stay:REGION[CLOSING_STAY[id]].stay } : REGION[id];
+  const visit = id => {
+    const src = regionOf(id), st = fine.get(id);
+    let cur = st.t;
+    if (st.stay){ cur = expandTimeForward(cur, src); st.t = cur; }
+    const pass = f => {
+      let t = 0n;
+      for (let s = 0; s < SLICE_COUNT; s++){ const b = bitOf(s); if (cur & b){ LT = b; if (f()) t |= b; } }
+      if (!t){ LT = cur; if (f()) t = cur; }   // (condition vraie seulement sur plusieurs tranches à la fois)
+      return t;
+    };
+    for (const [to, f] of [...src.conns, ...src.exits]){
+      if (!reached.has(to)) continue;
+      const t = pass(f);
+      if (!t) continue;
+      const ex = fine.get(to);
+      if (ex){ if ((ex.t | t) === ex.t) continue; ex.t |= t; }
+      else fine.set(to, { t, stay:REGION[to].wait });
+      visit(to);
+    }
+  };
+  visit('RR_MAX');
+  return fine;
+}
 function computeLogic(state){
   LS = state;
   LS.events = {};   // (recalculés à chaque fois)
@@ -240,13 +272,15 @@ function computeLogic(state){
     }
     if (!changed) break;
   }
+  // tranches fines des régions (moments seulement ; événements acquis)
+  const fine = fineRegionTimes(reached, times), fineT = id => (fine.get(id) || times.get(id)).t;
   /* Moments (affichage) : un événement de 2Ship, une fois acquis, vaut pour tout le cycle. Pour les moments, on calcule la
      première tranche où chaque événement peut avoir lieu (sa condition, tranche par tranche, avec les événements déjà
      possibles à cette tranche), jusqu'au point fixe ; à une tranche, un événement ne compte que s'il a pu avoir lieu avant
      (tout est remis à zéro à chaque cycle). */
   const allEvents = LS.events, firsts = new Map();   // entrée d'événement → première tranche
   const entries = [];
-  for (const id of reached) REGION[id].events.forEach(([ev, f], i) => { if (eventsDone.has(id + '#' + i)) entries.push({ key:id + '#' + i, ev, f, rt:times.get(id).t }); });
+  for (const id of reached) REGION[id].events.forEach(([ev, f], i) => { if (eventsDone.has(id + '#' + i)) entries.push({ key:id + '#' + i, ev, f, rt:fineT(id) }); });
   let at = 0;
   const gated = new Proxy({}, { get:(o, ev) => entries.filter(e => e.ev === ev && firsts.get(e.key) <= at).length });
   LS.events = gated;
@@ -262,10 +296,10 @@ function computeLogic(state){
     }
   }
   // checks : en logique (événements acquis, condition sur toutes les tranches de la région, comme 2Ship) ; moments :
-  // tranche par tranche, événements « déjà possibles » (sinon, à défaut, comme en logique)
+  // tranche par tranche des tranches fines de la région, événements « déjà possibles » (sinon, à défaut, comme en logique)
   const checks = {};
   for (const id of reached){
-    const r = REGION[id], rt = times.get(id).t;
+    const r = REGION[id], rt = times.get(id).t, rf = fineT(id);
     for (const [rc, f] of r.checks){
       const c = checks[rc] || (checks[rc] = { ok:false, when:0n });
       LS.events = allEvents; LT = rt;
@@ -273,9 +307,9 @@ function computeLogic(state){
       c.ok = true;
       let when = 0n;
       LS.events = gated;
-      for (let s = 0; s < SLICE_COUNT; s++){ const b = bitOf(s); if (rt & b){ at = s; LT = b; if (f()) when |= b; } }
-      if (!when){ LS.events = allEvents; for (let s = 0; s < SLICE_COUNT; s++){ const b = bitOf(s); if (rt & b){ LT = b; if (f()) when |= b; } } }
-      c.when |= when || rt;   // (condition vraie seulement sur plusieurs tranches à la fois : celles de la région)
+      for (let s = 0; s < SLICE_COUNT; s++){ const b = bitOf(s); if (rf & b){ at = s; LT = b; if (f()) when |= b; } }
+      if (!when){ LS.events = allEvents; for (let s = 0; s < SLICE_COUNT; s++){ const b = bitOf(s); if (rf & b){ LT = b; if (f()) when |= b; } } }
+      c.when |= when || rf;   // (condition vraie seulement sur plusieurs tranches à la fois : celles de la région)
     }
   }
   const evFirst = {};

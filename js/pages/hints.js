@@ -19,21 +19,7 @@ const GS_RI_WEIGHT = { RI_SOUL_BOSS_MAJORA:13, RI_MASK_DEKU:12, RI_MASK_GORON:12
   RI_REMAINS_ODOLWA:10, RI_REMAINS_TWINMOLD:10 };
 const GS_TYPE_WEIGHT = { MAJOR:9, MASK:9, BOSS_KEY:8, LESSER:6, SMALL_KEY:5, SKULLTULA_TOKEN:3, STRAY_FAIRY:3, HEALTH:2, JUNK:2 };
 const ITEM_TYPE = Object.fromEntries(CHECKS_DATA.items.map(i => [i.id, i.type]));
-// Ship_Random (PCG32) : seed → tirage(min, max) entier dans [min, max[
-function shipRandom(seed){
-  const M = 6364136223846793005n, INC = 11634580027462260723n, MASK = (1n << 64n) - 1n;
-  let state = BigInt(seed);
-  const next32 = () => {
-    state = (state * M + INC) & MASK;
-    const x = Number((((state >> 18n) ^ state) >> 27n) & 0xFFFFFFFFn) >>> 0, rot = Number(state >> 59n);
-    return ((x >>> rot) | (x << ((32 - rot) & 31))) >>> 0;
-  };
-  return (min, max) => {
-    if (min === max) return min;
-    const n = max - min, cut = 0xFFFFFFFF - (0xFFFFFFFF % n);
-    for (;;){ const r = next32(); if (r <= cut) return min + r % n; }
-  };
-}
+// (générateur de 2Ship : shipRandom, js/items.js)
 // check désigné par une pierre (scène du jeu, position de départ)
 function gossipCheck(items, seed, strength, scene, x, z){
   const list = [];

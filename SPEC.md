@@ -356,14 +356,18 @@ filtre d'incrustation sur le fond vert ; une source « Navigateur » d'OBS a son
   point fixe), sans placer d'objets. Temps : 45 tranches ; une région reçoit toutes les tranches de la région d'où l'on
   vient (comme 2Ship), puis y attend si elle le peut ; temps mélangé : seulement les demi-journées possédées.
 - **En logique** (faisable) : condition vraie sur les tranches de la région, événements acquis valant pour tout le cycle
-  (comme 2Ship). **Moments** (frise) : condition tranche par tranche ; un événement n'y compte qu'à partir de la première
-  tranche où il peut avoir lieu (tout est remis à zéro à chaque cycle : la vieille dame ne donne son masque qu'après
-  avoir été sauvée, nuit 1 à minuit).
+  (comme 2Ship). **Moments** (frise) : condition tranche par tranche, sur les tranches « fines » de la région ; un
+  événement n'y compte qu'à partir de la première tranche où il peut avoir lieu (tout est remis à zéro à chaque cycle : la
+  vieille dame ne donne son masque qu'après avoir été sauvée, nuit 1 à minuit). Tranches fines (`fineRegionTimes`) : une
+  sortie ne laisse passer que les tranches où sa condition est vraie (2Ship, lui, transmet toutes celles de la région de
+  départ), puis attente comme en logique ; le Manège des Amoureux et le Coffre-fort, qui ferment à 22 h et dont on est mis
+  dehors, reprennent les restrictions de séjour du Stand de tir aux mêmes horaires (`CLOSING_STAY` : absentes des sources
+  de 2Ship — à revérifier à la montée de version). « Faisable » n'en dépend pas.
 - **État** : d'après le panneau Objets, plus les objets donnés d'office selon la configuration (`computedStartingItems` :
   nage, touches, âmes, chants du temps non mélangés, consommables, cartes, clés et fées « au départ ») ; le Sac de Bombes
   donne aussi les Missiles Teigneux. Prix des boutiques mélangées : connus (`game.prices`), sinon 200 rubis au pire.
 - **Test** : `node tools/2ship-logic/replay_spoilers.mjs [dossier]` rejoue chaque spoiler sphère par sphère (objets du
-  spoiler, objet d'origine pour les checks hors spoiler) : tous ses checks doivent être atteints (2Ship garantit les seeds
+  spoiler, objet d'origine pour les checks hors spoiler, demi-journée de départ tirée comme 2Ship : `startingTimeItems`) : tous ses checks doivent être atteints (2Ship garantit les seeds
   sans glitch). Temps mélangé sans demi-journée de départ notée : 2Ship en tire une ; on essaie les six. À relancer après
   toute modification de `js/logic.js`, de l'extraction ou des objets.
 

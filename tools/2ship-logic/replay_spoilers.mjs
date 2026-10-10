@@ -2,7 +2,7 @@
 // (spoiler + objets donnés d'office), puis à chaque sphère on prend tous les checks en logique et on donne leur objet
 // (celui du spoiler, sinon l'objet d'origine : comme le remplissage de 2Ship). 2Ship garantit qu'une seed sans glitch se
 // finit : tous les checks du spoiler doivent être atteints. Temps mélangé sans demi-journée de départ notée : 2Ship en
-// tire une au sort (graine de la seed) ; on essaie les six.
+// tire une avec la graine de la seed (startingTimeItems de js/items.js, même tirage que le jeu).
 // Usage : node tools/2ship-logic/replay_spoilers.mjs [dossier des spoilers] (défaut : ../randomizer à côté du dépôt)
 import fs from 'fs';
 import path from 'path';
@@ -17,8 +17,8 @@ ctx.window = ctx;
 vm.createContext(ctx);
 for (const f of ['data/checks-data.js', 'data/logic-data.js', 'js/i18n.js', 'js/icons.js', 'js/config.js', 'js/checks.js', 'js/items.js', 'js/logic.js'])
   vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), ctx, { filename:f });
-const { OPT_DEFAULT, emptyState, giveItem, computeLogic, computedStartingItems, CHECKS_DATA } = vm.runInContext(
-  '({ OPT_DEFAULT, emptyState, giveItem, computeLogic, computedStartingItems, CHECKS_DATA })', ctx);
+const { OPT_DEFAULT, emptyState, giveItem, computeLogic, computedStartingItems, startingTimeItems, CHECKS_DATA } = vm.runInContext(
+  '({ OPT_DEFAULT, emptyState, giveItem, computeLogic, computedStartingItems, startingTimeItems, CHECKS_DATA })', ctx);
 const VANILLA = Object.fromEntries(CHECKS_DATA.checks.map(c => [c.id, c.item]));
 VANILLA.RC_STARTING_ITEM_DEKU_MASK = 'RI_MASK_DEKU'; VANILLA.RC_STARTING_ITEM_SONG_OF_HEALING = 'RI_SONG_HEALING';
 
@@ -53,12 +53,8 @@ for (const f of files){
   const sp = JSON.parse(fs.readFileSync(path.join(DIR, f), 'utf8'));
   if (sp.type !== '2S2H_RANDO_SPOILER') continue;
   if (sp.options.RO_LOGIC !== 0){ console.log(f, ': logique autre que « sans glitch », ignoré'); continue; }
-  const hasClock = (sp.startingItems || []).some(ri => /^RI_TIME_/.test(ri));
-  const tries = sp.options.RO_CLOCK_SHUFFLE && !hasClock
-    ? (sp.options.RO_CLOCK_SHUFFLE_PROGRESSIVE === 0 ? ['RI_TIME_DAY_1', 'RI_TIME_NIGHT_1', 'RI_TIME_DAY_2', 'RI_TIME_NIGHT_2', 'RI_TIME_DAY_3', 'RI_TIME_NIGHT_3'] : ['RI_TIME_PROGRESSIVE'])
-    : [undefined];
-  const runs = tries.map(c => ({ c, ...replay(sp, c) })).sort((a, b) => a.missing.length - b.missing.length);
-  const best = runs[0];
+  const [clock] = startingTimeItems({ ...OPT_DEFAULT, ...sp.options }, sp.startingItems || [], Number(sp.finalSeed) || 0);
+  const best = { c:clock, ...replay(sp, clock) };
   const ok = !best.missing.length;
   if (!ok) fails++;
   console.log(`${ok ? 'OK ' : 'KO '} ${f} (${sp.commitHash}) : ${best.got} checks atteints en ${best.spheres} sphères`

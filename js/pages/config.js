@@ -90,11 +90,13 @@ function useConfigPage(ctx){
     timelineSkip = true;   // (objets de départ : pas dans la chronologie)
     let start;
     const chosen = Array.isArray(sp.startingItems) ? sp.startingItems : [];
+    // (objet d'un check du spoiler : son nom, ou { price, randoItemId } pour un check avec un prix)
+    const seedItem = v => typeof v === 'string' ? v : v && v.randoItemId;
     // (cadeaux du Vendeur de masques heureux : deux checks donnés dès la création de la partie, OnFileCreate.cpp)
-    const given = ['RC_STARTING_ITEM_DEKU_MASK', 'RC_STARTING_ITEM_SONG_OF_HEALING'].map(rc => sp.checks && sp.checks[rc]).filter(ri => typeof ri === 'string');
+    const given = ['RC_STARTING_ITEM_DEKU_MASK', 'RC_STARTING_ITEM_SONG_OF_HEALING'].map(rc => sp.checks && seedItem(sp.checks[rc])).filter(Boolean);
     try { start = applyStartingItems([...chosen, ...given, ...computedStartingItems(s), ...startingTimeItems(s, chosen, Number(sp.finalSeed) || 0)]); } finally { timelineSkip = false; }
     store.game.seed = { input:String(sp.inputSeed ?? ''), final:Number(sp.finalSeed) || 0, file:file || '', commit:String(sp.commitHash || '') };
-    setSeedItems(Number(sp.finalSeed) || 0, sp.checks);   // (objets de la seed : indices)
+    setSeedItems(Number(sp.finalSeed) || 0, Object.fromEntries(Object.entries(sp.checks).map(([rc, v]) => [rc, seedItem(v)]).filter(e => e[1])));   // (objets de la seed : indices)
     notes.push(tn(n, '{n} réglage repris', '{n} réglages repris'), tn(Object.keys(s.pool).length, '{n} check dans la seed', '{n} checks dans la seed'),
       tn(start, '{n} objet de départ noté', '{n} objets de départ notés'));
     if (sp.commitHash && sp.commitHash !== SPOILER_COMMIT)
