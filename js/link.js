@@ -37,7 +37,7 @@ function readSave(j){
   const R = last.shipSaveInfo.rando;
   const out = { seed:R.finalSeed >>> 0, commit:String.fromCharCode(...(last.shipSaveInfo.commitHash || []).filter(Boolean)),
     options:{}, shuffled:{}, items:{}, obtained:{}, prices:{}, start:[], day:last.day, night:!!last.isNight, time:last.time,
-    playtime:last.shipSaveInfo.filePlaytime || 0, size:R.randoSaveChecks.length };
+    playtime:last.shipSaveInfo.filePlaytime || 0, size:R.randoSaveChecks.length, clocks:[] };
   LINK_ORDER.ro.forEach((k, i) => { if (k !== 'RO_MAX' && typeof R.randoSaveOptions[i] === 'number') out.options[k] = R.randoSaveOptions[i]; });
   R.randoSaveChecks.forEach((c, i) => {
     const rc = LINK_ORDER.rc[i];
@@ -50,6 +50,10 @@ function readSave(j){
     if (rc && c && c.obtained) out.obtained[rc] = LINK_ORDER.ri[c.randoItemId] || 'RI_UNKNOWN';
   });
   out.start = (R.randoStartingItems || []).filter(n => n > 0).map(n => LINK_ORDER.ri[n]).filter(Boolean);
+  /* demi-journées possédées (temps mélangé) : drapeaux RANDO_INF_OBTAINED_CLOCK_DAY_1 à NIGHT_3 (66 à 71, dans l'ordre jour 1,
+     nuit 1… ; randoInf : mots de 16 bits, bit de poids faible d'abord), départ compris, de l'une ou l'autre partie */
+  const inf = n => parts.some(p => ((p.shipSaveInfo.rando.randoInf || [])[n >> 4] >> (n & 15)) & 1);
+  out.clocks = [0, 1, 2, 3, 4, 5].map(i => !!inf(66 + i));
   return out;
 }
 // moment de la sauvegarde : demi-journée (0 à 5, -1 : avant le jour 1) et heure (« 6 h 02 » ; heure du jeu sur 16 bits)
@@ -62,11 +66,16 @@ function saveHours(sv){
   return Math.min(72, Math.max(0, (sv.day - 1) * 24 + (h < 6 ? h + 24 : h) - 6));
 }
 
-/* Panneau Objets d'après la sauvegarde : objets de départ (de la seed et donnés d'office) et objets des checks faits
-   (start : seulement les objets de départ) */
+/* Panneau Objets d'après la sauvegarde : objets de départ (de la seed et donnés d'office, demi-journée de départ comprise)
+   et objets des checks faits (start : seulement les objets de départ) ; demi-journées : d'après les drapeaux du jeu */
 function saveGame(sv, start){
-  const g = defaults().game;
-  applyStartingItems([...sv.start, ...computedStartingItems(store.settings), ...(start ? [] : Object.values(sv.obtained))], g);
+  const g = defaults().game, s = store.settings;
+  applyStartingItems([...sv.start, ...computedStartingItems(s), ...startingTimeItems(s, sv.start, sv.seed),
+    ...(start ? [] : Object.values(sv.obtained))], g);
+  if (!start && s.RO_CLOCK_SHUFFLE){
+    if (s.RO_CLOCK_SHUFFLE_PROGRESSIVE === RO.RO_CLOCK_SHUFFLE_RANDOM) TIME_HALVES.forEach((h, i) => { if (sv.clocks[i]) g.items['time_' + h] = true; });
+    else g.items.time_progressive = Math.max(g.items.time_progressive, sv.clocks.filter(Boolean).length);
+  }
   return g;
 }
 // report dans la partie notée, sans jamais revenir en arrière → nombre d'objets ajoutés

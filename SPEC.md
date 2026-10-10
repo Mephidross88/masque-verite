@@ -91,9 +91,12 @@ au code (`js/i18n.js`, dictionnaires `data/i18n/<code>.js`).
 - **Langue** (en tête), **import d'un spoiler** de 2Ship (`randomizer/<seed>.json`, `type: 2S2H_RANDO_SPOILER`) :
   - réglages : chaque option `RO_…` du spoiler (nombre) ; options inconnues signalées ;
   - checks de la seed : les clés de `checks` (`settings.pool`), liste exacte de 2Ship (checks exclus à la génération,
-    Skulltulas laissées en place). **Le contenu des checks n'est jamais lu.** Avec cette liste, changer un réglage de
+    Skulltulas laissées en place). **Le contenu des checks n'est jamais affiché** : gardé à part (`seedItems`), il ne sert qu'au texte des indices, une fois marqués lus. Avec cette liste, changer un réglage de
     mélange ne change plus les checks (« revenir aux réglages » la vide) ;
-  - objets de départ (`startingItems`) notés dans le panneau Objets ;
+  - objets de départ (`startingItems`) notés dans le panneau Objets, plus la demi-journée de départ que 2Ship ajoute
+    quand le temps est mélangé sans demi-journée parmi eux (`startingTimeItems` : au hasard, tirée avec la seed comme
+    `StartingItems.cpp` — `Ship_Random(0, 6)` sur finalSeed, ordre jours 1 à 3 puis nuits 1 à 3 ; progressif, un temps
+    progressif) ;
   - seed (`inputSeed`, affichée ; `finalSeed`, fichier, commit) ; spoiler d'une autre version de 2Ship : avertissement ;
     autre seed qu'une partie en cours (checks cochés) : choix entre remettre à zéro, importer quand même, annuler.
 - **Réglages** (`js/config.js`) : onglets et cartes du menu Rando de 2Ship — Logique et accès, Checks mélangés, Objets,
@@ -180,7 +183,8 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   - checks faits, et l'objet trouvé dans chacun (`game.found` : seul ce que le jeu a montré) ;
   - prix des boutiques, laiterie, cartes de Tingle mélangées (`game.prices`, lus par la logique) ;
   - panneau Objets : objets de départ (de la seed et donnés d'office) + objets des checks faits (`applyStartingItems`),
-    fusionnés au plus haut ;
+    fusionnés au plus haut ; demi-journées possédées (temps mélangé) d'après les drapeaux du jeu (`randoInf`,
+    RANDO_INF_OBTAINED_CLOCK_DAY_1 à NIGHT_3), départ compris ;
   - moment : demi-journée de la sauvegarde dans le sélecteur Moment (option `ui.link.moment`) ;
   - temps de jeu de 2Ship (`filePlaytime`, `game.playtime`) et chronologie datée (voir Statistiques).
 - **Autre seed** que la partie notée (avec des checks faits) : ignorée et signalée (`link.foreign`), « Remettre à zéro et

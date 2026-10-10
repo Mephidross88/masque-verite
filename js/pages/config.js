@@ -89,7 +89,10 @@ function useConfigPage(ctx){
     // objets de départ du spoiler, et ceux que 2Ship donne d'office selon les réglages (absents du spoiler)
     timelineSkip = true;   // (objets de départ : pas dans la chronologie)
     let start;
-    try { start = applyStartingItems([...(Array.isArray(sp.startingItems) ? sp.startingItems : []), ...computedStartingItems(s)]); } finally { timelineSkip = false; }
+    const chosen = Array.isArray(sp.startingItems) ? sp.startingItems : [];
+    // (cadeaux du Vendeur de masques heureux : deux checks donnés dès la création de la partie, OnFileCreate.cpp)
+    const given = ['RC_STARTING_ITEM_DEKU_MASK', 'RC_STARTING_ITEM_SONG_OF_HEALING'].map(rc => sp.checks && sp.checks[rc]).filter(ri => typeof ri === 'string');
+    try { start = applyStartingItems([...chosen, ...given, ...computedStartingItems(s), ...startingTimeItems(s, chosen, Number(sp.finalSeed) || 0)]); } finally { timelineSkip = false; }
     store.game.seed = { input:String(sp.inputSeed ?? ''), final:Number(sp.finalSeed) || 0, file:file || '', commit:String(sp.commitHash || '') };
     setSeedItems(Number(sp.finalSeed) || 0, sp.checks);   // (objets de la seed : indices)
     notes.push(tn(n, '{n} réglage repris', '{n} réglages repris'), tn(Object.keys(s.pool).length, '{n} check dans la seed', '{n} checks dans la seed'),

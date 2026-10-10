@@ -249,6 +249,14 @@ function computedStartingItems(s){
   if (s.RO_STARTING_CONSUMABLES) out.push('RI_DEKU_STICK', 'RI_DEKU_NUT');
   return out;
 }
+/* Demi-journée de départ (StartingItems.cpp) : temps mélangé sans demi-journée parmi les objets de départ choisis (start) —
+   au hasard, tirée avec la seed (Ship_Random_Seed(finalSeed) puis Ship_Random(0, 6), dans l'ordre de l'énumération de
+   2Ship : jours 1 à 3 puis nuits 1 à 3) ; progressif, un temps progressif. Absente du spoiler et de la sauvegarde. */
+function startingTimeItems(s, start, seed){
+  if (!s.RO_CLOCK_SHUFFLE || start.some(ri => /^RI_TIME_/.test(ri))) return [];
+  if (s.RO_CLOCK_SHUFFLE_PROGRESSIVE !== RO.RO_CLOCK_SHUFFLE_RANDOM) return ['RI_TIME_PROGRESSIVE'];
+  return [['RI_TIME_DAY_1', 'RI_TIME_DAY_2', 'RI_TIME_DAY_3', 'RI_TIME_NIGHT_1', 'RI_TIME_NIGHT_2', 'RI_TIME_NIGHT_3'][shipRandom(seed >>> 0)(0, 6)]];
+}
 const DUNGEON_OF = { WOODFALL:'woodfall', SNOWHEAD:'snowhead', GREAT_BAY:'greatBay', STONE_TOWER:'stoneTower' };
 // objets (noms RI_…) → panneau Objets (g : la partie, store.game par défaut) : objets de départ du spoiler, objets trouvés
 // d'après la sauvegarde (js/link.js). → nombre d'objets notés
