@@ -193,7 +193,8 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   - prix des boutiques, laiterie, cartes de Tingle mélangées (`game.prices`, lus par la logique) ;
   - panneau Objets : objets de départ (de la seed et donnés d'office) + objets des checks faits + objets de l'inventaire
     qu'on peut avoir hors check (herbe, ennemis, boutiques… non mélangés) : Missiles Teigneux, Bâtons et Noix Mojo, Haricots
-    Magiques, Baril de Poudre (`inventory.items`) (`applyStartingItems`),
+    Magiques, Baril de Poudre (`inventory.items`) ; jetons des Maisons des Araignées non mélangés : le compte
+    de la sauvegarde tel quel (`skullTokenCount`, Marais sur les 16 bits du haut ; il retombe à zéro au Chant du temps) (`applyStartingItems`),
     fusionnés au plus haut ; demi-journées possédées (temps mélangé) d'après les drapeaux du jeu (`randoInf`,
     RANDO_INF_OBTAINED_CLOCK_DAY_1 à NIGHT_3), départ compris ;
   - moment : demi-journée de la sauvegarde dans le sélecteur Moment (option `ui.link.moment`) ;
@@ -449,7 +450,7 @@ Rangé comme l'écran de pause du jeu (`js/items.js`, `ITEM_GROUPS`) :
   chaque temple ; obtenu, les compteurs de petites clés s'affichent complets, le nombre noté est gardé), âme de Majora (si
   mélangées).
 - **À part** (« fourre-tout », carte juste avant les temples, en 2 colonnes) : fée perdue de Bourg-Clocher, Nage (si
-  mélangée, à cocher) ; jetons de Skulltula d'or par maison (si mélangées), nom court (« Marais », « Côte ») et compteur ;
+  mélangée, à cocher) ; jetons de Skulltula d'or par maison (toujours : la récompense de chaque maison est un check), nom court (« Marais », « Côte ») et compteur ;
   les quatre grenouilles du chœur de Don Gero sur toute la largeur (`ITEMS_PAGE.frogs`).
 - Chaque objet est relié à ses objets de 2Ship (`ri`, `levelOf` pour un palier précis) : objets de départ du spoiler,
   logique et auto-tracking ensuite. Clic : activer / palier suivant / +1 ; clic droit : l'inverse.

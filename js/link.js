@@ -58,6 +58,10 @@ function readSave(j){
      Missiles Teigneux, Bâtons et Noix Mojo, Haricots Magiques, Baril de Poudre (emplacement = numéro de l'objet dans
      inventory.items, z64item.h ; l'objet reste après le Chant du temps, sans munitions) */
   const slot = n => parts.some(p => ((p.saveInfo && p.saveInfo.inventory && p.saveInfo.inventory.items) || [])[n] === n);
+  /* jetons des Maisons des Araignées (skullTokenCount de la partie la plus récente : Marais sur les 16 bits du haut, Océan
+     sur ceux du bas, Inventory_GetSkullTokenCount) — non mélangés, 2Ship les remet à zéro au Chant du temps (OnCycleSave.cpp) */
+  const skulls = (last.saveInfo && last.saveInfo.skullTokenCount) >>> 0;
+  out.tokens = { swamp:skulls >>> 16, ocean:skulls & 0xFFFF };
   out.inv = [[7, 'RI_BOMBCHU'], [8, 'RI_DEKU_STICK'], [9, 'RI_DEKU_NUT'], [10, 'RI_MAGIC_BEAN'], [12, 'RI_POWDER_KEG']].filter(([n]) => slot(n)).map(([, ri]) => ri);
   return out;
 }
@@ -144,6 +148,8 @@ function linkReport(sv){
   if (checks > 8) linkLog(tn(checks - 8, '… et {n} autre check', '… et {n} autres checks'));
   for (const [rc, p] of Object.entries(sv.prices)) if (g.prices[rc] !== p) g.prices[rc] = p;
   const items = mergeGame(saveGame(sv));
+  // jetons non mélangés : le compte de la sauvegarde tel quel (il retombe à zéro au Chant du temps)
+  if (!store.settings.RO_SHUFFLE_GOLD_SKULLTULAS && sv.tokens) for (const [k, v] of Object.entries(sv.tokens)) if (g.tokens[k] !== v) g.tokens[k] = v;
   if (items) linkLog(tn(items, '{n} objet noté', '{n} objets notés'));
   if (!checks && !items) linkLog(t('Sauvegarde relue : rien de nouveau ({when}).', { when:link.when }));
 }

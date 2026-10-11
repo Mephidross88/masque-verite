@@ -107,14 +107,14 @@ const ITEMS_TPL = `
           @click="modal = 'list-' + l.id"><img :src="'icons/' + l.icon" alt=""><span>{{l.title}}</span><b>{{l.got}}/{{l.total}}</b></button>
       </section>
       <!-- à part (fourre-tout), en 2 colonnes : fée perdue de Bourg-Clocher, Nage (si mélangée) ; jetons des Maisons des
-           Araignées (si mélangés) ; grenouilles du chœur, sur toute la largeur -->
+           Araignées (toujours : leur récompense est un check) ; grenouilles du chœur, sur toute la largeur -->
       <section class="panel-card list-card grid2">
         <button type="button" class="check-tile" :class="{none:!store.game.townFairy, done:store.game.townFairy}" title="Fée perdue de Bourg-Clocher"
           @click="store.game.townFairy=true" @contextmenu.prevent="store.game.townFairy=false"><img src="icons/others/StrayFairyClockTown.png" alt=""><span>Bourg-Clocher</span></button>
         <button v-if="itemVisible(ITEM_BY_KEY.ability_swim)" type="button" class="check-tile" :class="{none:!store.game.items.ability_swim, done:store.game.items.ability_swim}"
           :title="ITEM_BY_KEY.ability_swim.label" @click="store.game.items.ability_swim=!store.game.items.ability_swim" @contextmenu.prevent="store.game.items.ability_swim=false">
           <img :src="iconSrc(ITEM_BY_KEY.ability_swim)" alt=""><span>{{ITEM_BY_KEY.ability_swim.label}}</span></button>
-        <button v-for="h in SPIDER_HOUSES" :key="h.id" v-show="s.RO_SHUFFLE_GOLD_SKULLTULAS" type="button" class="check-tile"
+        <button v-for="h in SPIDER_HOUSES" :key="h.id" type="button" class="check-tile"
           :class="{none:!store.game.tokens[h.id], done:store.game.tokens[h.id]>=s.RO_SKULLTULA_TOKENS_REQUIRED}"
           :title="t('{house} : {n} / {max} jetons', {house:h.label, n:store.game.tokens[h.id], max:s.RO_SKULLTULA_TOKENS_REQUIRED})"
           @click="addTokens(h.id,1)" @contextmenu.prevent="addTokens(h.id,-1)"><img :src="'icons/' + h.icon" alt=""><span>{{h.short}}</span><b>{{store.game.tokens[h.id]}}/{{s.RO_SKULLTULA_TOKENS_REQUIRED}}</b></button>
