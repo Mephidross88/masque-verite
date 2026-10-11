@@ -16,7 +16,7 @@ export const SCENE_FR = {
   SCENE_11GORONNOSATO:'Village Goron', SCENE_16GORON_HOUSE:'Autel Goron', SCENE_14YUKIDAMANOMITI:'Chemin du Pic des Neiges',
   SCENE_12HAKUGINMAE:'Pic des Neiges', SCENE_HAKUGIN:'Temple du Pic des Neiges', SCENE_HAKUGIN_BS:'Antre de Rhork',
   SCENE_30GYOSON:'Plage de la Grande Baie', SCENE_KINDAN2:'Maison des Araignées de la Côte', SCENE_31MISAKI:'Cap Zora',
-  SCENE_33ZORACITY:'Théâtre des Zoras', SCENE_SINKAI:'Puits de Pierre', SCENE_35TAKI:'Rapides de la Cascade',
+  SCENE_33ZORACITY:'Théâtre des Zoras', SCENE_SINKAI:'Puits de Pierre (Grande Baie)', SCENE_35TAKI:'Rapides de la Cascade',
   SCENE_TORIDE:'Abords de la Forteresse des Pirates', SCENE_KAIZOKU:'Forteresse des Pirates',
   SCENE_PIRATE:'Intérieur de la Forteresse des Pirates', SCENE_SEA:'Temple de la Grande Baie', SCENE_SEA_BS:'Antre de Gyorg',
   SCENE_IKANAMAE:'Route vers Ikana', SCENE_BOTI:'Cimetière d’Ikana', SCENE_HAKASHITA:'Sous le Cimetière',
