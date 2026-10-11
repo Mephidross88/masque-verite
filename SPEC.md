@@ -323,7 +323,8 @@ filtre d'incrustation sur le fond vert ; une source « Navigateur » d'OBS a son
   cowGrottoMap d'ObjGrass.cpp) : herbes et coffre (créé par En_Torch) placés dans la salle commune. Anneaux d'herbe de
   Keaton, objets cachés (un point libère plusieurs objets : checks de suite), fresque du mur de la Plaine (En_Gakufu),
   gong de l'École d'escrime (Obj_Dora) ; Skulltulas d'or cachées (sol meuble, caisse, ruche, pot : numéro de jeton dans
-  leurs paramètres) ; fées dans une bulle (En_Elfbub) ; ruches (drapeau d'objet). À défaut : la position d'un voisin de
+  leurs paramètres ; seulement la caisse et la ruche au bit 15, le pot de rotation Z 2 — ailleurs, ces bits disent
+  l'objet lâché) ; fées dans une bulle (En_Elfbub) ; ruches (drapeau d'objet). À défaut : la position d'un voisin de
   la même famille (rubis d'un Guay, articles d'une boutique) ; salle d'un boss : la place du boss. PNJ : l'acteur dont
   le code (décompilation embarquée par 2Ship, src/overlays/actors, téléchargée par fetch_sources.mjs) lève le drapeau
   d'événement du check (comparé par valeur : WEEKEVENTREG_57_04 = son nom parlant) ; boutiques : le marchand (acteur qui

@@ -228,13 +228,16 @@ async function extractMaps({ rom:bytes, recipe, progress }){
   /* ---------- Checks : acteur de chaque check dans les salles (règles de recipe.loc, voir gen_maps_recipe.mjs) ---------- */
   const ACTOR_ID = {};
   recipe.actors.forEach((n, i) => { ACTOR_ID[n] = i; });
-  /* drapeau d'un acteur selon son type (paramètres, décompilation de MM, comme ActorBehavior de 2Ship), par ordre de
-     préférence (un drapeau peut revenir chez plusieurs acteurs). Skulltulas d'or cachées : le sol meuble, la caisse, la
-     ruche ou le pot passe son numéro de jeton au Skulltula (paramètres « (n << 2) | 0xFF01 ») ; fées dans une bulle :
-     drapeau de la bulle (En_Elfbub). */
+  /* drapeau d'un acteur selon son type (paramètres, et l'acteur pour sa rotation ; décompilation de MM, comme ActorBehavior
+     de 2Ship), par ordre de préférence (un drapeau peut revenir chez plusieurs acteurs). Skulltulas d'or cachées : le sol
+     meuble, la caisse, la ruche ou le pot passe son numéro de jeton au Skulltula (paramètres « (n << 2) | 0xFF01 ») —
+     seulement la caisse au bit 15, la ruche au bit 15 (z_obj_comb.c, OBJCOMB_GET_8000) et le pot de rotation Z 2
+     (z_obj_tsubo.c, OBJ_TSUBO_ZROT) : ailleurs, ces bits disent l'objet lâché ; fées dans une bulle : drapeau de la bulle
+     (En_Elfbub). */
   const FLAGS = {
     c:{ ACTOR_EN_BOX:p => p & 0x1F, ACTOR_EN_SW:p => (p & 0xFC) >> 2, ACTOR_OBJ_MAKEKINSUTA:p => (p >> 8) & 0x1F,
-      ACTOR_OBJ_KIBAKO2:p => (p >> 15) & 1 ? p & 0x1F : -1, ACTOR_OBJ_COMB:p => p & 0x1F, ACTOR_OBJ_TSUBO:p => p & 0x1F },
+      ACTOR_OBJ_KIBAKO2:p => (p >> 15) & 1 ? p & 0x1F : -1, ACTOR_OBJ_COMB:p => (p >> 15) & 1 ? p & 0x1F : -1,
+      ACTOR_OBJ_TSUBO:(p, ac) => ac.rz === 2 ? p & 0x1F : -1 },
     k:{ ACTOR_EN_ITEM00:p => (p >> 8) & 0x7F, ACTOR_OBJ_TSUBO:p => (p >> 9) & 0x7F, ACTOR_EN_ELFORG:p => (p & 0xFE00) >> 9,
       ACTOR_ITEM_B_HEART:() => 0x1F, ACTOR_OBJ_KIBAKO:p => (p >> 8) & 0x7F, ACTOR_OBJ_KIBAKO2:p => (p >> 8) & 0x7F,
       ACTOR_OBJ_TARU:p => (p >> 8) & 0x7F, ACTOR_EN_KUSA:p => (p >> 8) & 0x7F, ACTOR_OBJ_FLOWERPOT:p => (p >> 8) & 0x7F,
@@ -293,11 +296,11 @@ async function extractMaps({ rom:bytes, recipe, progress }){
       for (const [id, ok] of tests) for (const sc of withVariants(scene)){
         const R = RAW[sc];
         if (!R) continue;
-        for (const list of R.rooms) for (const ac of list) if (ac.id === id && ok(ac.p)) return [sc, ac.x, ac.y, ac.z];
+        for (const list of R.rooms) for (const ac of list) if (ac.id === id && ok(ac.p, ac)) return [sc, ac.x, ac.y, ac.z];
       }
       return null;
     };
-    if (k !== 'a') return find(FLAG_ID[k].map(([id, fn]) => [id, p => fn(p) === rule[2]]));
+    if (k !== 'a') return find(FLAG_ID[k].map(([id, fn]) => [id, (p, ac) => fn(p, ac) === rule[2]]));
     // acteur (un parmi plusieurs) ; absent des salles (créé en cours de partie) : celui qui le crée, sur trois niveaux
     let names = [].concat(rule[2]);
     const seen = new Set(names);

@@ -5,7 +5,7 @@
    data/maps-recipe.js tirée des sources de 2Ship), gardées dans IndexedDB (base masque-verite-maps) ; data/maps-data.js
    (outil en ligne de commande, non versionné), s'il est présent, passe avant. Rien de la ROM n'est publié. */
 
-const MAPS_VER = 7;   // (à augmenter quand le calcul change : les cartes du navigateur sont alors à refaire)
+const MAPS_VER = 8;   // (à augmenter quand le calcul change : les cartes du navigateur sont alors à refaire)
 // cartes en service (window.MAPS_DATA du fichier, sinon celles du navigateur) ; infos : source, date, nom de la ROM
 const mapsData = Vue.shallowRef(window.MAPS_DATA || null);
 const MAPS_INFO = reactive({ source:window.MAPS_DATA ? 'file' : null, at:null, rom:'', old:false });
