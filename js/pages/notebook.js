@@ -21,9 +21,10 @@ const NOTEBOOK_TPL = paneTpl('notebook', `<h1>Journal des Bombers</h1><p class="
         <div class="ct-row">
           <div class="age-seg moment-seg" title="Moment du cycle (le même que dans la page Checks) : colonne mise en évidence">
             <span class="ct-label">Moment</span>
-            <button type="button" :class="{on:ui.checks.moment<0}" @click="ui.checks.moment=-1">Tous</button>
-            <button v-for="(m,i) in MOMENTS" :key="i" type="button" :class="['mo-' + (i%2 ? 'night' : 'day'), {on:ui.checks.moment===i, lock:!owned[i]}]"
-              :title="owned[i] ? m.long : t('{moment} : demi-journée pas encore possédée (temps mélangé)', {moment:m.long})" @click="ui.checks.moment=i">{{m.short}}</button>
+            <button v-if="store.game.cycle.half !== undefined" type="button" class="mo-auto" :class="{on:ui.link.moment}" title="Suivre le moment de la dernière sauvegarde lue (auto-tracking)" @click="setMomentAuto">Auto</button>
+            <button type="button" :class="{on:ui.checks.moment<0 && !ui.link.moment}" @click="setMoment(-1)">Tous</button>
+            <button v-for="(m,i) in MOMENTS" :key="i" type="button" :class="['mo-' + (i%2 ? 'night' : 'day'), {on:ui.checks.moment===i, auto:ui.link.moment, lock:!owned[i]}]"
+              :title="owned[i] ? m.long : t('{moment} : demi-journée pas encore possédée (temps mélangé)', {moment:m.long})" @click="setMoment(i)">{{m.short}}</button>
           </div>
           <label class="check" title="N'afficher que les checks faisables avec l'inventaire noté (au moment choisi), et ceux déjà faits"><input type="checkbox" v-model="ui.checks.onlyAvailable">Seulement les faisables</label>
           <label class="check"><input type="checkbox" v-model="ui.notebook.hideDone">Masquer les checks faits</label>

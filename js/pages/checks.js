@@ -23,8 +23,9 @@ const CHECKS_TPL = paneTpl('checks', `<h1>Checks</h1>`, `
         <div class="ct-row">
           <div class="age-seg moment-seg" title="Moment du cycle : les checks faisables à ce moment sont mis en avant (frise : la case du moment est entourée)">
             <span class="ct-label">Moment</span>
-            <button type="button" :class="{on:ui.checks.moment<0}" @click="ui.checks.moment=-1">Tous</button>
-            <button v-for="(m,i) in MOMENTS" :key="i" type="button" :class="['mo-' + (i%2 ? 'night' : 'day'), {on:ui.checks.moment===i, lock:!owned[i]}]" :title="owned[i] ? m.long : t('{moment} : demi-journée pas encore possédée (temps mélangé)', {moment:m.long})" @click="ui.checks.moment=i">{{m.short}}</button>
+            <button v-if="store.game.cycle.half !== undefined" type="button" class="mo-auto" :class="{on:ui.link.moment}" title="Suivre le moment de la dernière sauvegarde lue (auto-tracking)" @click="setMomentAuto">Auto</button>
+            <button type="button" :class="{on:ui.checks.moment<0 && !ui.link.moment}" @click="setMoment(-1)">Tous</button>
+            <button v-for="(m,i) in MOMENTS" :key="i" type="button" :class="['mo-' + (i%2 ? 'night' : 'day'), {on:ui.checks.moment===i, auto:ui.link.moment, lock:!owned[i]}]" :title="owned[i] ? m.long : t('{moment} : demi-journée pas encore possédée (temps mélangé)', {moment:m.long})" @click="setMoment(i)">{{m.short}}</button>
           </div>
           <label class="check" title="N'afficher que les checks faisables avec l'inventaire noté (au moment choisi), et ceux déjà faits"><input type="checkbox" v-model="ui.checks.onlyAvailable">Seulement les faisables</label>
           <label class="check"><input type="checkbox" v-model="ui.checks.hideDone">Masquer les checks faits</label>
@@ -230,6 +231,10 @@ function useChecksPage(ctx){
     lastCheck.value = null;
   }
   // « Pourquoi pas encore ? » : calcul de quelques centaines de millisecondes, lancé après l'ouverture de la fenêtre
+  /* moment choisi à la main (Tous, J1 … N3) : ne suit plus la sauvegarde ; Auto (ui.link.moment) : celui de la dernière
+     sauvegarde lue (game.cycle.half, -1 avant le jour 1 : Tous), puis à chaque lecture (linkApply) */
+  const setMoment = i => { ui.checks.moment = i; store.ui.link.moment = false; };
+  const setMomentAuto = () => { store.ui.link.moment = true; const h = store.game.cycle.half; if (h !== undefined) ui.checks.moment = h >= 0 ? h : -1; };
   const why = reactive({ check:null, moment:-1, res:null });
   function openWhy(c){
     why.check = c; why.moment = ui.checks.moment; why.res = null; ctx.modal.value = 'why';
@@ -246,7 +251,7 @@ function useChecksPage(ctx){
   const toggleCat = id => { ui.checks.hiddenCats[id] = !ui.checks.hiddenCats[id]; };
   const soloCat = id => { CHECK_CATS.forEach(k => { ui.checks.hiddenCats[k.id] = k.id !== id; }); };
   const allCats = () => { CHECK_CATS.forEach(k => { ui.checks.hiddenCats[k.id] = false; }); };
-  return { s, logicNow, logicFull, canNow, nowCells, timeline, never, formsOf, seedChecks, sceneStats, checkStats, catCounts, checkList,
+  return { s, setMoment, setMomentAuto, logicNow, logicFull, canNow, nowCells, timeline, never, formsOf, seedChecks, sceneStats, checkStats, catCounts, checkList,
     sceneTitle, checkTitle, lastCheck, toggleCheck, undoCheck, toggleExcluded, toggleScene, setAllChecks, jumpScene, toggleCat,
     soloCat, allCats, MOMENTS, TL_SUN, TL_MOON, owned, why, openWhy };
 }

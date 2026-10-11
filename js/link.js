@@ -140,7 +140,7 @@ function linkApply(sv, file, adopt){
   try { linkReport(sv); } finally { timelineQuiet = false; timelinePlay = null; timelineAt = null; }
   if (sv.playtime > g.playtime){ g.playtime = sv.playtime; g.playtimeAt = Date.now(); }
   // moment du cycle
-  if (store.ui.link.moment && half >= 0) store.ui.checks.moment = half;
+  if (store.ui.link.moment) store.ui.checks.moment = half >= 0 ? half : -1;
 }
 // checks faits, objets trouvés, prix, panneau Objets
 function linkReport(sv){

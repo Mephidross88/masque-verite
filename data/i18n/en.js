@@ -656,6 +656,7 @@
   'Suivi de la sauvegarde':'Following the save',
   'Suivi en pause':'Tracking paused',
   'Suivre aussi les Skulltulas non mélangées':'Also track unshuffled Skulltulas',
+  'Suivre le moment de la dernière sauvegarde lue (auto-tracking)':'Follow the time of the last save read (auto-tracking)',
   'Suppr':'Del',
   'Supprimer':'Delete',
   'Supprimer la disposition « {name} » ?':'Delete the layout “{name}”?',

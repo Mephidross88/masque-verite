@@ -137,7 +137,9 @@ au code (`js/i18n.js`, dictionnaires `data/i18n/<code>.js`).
   objets). Temps mélangé : les demi-journées pas encore possédées (panneau Objets, selon le mode : au hasard, dans
   l’ordre, à rebours) sont barrées sur les frises et dans le sélecteur de moment ; sans aucune, un message rappelle de
   noter celle que 2Ship donne au départ (tirée au sort, absente du spoiler : sinon seul le jour 1 à 6 h compte).
-- **Moment** (barre d'outils, `ui.checks.moment`) : Tous, ou une demi-journée (J1 … N3). Avec un moment, « faisable »
+- **Moment** (barre d'outils, `ui.checks.moment`, commun aux pages Checks et Journal) : Auto, Tous, ou une demi-journée (J1 … N3).
+  Auto (`ui.link.moment`, affiché quand l'auto-tracking a lu une sauvegarde) : le moment de la dernière sauvegarde lue,
+  repris à chaque lecture (bord en pointillés) ; choisir Tous ou une demi-journée à la main le désactive. Avec un moment, « faisable »
   veut dire faisable à ce moment-là ; la case du moment est entourée sur les frises. « Seulement les faisables »
   (`ui.checks.onlyAvailable`) : seulement les checks faisables (au moment choisi) et ceux déjà faits.
 - **Pourquoi pas encore ?** (bouton ? sur un check pas encore faisable, au survol ; clic sur sa piste dans le Journal des
