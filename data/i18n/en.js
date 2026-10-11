@@ -228,6 +228,7 @@
   'cliquez sur la carte':'click on the map',
   'CO':'BK',
   'Coché : ':'Checked: ',
+  'Coché : {check}':'Checked: {check}',
   'Coché : {check} — {item}':'Checked: {check} — {item}',
   'Cochez un ou plusieurs checks, puis cliquez sur la carte à leur emplacement (à l’étage affiché).':'Tick one or more checks, then click on the map where they are (on the floor shown).',
   'cœurs':'hearts',

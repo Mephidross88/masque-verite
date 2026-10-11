@@ -194,7 +194,9 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   - panneau Objets : objets de départ (de la seed et donnés d'office) + objets des checks faits + objets de l'inventaire
     qu'on peut avoir hors check (herbe, ennemis, boutiques… non mélangés) : Missiles Teigneux, Bâtons et Noix Mojo, Haricots
     Magiques, Baril de Poudre (`inventory.items`) ; jetons des Maisons des Araignées non mélangés : le compte
-    de la sauvegarde tel quel (`skullTokenCount`, Marais sur les 16 bits du haut ; il retombe à zéro au Chant du temps) (`applyStartingItems`),
+    de la sauvegarde tel quel (`skullTokenCount`, Marais sur les 16 bits du haut ; il retombe à zéro au Chant du temps) ; Skulltulas
+    non mélangées ramassées (2Ship ne les suit pas) : cochées d'après le drapeau de coffre de la scène (`fi` de
+    checks-data.js dans `permanentSceneFlags[numéro de la scène].chest`), lu avant que le Chant du temps ne le remette à zéro (`applyStartingItems`),
     fusionnés au plus haut ; demi-journées possédées (temps mélangé) d'après les drapeaux du jeu (`randoInf`,
     RANDO_INF_OBTAINED_CLOCK_DAY_1 à NIGHT_3), départ compris ;
   - moment : demi-journée de la sauvegarde dans le sélecteur Moment (option `ui.link.moment`) ;

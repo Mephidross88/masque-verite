@@ -67,7 +67,7 @@ const checks = [...checkScenes.keys()].sort((a, b) =>
   const c = CHECKS.get(id), l = labels.get(id);
   return { id, en:l.en, fr:l.fr, type:c.type.replace(/^RCTYPE_/, ''), scene:checkScenes.get(id)[0],
     ...(checkScenes.get(id).length > 1 ? { also:checkScenes.get(id).slice(1) } : {}),
-    flag:c.flagType.replace(/^FLAG_/, ''), item:c.item };
+    flag:c.flagType.replace(/^FLAG_/, ''), ...(c.flagType !== 'FLAG_NONE' && /^(0x[0-9a-fA-F]+|\d+)$/.test(c.flag) ? { fi:Number(c.flag) } : {}), item:c.item };
 });
 const items = [...ITEMS.values()].map(i => ({ id:i.id, en:i.name, fr:itemFr(i.id, i.name), type:i.type.replace(/^RITYPE_/, '') }));
 
@@ -101,7 +101,7 @@ const out = `/* FICHIER GÉNÉRÉ par tools/2ship-checks/extract_checks.mjs depu
    ne pas modifier à la main (libellés français : tools/2ship-checks/translate.mjs). Voir SPEC.md > Checks.
    scenes  : scènes du tracker de checks de 2Ship, dans son ordre { id, en, fr, num }
    checks  : { id, en, fr, type (RCTYPE_…), scene (scène affichée), also (autres scènes), flag (FLAG_… : CYCL_… remis à
-             zéro par le Chant du temps), item (objet d'origine) }
+             zéro par le Chant du temps), fi (numéro du drapeau), item (objet d'origine) }
    items   : { id, en, fr, type (RITYPE_…) }
    options : options du randomizer (RO_…) et leur valeur par défaut ; ro : valeurs de leurs choix (RO_GENERIC_ON…)
    order   : noms des énumérations dans l'ordre de leurs numéros (rc : checks, ri : objets, ro : options), pour la sauvegarde */

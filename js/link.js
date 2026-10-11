@@ -12,6 +12,7 @@
 
 const LINK_ORDER = CHECKS_DATA.order;
 const LINK_COMMIT = '8a24047';
+const LINK_SCENE_NUM = Object.fromEntries(CHECKS_DATA.scenes.map(s => [s.id, s.num]));   // scène → numéro (SceneId)
 const LINK_CAN = typeof window.showDirectoryPicker === 'function';   // suivi du dossier possible (sinon : fichier à la main)
 const SAVE_FILES = ['file1.json', 'file2.json', 'file3.json'];
 // link.status : off (pas de suivi), perm (dossier connu, permission à redonner d'un clic), on (dossier suivi), error
@@ -62,6 +63,15 @@ function readSave(j){
      sur ceux du bas, Inventory_GetSkullTokenCount) — non mélangés, 2Ship les remet à zéro au Chant du temps (OnCycleSave.cpp) */
   const skulls = (last.saveInfo && last.saveInfo.skullTokenCount) >>> 0;
   out.tokens = { swamp:skulls >>> 16, ocean:skulls & 0xFFFF };
+  /* Skulltulas d'or non mélangées : 2Ship ne les suit pas (randoSaveChecks) ; jeton ramassé = drapeau de coffre de la scène
+     (fi de checks-data.js) dans permanentSceneFlags[numéro de la scène].chest, de l'une ou l'autre partie (remis à zéro au
+     Chant du temps : un check coché le reste) */
+  out.skulls = [];
+  for (const c of CHECKS_DATA.checks){
+    if (c.type !== 'SKULL_TOKEN' || c.fi == null || out.shuffled[c.id]) continue;
+    const n = LINK_SCENE_NUM[c.scene];
+    if (parts.some(p => ((((p.saveInfo && p.saveInfo.permanentSceneFlags) || [])[n] || {}).chest >>> c.fi) & 1)) out.skulls.push(c.id);
+  }
   out.inv = [[7, 'RI_BOMBCHU'], [8, 'RI_DEKU_STICK'], [9, 'RI_DEKU_NUT'], [10, 'RI_MAGIC_BEAN'], [12, 'RI_POWDER_KEG']].filter(([n]) => slot(n)).map(([, ri]) => ri);
   return out;
 }
@@ -144,6 +154,11 @@ function linkReport(sv){
       g.checks[rc] = true; checks++;
       if (checks <= 8) linkLog(t('Coché : {check} — {item}', { check:c.label, item:ITEM_DATA[ri] ? ITEM_DATA[ri].label : ri }));
     }
+  }
+  // Skulltulas non mélangées ramassées (drapeaux de la scène) : cochées aussi, listées ou non (Suivre aussi les Skulltulas…)
+  for (const rc of sv.skulls || []) if (CHECK_BY_ID[rc] && !g.checks[rc]){
+    g.checks[rc] = true; checks++;
+    if (checks <= 8) linkLog(t('Coché : {check}', { check:CHECK_BY_ID[rc].label }));
   }
   if (checks > 8) linkLog(tn(checks - 8, '… et {n} autre check', '… et {n} autres checks'));
   for (const [rc, p] of Object.entries(sv.prices)) if (g.prices[rc] !== p) g.prices[rc] = p;
