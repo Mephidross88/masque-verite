@@ -267,6 +267,19 @@ const WOODS_SCENE = 'SCENE_26SARUNOMORI', WOODS_DOOR = [374, 0];
 const WOODS_PATHS = { 1:[6, 3, 2, 5, 8, 7, 4], 2:[6, 9, 8, 7, 4, 5, 2], 3:[6, 5, 2, 1, 4, 7, 8] };
 const woodsXZ = n => [-1760 + (n - 1) % 3 * 880, 880 - Math.floor((n - 1) / 3) * 880];
 
+/* Indices de certains lieux, sous la barre de la Carte : texte, et notes à jouer (touches de l'ocarina, sOcarinaSongNotes du
+   jeu, code_8019AF00.c). Chant d'Evan (z_en_zos.c) : le quart de cœur vient quand on joue ses deux moitiés à la suite près de
+   lui, dans son dos (WEEKEVENTREG_52_10 : moins de 100 unités, Evan ne fait pas face au joueur). Puits de Pierre : l'hippocampe
+   sorti de la bouteille ne suit pas un chemin de la scène (le chemin 0 est celui de l'autre hippocampe, qui tourne autour du
+   rocher, z_en_ot.c) : texte seulement. */
+const MAP_HINTS = {
+  SCENE_33ZORACITY:[{ title:t('Chant d’Evan (quart de cœur)'),
+    text:t('Dans la chambre d’Evan : se placer tout près de lui, dans son dos, pendant qu’il est penché sur son clavier, et jouer à la suite'),
+    notes:['C_RIGHT', 'C_RIGHT', 'C_DOWN', 'A', 'A', 'C_DOWN', 'C_RIGHT', 'A', '|', 'C_LEFT', 'C_LEFT', 'C_RIGHT', 'C_DOWN', 'C_DOWN', 'C_RIGHT', 'C_LEFT', 'C_DOWN'] }],
+  SCENE_SINKAI:[{ title:t('Hippocampe'),
+    text:t('Le libérer de sa bouteille à l’entrée, puis le suivre sous forme Zora') }],
+};
+
 /* ---------- Carte d'une scène (composant) ----------
    Sol vu de dessus (nord en haut), murs, eau ; un repère par sortie (zone de chargement ou porte), avec le nom de la
    scène d'arrivée ; clic : aller à la carte de cette scène. Molette : zoom autour du curseur ; glisser : déplacer. */
@@ -445,7 +458,10 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
         <div v-if="mapGroups.length > 1" class="zmap-tabs map-groups" title="Plusieurs grottes partagent cette salle : choisissez celle dont afficher les checks">
           <button type="button" :class="{on:!mapGroup}" @click="mapGroup = ''">Tous</button>
           <button v-for="g in mapGroups" :key="g.id" type="button" :class="{on:mapGroup===g.id}" @click="mapGroup = g.id">{{g.label}} <small>{{g.n}}</small></button></div>
-        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :counts="mapPlaceCounts" :stones="ui.map.stones ? hintStones(mapBase) : []" @stone="toggleHint" :path="woodsPath" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
+        <div v-for="(h,i) in mapHints" :key="'h' + i" class="zmap-hint"><span class="zh-ic" v-html="ICONS.hint"></span>
+          <div><b>{{h.title}}</b> — {{h.text}}<span v-if="h.notes" class="zh-notes"><template v-for="(b,j) in h.notes" :key="j"><i v-if="b === '|'" class="zh-sep"></i>
+            <img v-else :src="iconSrc(ITEM_BY_KEY['ocarina_button_' + b.toLowerCase()])" :alt="b"></template></span></div></div>
+        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :counts="mapPlaceCounts" :stones="ui.map.stones ? hintStones(mapBase) : []" @stone="toggleHint" :path="mapPath" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
           @goto="mapGoto" @check="toggleCheck" @place="mapPlace"></map-view>
         <div v-if="mapEdit" class="zmap-edit">
           <div class="ze-head"><b>Placer les checks sans position</b>
@@ -475,7 +491,7 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
           <span class="muted">{{ui.map.editTool ? t('(outil de placement : tous les checks du jeu, sans filtres)') : t('(clic : cocher)')}}</span></div>
         <div class="zmap-legend"><span><i class="lg-ground"></i>Sol, du plus bas au plus haut</span><span><i class="lg-water"></i>Eau</span>
           <span><i class="lg-exit"></i>Sortie (clic : voir la carte du lieu d’arrivée)</span><span><i class="lg-stone"></i>Pierre à potins (clic : lue)</span>
-          <span v-if="woodsPath"><i class="lg-path"></i>{{woodsPath.tip}}</span></div>
+          <span v-if="mapPath"><i class="lg-path"></i>{{mapPath.tip}}</span></div>
         <p class="maps-src">{{MAPS_INFO.source === 'file' ? t('Cartes du fichier data/maps-data.js.') : t('Cartes fabriquées dans ce navigateur depuis {rom}.', {rom:MAPS_INFO.rom || 'la ROM'})}}
           <button v-if="MAPS_INFO.source === 'browser'" type="button" class="link" @click="mapsForgetAsk">Oublier ces cartes</button>
           <label class="check maps-tool" title="Outil pour placer à la main les checks sans position, et exporter ces positions (contributeurs)"><input type="checkbox" v-model="ui.map.editTool">Outil de placement des checks</label></p>
@@ -495,6 +511,9 @@ function useMapPage(ctx){
   /* Bois Perdus : chemin du singe selon le jour (ui.map.woods ; auto : jour de la sauvegarde suivie, sinon du moment de la
      page Checks, sinon jour 1). Depuis la sortie est de la clairière 6 (l'entrée), puis le centre de chaque clairière. */
   const woodsHere = computed(() => mapBase.value === WOODS_SCENE);
+  // chemin tracé sur la carte : Bois Perdus (selon le jour)
+  const mapPath = computed(() => woodsHere.value ? woodsPath.value : null);
+  const mapHints = computed(() => MAP_HINTS[mapBase.value] || []);
   const woodsPath = computed(() => {
     if (!woodsHere.value || ui.map.woods === 'off') return null;
     const half = store.game.cycle.half, m = ui.checks.moment;
@@ -650,5 +669,5 @@ function useMapPage(ctx){
   }
   function mapsForgetAsk(){ if (confirm(t('Oublier les cartes gardées dans ce navigateur ?'))) mapsForget(); }
   return { mapPlaceCounts, mapOfScene, openMapOf, mapBase, mapHoles, mapHome, mapValidate, mapApprox, mapGroup, mapGroups, mapCheckHelp, mapMissing, mapEdit, mapPick, mapPicked, mapToPlace, mapPlacedList, mapPlacedHere, mapPlace, mapEditCount, mapExport, mapClearEdits, mapEdits,
-    mapChecks, mapsData, MAPS_INFO, woodsHere, woodsPath, mapScene, mapBack, mapGoto, mapGoBack, mapSceneGroups, mapSceneName, mapsJob, mapsMake, mapsForgetAsk };
+    mapChecks, mapsData, MAPS_INFO, woodsHere, woodsPath, mapPath, mapHints, mapScene, mapBack, mapGoto, mapGoBack, mapSceneGroups, mapSceneName, mapsJob, mapsMake, mapsForgetAsk };
 }

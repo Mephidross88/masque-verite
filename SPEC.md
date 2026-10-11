@@ -296,6 +296,10 @@ filtre d'incrustation sur le fond vert ; une source « Navigateur » d'OBS a son
   6 5 2 1 4 7 8 (`WOODS_PATHS` de `js/pages/map.js`, relevé en jeu). Tracé jaune avec flèches, réglage « Chemin » de la
   barre, sur cette carte seulement (`ui.map.woods`) : Auto (jour de la sauvegarde suivie, sinon du moment de la page
   Checks, sinon jour 1), Jour 1 à 3, Masqué. Aussi dans la fenêtre de stream.
+- **Indices de lieu** (`MAP_HINTS`, sous la barre de la Carte, selon le lieu) : Théâtre des Zoras, chant d'Evan pour son quart de
+  cœur (touches tirées de `sOcarinaSongNotes` du jeu : ▶▶▼AA▼▶A puis ◀◀▶▼▼▶◀▼, joués dans son dos, tout près, quand il est
+  penché sur son clavier — `z_en_zos.c`) ; Puits de Pierre (Grande Baie), l'hippocampe à libérer puis suivre en Zora (pas de
+  tracé : il ne suit pas un chemin de la scène — le chemin 0 est celui de l'autre hippocampe, qui tourne autour du rocher).
 - **Fabrication** : depuis la ROM de Majora's Mask du joueur (N64 US, compressée ou non, .z64 / .v64), jamais distribuée :
   choisie sur la page Carte, lue dans le navigateur (`js/maps-extract.js`, chargé à la demande), cartes gardées dans
   IndexedDB (`masque-verite-maps`), « Oublier ces cartes ». En ligne de commande : `tools/2ship-maps/extract_maps.mjs`
