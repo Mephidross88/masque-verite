@@ -153,6 +153,11 @@ au code (`js/i18n.js`, dictionnaires `data/i18n/<code>.js`).
 - **Formes** (pages Checks et Journal) : un point de couleur par forme avec laquelle le check est faisable (humain : beige,
   Mojo : vert, Goron : brun, Zora : bleu ; voir Logique de 2Ship > Formes) ; aucun point si les quatre conviennent ; points
   reliés : plusieurs formes à la suite. Détail au survol.
+- **Boss à vaincre** (pages Checks et Journal) : restes du boss (Odolwa, Goht, Gyorg) à côté du check quand il faut l'avoir
+  vaincu (`checkBosses` de `js/logic.js` : la logique « tout obtenu » sans l'événement RE_CLEARED_… du temple — bloqué,
+  `state.block` — n'atteint plus le check ; la Forteresse de Pierre n'a pas d'événement dans 2Ship). Ex. promenade en barque
+  et course du majordome (Bois-Cascade), chorale des grenouilles, Lame Dorée, course des Gorons (Pic des Neiges), jeu du
+  pêcheur (Grande Baie). « Après la victoire sur … » au survol.
 - Checks faits d'après la sauvegarde (auto-tracking) : objet trouvé à la suite du libellé (`game.found`), aussi dans le
   Journal des Bombers.
 

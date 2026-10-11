@@ -67,6 +67,7 @@ const CHECKS_TPL = paneTpl('checks', `<h1>Checks</h1>`, `
               <button type="button" class="ci-main" :title="checkTitle(c)" @click="toggleCheck(c)">
                 <span class="ci-cat cat-svg" v-html="CHECK_CAT[c.cat].icon"></span>
                 <span class="ci-label">{{c.label}}<i v-if="store.game.checks[c.id] && store.game.found[c.id]" class="ci-found" title="Objet trouvé (d’après la sauvegarde)">{{foundLabel(c.id)}}</i><i v-else-if="hintsByCheck[c.id]" class="ci-found seen" title="Objet indiqué (indice lu)">{{hintsByCheck[c.id].join(', ')}}</i></span>
+                <span v-if="bossOf[c.id]" class="ci-boss" :title="bossOf[c.id].tip"><img v-for="b in bossOf[c.id].list" :key="b.name" :src="'icons/' + b.icon" :alt="b.name"></span>
                 <span v-if="formsOf[c.id]" class="ci-forms" :class="{seq:formsOf[c.id].seq}" :title="formsOf[c.id].tip"><i v-for="f in formsOf[c.id].f" :key="f" :class="'fm-' + f"></i></span>
                 <span v-if="timeline[c.id]" class="tl3" :title="timeline[c.id].title"><span v-for="d in 3" :key="d" class="tl3-d"><b>{{d}}</b><i
                   v-for="k in 2" :key="k" :class="[timeline[c.id].cells[(d-1)*2+k-1], {mo:ui.checks.moment===(d-1)*2+k-1, ok:nowCells(c)[(d-1)*2+k-1], lock:!owned[(d-1)*2+k-1]}]"
@@ -111,6 +112,9 @@ const WHY_TPL = `
 // icônes des cases de la frise (soleil : jour, lune : nuit)
 const TL_SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>';
 const TL_MOON = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></svg>';
+// boss à vaincre avant un check (checkBosses de logic.js) : restes du boss en repère
+const BOSS_INFO = { WOODFALL:{ name:'Odolwa', icon:'boss_remains/OdolwasRemains.png' }, SNOWHEAD:{ name:'Goht', icon:'boss_remains/GohtsRemains.png' },
+  GREAT_BAY:{ name:'Gyorg', icon:'boss_remains/GyorgsRemains.png' } };
 // formes de Link (points de couleur des checks)
 const FORM_LABEL = { HUMAN:t('Humain'), DEKU:t('Mojo'), GORON:t('Goron'), ZORA:t('Zora') };
 // demi-journées du sélecteur de moment
@@ -161,6 +165,11 @@ function useChecksPage(ctx){
     }
     return out;
   });
+  // boss à vaincre avant le check : { RC: { list:[{ name, icon }], tip } }
+  const bossOf = computed(() => Object.fromEntries(Object.entries(checkBosses(s, logicFull.value)).map(([rc, bs]) => {
+    const list = bs.map(b => BOSS_INFO[b]);
+    return [rc, { list, tip:t('Après la victoire sur {boss}', { boss:list.map(b => b.name).join(t(' et ')) }) }];
+  })));
   const never = computed(() => Object.fromEntries(CHECKS.filter(c => !logicFull.value.checks[c.id]?.ok).map(c => [c.id, true])));
 
   // checks de la seed (mélangés selon la configuration ou le spoiler) ; exclus : comptent à part
@@ -251,7 +260,7 @@ function useChecksPage(ctx){
   const toggleCat = id => { ui.checks.hiddenCats[id] = !ui.checks.hiddenCats[id]; };
   const soloCat = id => { CHECK_CATS.forEach(k => { ui.checks.hiddenCats[k.id] = k.id !== id; }); };
   const allCats = () => { CHECK_CATS.forEach(k => { ui.checks.hiddenCats[k.id] = false; }); };
-  return { s, setMoment, setMomentAuto, logicNow, logicFull, canNow, nowCells, timeline, never, formsOf, seedChecks, sceneStats, checkStats, catCounts, checkList,
+  return { s, bossOf, setMoment, setMomentAuto, logicNow, logicFull, canNow, nowCells, timeline, never, formsOf, seedChecks, sceneStats, checkStats, catCounts, checkList,
     sceneTitle, checkTitle, lastCheck, toggleCheck, undoCheck, toggleExcluded, toggleScene, setAllChecks, jumpScene, toggleCat,
     soloCat, allCats, MOMENTS, TL_SUN, TL_MOON, owned, why, openWhy };
 }

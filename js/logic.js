@@ -287,7 +287,7 @@ function computeLogic(state){
       LT = times.get(id).t;
       r.events.forEach(([ev, f], i) => {
         const key = id + '#' + i;
-        if (!eventsDone.has(key) && f()){ LS.events[ev] = (LS.events[ev] || 0) + 1; eventsDone.add(key); changed = true; }
+        if (!eventsDone.has(key) && !(LS.block && LS.block.has(ev)) && f()){ LS.events[ev] = (LS.events[ev] || 0) + 1; eventsDone.add(key); changed = true; }
       });
     }
     if (!changed) break;
@@ -501,6 +501,22 @@ function fullState(settings){
   for (const d of DUNGEONS){ S0.keys[d.id] = d.keys; S0.bossKey[d.id] = true; S0.fairies[d.id] = 15; }
   S0.tokens = { SCENE_KINSTA1:30, SCENE_KINDAN2:30 };
   return S0;
+}
+
+/* ---------- Boss à vaincre (affichage) ----------
+   Pour chaque check, les temples dont il faut avoir vaincu le boss : la logique « tout obtenu » sans l'événement de 2Ship
+   (RE_CLEARED_…, bloqué : state.block) ne l'atteint plus. Pas d'événement pour la Forteresse de Pierre dans 2Ship.
+   checkBosses(settings, full) → { RC: ['WOODFALL', …] } (full : computeLogic(fullState(settings))). */
+const BOSS_EVENTS = { WOODFALL:'RE_CLEARED_WOODFALL_TEMPLE', SNOWHEAD:'RE_CLEARED_SNOWHEAD_TEMPLE', GREAT_BAY:'RE_CLEARED_GREAT_BAY_TEMPLE' };
+function checkBosses(settings, full){
+  const out = {};
+  for (const [boss, ev] of Object.entries(BOSS_EVENTS)){
+    const S = fullState(settings);
+    S.block = new Set([ev]);
+    const res = computeLogic(S);
+    for (const [rc, x] of Object.entries(full.checks)) if (x.ok && !(res.checks[rc] && res.checks[rc].ok)) (out[rc] = out[rc] || []).push(boss);
+  }
+  return out;
 }
 
 /* ---------- Formes (affichage) ----------

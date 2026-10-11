@@ -1182,6 +1182,10 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .fm-goron{background:#b5651d}
 .fm-zora{background:#3d9be0}
 .check-item.done .ci-forms,.nb-row.done .ci-forms{opacity:.45}
+/* boss à vaincre avant le check : restes du boss, petits */
+.ci-boss{flex:none;display:inline-flex;align-items:center;gap:1px;align-self:center}
+.ci-boss img{width:18px;height:18px;object-fit:contain}
+.check-item.done .ci-boss,.nb-row.done .ci-boss{opacity:.45}
 .ci-found.seen{background:none;border:1px dashed color-mix(in srgb,var(--ocarina) 55%,var(--line))}
 /* prix d'une boutique / peste Mojo / marchand : connu (toujours visible), inconnu « ? » (au survol), trop cher pour la bourse */
 .ci-price{width:auto;min-width:28px;padding:0 6px;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
