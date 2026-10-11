@@ -578,7 +578,7 @@ function useMapPage(ctx){
       const done = !!store.game.checks[c.id], now = !done && canNow(c);
       if (filters && (f.hiddenCats[c.cat] || (f.hideDone && done) || (f.onlyAvailable && !done && !now))) continue;
       if (q && !normMap(c.label).includes(q) && !normMap(CHECK_SCENE[c.scene] ? CHECK_SCENE[c.scene].label : '').includes(q)) continue;
-      const w = logicFull.value.checks[c.id], when = w && w.ok ? whenText(w.when) : null;
+      const w = logicFull.value.checks[c.id], when = w && w.ok ? whenText(w.when, c.id) : null;
       out.push({ c, x:p[1], y:p[2], z:p[3], approx:!!p[4] && !mapEdits[c.id] && !MAPS_RECIPE.manual[c.id], st:done ? 'done' : now ? 'now' : 'later',
         tip:c.label + ' — ' + (done ? t('fait') : now ? t('faisable') : t('pas encore faisable')) + (when ? ' · ' + when : '') });
     }

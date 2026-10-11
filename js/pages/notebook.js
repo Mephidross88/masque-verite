@@ -110,15 +110,15 @@ function useNotebookPage(ctx){
       if (s.excluded[c.id]) continue;
       const f = full[c.id];
       if (!f || !f.ok) continue;
-      const text = whenText(f.when);
+      const text = whenText(f.when, c.id);
       if (!text && !ui.notebook.all) continue;
       const done = !!store.game.checks[c.id];
       if (ui.notebook.hideDone && done) continue;
       if (ui.checks.onlyAvailable && !done && !canNow(c)) continue;
       const scene = CHECK_SCENE[c.scene].label;
       if (q && !norm(c.label).includes(q) && !norm(scene).includes(q)) continue;
-      const n = now[c.id], runs = whenRuns(f.when);
-      out.push({ c, scene, text, full:runs, now:n && n.ok ? whenRuns(n.when) : [], start:runs.length ? runs[0][0] : 0 });
+      const n = now[c.id], runs = whenRuns(f.when, c.id);
+      out.push({ c, scene, text, full:runs, now:n && n.ok ? whenRuns(n.when, c.id) : [], start:runs.length ? runs[0][0] : 0 });
     }
     return out.sort((a, b) => a.start - b.start || a.full[0][1] - b.full[0][1] || a.c.label.localeCompare(b.c.label));
   });

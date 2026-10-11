@@ -403,7 +403,10 @@ filtre d'incrustation sur le fond vert ; une source « Navigateur » d'OBS a son
   aire de jeu des Pestes Mojo, pas de partie de 23 h 30 à 6 h (`z_en_lift_nuts.c`) ; Boutique Curiosités, porte ouverte de
   22 h à 5 h (`z_en_door.c` ; 2Ship laisse y attendre toute la journée) ; articles du Poste d'échange, porte fermée de 21 h
   à 22 h et pas de vendeur la nuit 3 après 22 h (`z_en_ossan.c`) ; pêcheur de la Grande Baie, pas de partie de 4 h à 7 h
-  ni de 16 h à 19 h (`z_en_jgame_tsn.c` ; 2Ship : la première plage). Les autres horaires du code (portes : `z_en_door.c`,
+  ni de 16 h à 19 h (`z_en_jgame_tsn.c` ; 2Ship : la première plage). Heure exacte de quelques checks, plus fine que les tranches
+  (`EXACT_HOURS` : texte, frises et Journal en repère ponctuel ; moments limités à la tranche qui la contient) : invasion
+  du Ranch Romani, nuit 1 à 2 h 30 (`z_en_invadepoh.c`) ; vieille dame de Bourg-Clocher Nord, nuit 1 à minuit (Sakon parti
+  à 0 h 20, `z_en_suttari.c`). Les autres horaires du code (portes : `z_en_door.c`,
   personnages) sont déjà dans la logique de 2Ship (relevé du 2026-10-10). « Faisable » n'en dépend pas.
 - **Formes** (`checkForms`, affichage) : la logique de 2Ship ne suit pas la forme de Link. Pour chaque check, sa propre
   condition (pas le chemin) est évaluée tout obtenu avec ce que chaque forme peut utiliser : humain (tout sauf les masques

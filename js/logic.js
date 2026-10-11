@@ -321,7 +321,7 @@ function computeLogic(state){
   for (const id of reached){
     const r = REGION[id], rt = times.get(id).t, rfRegion = fineT(id);
     for (const [rc, f] of r.checks){
-      const c = checks[rc] || (checks[rc] = { ok:false, when:0n }), rf = rfRegion & (OPEN_MASK[rc] ?? ALL_SLICES);
+      const c = checks[rc] || (checks[rc] = { ok:false, when:0n }), rf = rfRegion & (OPEN_MASK[rc] ?? ALL_SLICES) & (EXACT_MASK[rc] ?? ALL_SLICES);
       LS.events = allEvents; LT = rt;
       if (!f()) continue;
       c.ok = true;
@@ -559,7 +559,7 @@ function whyLocked(game, settings, rc, moment){
   const okAt = x => x && x.ok && (moment < 0 || (x.when & HALF_MASK[moment]) !== 0n);
   const full = computeLogic(fullState(settings)).checks[rc];
   if (!full || !full.ok) return { never:true };
-  if (!okAt(full)) return { neverAt:true, when:whenText(full.when) };
+  if (!okAt(full)) return { neverAt:true, when:whenText(full.when, rc) };
   const g = JSON.parse(JSON.stringify(game)), cur = game, num = v => typeof v === 'boolean' ? +v : v || 0;
   const res = () => computeLogic(stateFromGame(g, settings, game.prices)).checks[rc];
   // dimensions où le panneau « tout obtenu » dépasse le panneau noté : { bloc, objet, clé, booléen, lo, hi, libellé(v), icône(v) }
@@ -596,15 +596,28 @@ function whyLocked(game, settings, rc, moment){
     set(d, hi);
   }
   const x = res();
-  return { items:dims.filter(d => d.v !== d.lo).map(d => ({ label:d.label(d.v), src:d.src(d.v) })), when:whenText(x.when) };
+  return { items:dims.filter(d => d.v !== d.lo).map(d => ({ label:d.label(d.v), src:d.src(d.v) })), when:whenText(x.when, rc) };
 }
 
 /* ---------- Moments ---------- */
 // heure de début d'une tranche, en heures depuis le jour 1 à 6 h (0 à 72 ; fin du cycle : 72)
 const sliceStart = s => { if (s >= SLICE_COUNT) return 72; const x = SLICE_INFO[s]; return (x.day - 1) * 24 + (x.h < 6 ? x.h + 24 : x.h) + x.m / 60 - 6; };
+/* Heure exacte de quelques checks, plus fine que les tranches de 2Ship (en heures depuis le jour 1 à 6 h) : affichée telle
+   quelle (texte, frises, Journal : whenText, whenRuns, halfDayParts avec le check) ; moments de la logique limités à la
+   tranche qui la contient (EXACT_MASK). Relevé dans le code du jeu :
+   - invasion du Ranch Romani : nuit 1, il faut y être à 2 h 30 (elle dure jusqu'à 5 h 15 ; z_en_invadepoh.c) ;
+   - vieille dame de Bourg-Clocher Nord : Sakon la vole à minuit, nuit 1 (il est parti à 0 h 20 ; z_en_suttari.c). */
+const EXACT_HOURS = { RC_ROMANI_RANCH_ALIENS:20.5, RC_CLOCK_TOWN_NORTH_BOMB_LADY:18 };
+const EXACT_MASK = Object.fromEntries(Object.entries(EXACT_HOURS).map(([rc, h]) => {
+  let s = 0; while (s + 1 < SLICE_COUNT && sliceStart(s + 1) <= h) s++;
+  return [rc, bitOf(s)];
+}));
+const EXACT_WIDTH = 0.5;    // largeur d'un repère d'heure exacte sur les frises (heures)
 /* parties d'une demi-journée (0 à 5, 12 h chacune) couvertes par un champ de tranches : [[début, fin]] en fractions de la
    demi-journée (0 à 1), plages consécutives fusionnées */
-function halfDayParts(when, i){
+function halfDayParts(when, i, rc){
+  const xh = rc && when ? EXACT_HOURS[rc] : undefined;
+  if (xh !== undefined) return Math.floor(xh / 12) === i ? [[(xh - i * 12) / 12, (xh + EXACT_WIDTH - i * 12) / 12]] : [];
   const out = [], [a, b] = HALF_DAYS[i], base = i * 12;
   for (let s = a; s <= b; s++){
     if (!(when & bitOf(s))) continue;
@@ -614,7 +627,9 @@ function halfDayParts(when, i){
   return out;
 }
 // plages horaires d'un champ de tranches : [[début, fin]] en heures depuis le jour 1 à 6 h (0 à 72), consécutives fusionnées
-function whenRuns(when){
+function whenRuns(when, rc){
+  const xh = rc && when ? EXACT_HOURS[rc] : undefined;
+  if (xh !== undefined) return [[xh, xh + EXACT_WIDTH]];
   const out = [];
   for (let s = 0; s < SLICE_COUNT; s++){
     if (!(when & bitOf(s))) continue;
@@ -631,7 +646,10 @@ const halfDayLabel = i => (i % 2 ? t('Nuit') : t('Jour')) + ' ' + (Math.floor(i 
 const sliceTime = s => { const x = SLICE_INFO[s]; return x.h + ' h' + (x.m ? ' ' + String(x.m).padStart(2, '0') : ''); };
 /* plages de tranches consécutives d'un champ, en texte : « jour 3, 13 h → nuit 3, 22 h » (fin = début de la tranche
    suivante) ; tout le temps : null */
-function whenText(when){
+function whenText(when, rc){
+  const xh = rc && when ? EXACT_HOURS[rc] : undefined;
+  if (xh !== undefined){ const c = (xh + 6) % 24, m = Math.round((c % 1) * 60);
+    return halfDayLabel(Math.floor(xh / 12)) + ', ' + Math.floor(c) + ' h' + (m ? ' ' + String(m).padStart(2, '0') : ''); }
   if (!when || when === ALL_SLICES) return null;
   const parts = [];
   for (let s = 0; s < SLICE_COUNT; s++){

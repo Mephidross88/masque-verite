@@ -137,11 +137,11 @@ function useChecksPage(ctx){
     for (const c of CHECKS){
       const x = full[c.id];
       if (!x || !x.ok) continue;
-      const text = whenText(x.when);
+      const text = whenText(x.when, c.id);
       out[c.id] = { title:text ? t('Faisable : {when}', { when:text }) : t('Faisable à tout moment'),
         cells:HALF_MASK.map(m => (x.when & m) === m ? 'full' : (x.when & m) ? 'part' : ''),
         // case partielle : remplie de gauche à droite aux heures couvertes (12 h par case)
-        fill:HALF_MASK.map((m, i) => (x.when & m) && (x.when & m) !== m ? partFill(halfDayParts(x.when, i)) : null) };
+        fill:HALF_MASK.map((m, i) => (x.when & m) && (x.when & m) !== m ? partFill(halfDayParts(x.when, i, c.id)) : null) };
     }
     return out;
   });
