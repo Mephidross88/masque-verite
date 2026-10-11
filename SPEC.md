@@ -65,6 +65,8 @@ au code (`js/i18n.js`, dictionnaires `data/i18n/<code>.js`).
   export / import de la partie, « Tout remettre à zéro » (avec confirmation : efface la partie, garde la configuration).
 - Teintes : celles de l'Œil Sheikah (parchemin, or), barre de gauche prune nocturne (nuit de Termina) ; thème sombre
   teinté de prune.
+- Réglages oui / non : interrupteurs (piste arrondie, pastille, or quand activé ; `label.check`, styles seuls) ; cases à
+  cocher classiques seulement pour choisir des éléments d'une liste (outil de placement de la Carte).
 
 ## Données de 2Ship (fichier généré)
 `data/checks-data.js` (`window.CHECKS_DATA`) est produit par `tools/2ship-checks/extract_checks.mjs` depuis les sources de
