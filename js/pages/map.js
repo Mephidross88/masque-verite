@@ -446,8 +446,9 @@ const MapView = {
     // étage affiché (donjons) : choisi, sinon celui de l'entrée (premier point d'apparition)
     levels(){ return this.sc && this.sc.lv ? this.sc.lv.map((_, i) => ({ i, name:mapLevelName(this.sc, i),
       todo:this.checks.filter(m => m.st !== 'done' && mapLevelOf(this.sc, m.y) === i).length })).reverse() : null; },
-    // (Link dans la scène : son étage, tant qu'on n'en choisit pas un autre)
-    lvl(){ return !this.levels ? null : this.level != null ? this.level : this.live ? mapLevelOf(this.sc, this.live.y)
+    // (Link dans la scène : son étage, tant qu'on n'en choisit pas un autre — jusqu'à ce qu'il change d'étage, voir liveLvl)
+    liveLvl(){ return this.levels && this.live ? mapLevelOf(this.sc, this.live.y) : null; },
+    lvl(){ return !this.levels ? null : this.level != null ? this.level : this.liveLvl != null ? this.liveLvl
       : mapLevelOf(this.sc, this.sc.sp.length ? this.sc.sp[0][1] : this.sc.lv[0]); },
     liveMark(){ return this.live && this.onLevel(this.live.y) ? this.live : null; },
     img(){ return this.images ? MAP_IMAGES[mapImgKey(this.scene, this.lvl)] || null : null; },
@@ -486,6 +487,8 @@ const MapView = {
   watch:{
     scene(){ this.view = null; this.hover = null; this.level = null; },
     lvl:{ handler(v){ this.$emit('level', v); }, immediate:true },
+    // Link change d'étage : la carte le suit, même si un autre étage avait été choisi (bouton d'étage, page Donjons)
+    liveLvl(v, old){ if (v != null && old != null && v !== old) this.level = null; },
     // (après le changement de scène) : étage du premier repère, cadrage sur tous, avec une marge
     'focus.at'(){ this.applyFocus(); },
     // carte zoomée : elle se recentre sur Link quand il approche du bord
