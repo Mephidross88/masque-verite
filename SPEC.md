@@ -201,7 +201,7 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   Link, s'il y a des checks (on y entre toujours par son trou). Ailleurs (sans check) : rien ne change. La région de Link se
   déplie aussi, les autres se replient.
 - **Régions** (regroupement par scène) : celles de la liste des cartes (Centre, Sud, Nord, Ouest, Est, Autres ; `MAP_REGIONS`),
-  lieux dans l'ordre du chemin (Autel du Pic Isolé : au centre, après la Plaine Termina) ; en-tête repliable (`ui.notebook.regions`)
+  lieux dans l'ordre du chemin (Autel du Pic Isolé : au nord, après le Village Goron) ; en-tête repliable (`ui.notebook.regions`)
   avec faits / total et, repliée, les horaires réunis de ses checks. « Tout déplier » : régions et lieux ; « Tout replier » :
   les lieux (régions ouvertes).
 - **Axe** : les 72 heures du cycle (jour 1, 6 h → jour 4, 6 h), en-tête des six demi-journées (soleil / lune) et

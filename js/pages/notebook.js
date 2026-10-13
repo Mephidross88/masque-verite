@@ -118,8 +118,8 @@ const NOTEBOOK_TPL = paneTpl('notebook', `<h1>Journal des Bombers</h1><p class="
 /* lieu du Journal où est Link (suivi en direct) : sa scène si elle a son lieu ; variante (Marais purifié, printemps,
    Forteresse inversée) : sa scène d'origine ; intérieur, boutique : le lieu de la plupart de ses checks (recipe.cs) ; grotte
    (une salle de SCENE_KAKUSIANA) : celui des checks de sa salle (cartes fabriquées), le lieu d'où vient Link (prev) d'abord */
-// région d'un lieu (liste des cartes, MAP_REGIONS de js/pages/map.js) ; Autel du Pic Isolé (SCENE_KAKUSIANA) : centre
-const nbRegionOf = id => MAP_REGION_OF[id] || (id === 'SCENE_KAKUSIANA' ? 'centre' : 'autres');
+// région d'un lieu (liste des cartes, MAP_REGIONS de js/pages/map.js) ; Autel du Pic Isolé (SCENE_KAKUSIANA, au Village Goron) : nord
+const nbRegionOf = id => MAP_REGION_OF[id] || (id === 'SCENE_KAKUSIANA' ? 'nord' : 'autres');
 const NB_VARIANT_OF = {};
 for (const [o, vs] of Object.entries(MAPS_RECIPE.variants || {})) for (const v of vs) NB_VARIANT_OF[v] = o;
 function nbSceneOf(scene, room, prev){
@@ -178,8 +178,8 @@ function useNotebookPage(ctx){
     const left = x.list.filter(c => !s.excluded[c.id] && !store.game.checks[c.id]);
     return [x.scene.id, left.length > 0 && left.every(c => logicNow.value.checks[c.id] && logicNow.value.checks[c.id].ok)];
   })));
-  /* par région (celles de la liste des cartes, lieux dans l'ordre du chemin ; Autel du Pic Isolé : au centre, avec la Plaine
-     Termina), la première scène de chaque région portant l'en-tête de la région (head) */
+  /* par région (celles de la liste des cartes, lieux dans l'ordre du chemin ; Autel du Pic Isolé : au nord, après le
+     Village Goron), la première scène de chaque région portant l'en-tête de la région (head) */
   const notebookGroups = computed(() => {
     const rows = notebookRows.value;
     if (!ui.notebook.byScene) return [{ id:'', rows }];
@@ -187,7 +187,7 @@ function useNotebookPage(ctx){
     rows.forEach(r => (by[r.c.scene] = by[r.c.scene] || []).push(r));
     MAP_REGIONS.forEach((reg, i) => reg.list.forEach((sc, j) => { rank[sc] = i * 1000 + j; }));
     const tracker = Object.fromEntries(CHECK_SCENES.map((x, i) => [x.id, i]));
-    const at = id => rank[id] ?? (id === 'SCENE_KAKUSIANA' ? rank.SCENE_00KEIKOKU + 0.5 : MAP_REGIONS.length * 1000 + tracker[id]);
+    const at = id => rank[id] ?? (id === 'SCENE_KAKUSIANA' ? rank.SCENE_11GORONNOSATO + 0.5 : MAP_REGIONS.length * 1000 + tracker[id]);
     const groups = CHECK_SCENES.filter(x => by[x.id]).sort((a, b) => at(a.id) - at(b.id)).map(x => {
       const list = by[x.id], open = list.filter(r => !store.game.checks[r.c.id]);
       return { id:x.id, label:x.label, region:nbRegionOf(x.id), rows:list, done:list.length - open.length, can:!!sceneCan.value[x.id],
