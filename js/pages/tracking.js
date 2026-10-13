@@ -7,17 +7,15 @@ const LINK_BTN_TPL = `
         <span class="link-ic" v-html="ICONS.live"></span><i></i><span class="link-label">{{linkBadge.label}}</span></button>`;
 
 // en tête des pages, à côté du compteur de checks (suivi en ligne) : jour et heure de la dernière sauvegarde (ou du jeu, en
-// direct), frise des trois jours avec son repère ; clic : fenêtre de l'auto-tracking
+// direct) en cadran (CycleDial), heures restantes avant la fin du cycle ; clic : fenêtre de l'auto-tracking
 const SAVE_CARD_TPL = `
       <button v-if="linkFollowing() && link.save" type="button" class="progress-card save-card" :class="[link.save.half % 2 ? 'night' : 'day', {live:link.relay==='live'}]"
         :title="link.relay==='live' ? t('Partie en cours, lue en direct') : t('Dernière sauvegarde lue : {file} à {at}', {file:link.file, at:linkAt})" @click="modal='link'">
-        <span class="sc-ic" v-html="link.save.half % 2 ? ICONS.moon : ICONS.sun"></span>
+        <cycle-dial :hours="link.save.hours" :clock="link.save.half >= 0 ? link.save.clock : ''" :before="link.save.half < 0"></cycle-dial>
         <div class="pc-main">
           <div class="pc-title">{{link.relay==='live' ? t('En direct') : t('Dernière sauvegarde')}}</div>
-          <div class="pc-count"><b>{{link.save.half >= 0 ? MOMENTS[link.save.half].long : t('Avant le premier jour')}}</b>
-            <span v-if="link.save.half >= 0">{{link.save.clock}}</span></div>
-          <div class="sc-bar"><i v-for="(m,i) in MOMENTS" :key="i" :class="[i%2 ? 'n' : 'd', {past:i < link.save.half, cur:i === link.save.half}]"></i>
-            <b :style="{left:(link.save.hours*100/72)+'%'}"></b></div>
+          <div class="pc-count"><b>{{link.save.half >= 0 ? MOMENTS[link.save.half].long : t('Avant le premier jour')}}</b></div>
+          <div v-if="link.save.half >= 0" class="sc-left">{{tn(Math.max(0, Math.floor(72 - link.save.hours)), 'encore {n} heure avant la chute de la lune', 'encore {n} heures avant la chute de la lune')}}</div>
           <div class="pc-sub">{{link.relay==='live' ? link.file : t('lue à {at}', {at:linkAt}) + ' · ' + link.file}}</div>
         </div>
       </button>`;

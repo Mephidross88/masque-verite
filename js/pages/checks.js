@@ -194,8 +194,16 @@ function useChecksPage(ctx){
     const all = sceneStats.value, total = all.reduce((n, x) => n + x.total, 0), got = all.reduce((n, x) => n + x.got, 0);
     const acc = all.reduce((n, x) => n + x.accessible, 0);
     const done = all.filter(x => x.complete).length, scenes = all.filter(x => x.total).length;
+    // par région (celles de la liste des cartes : nbRegionOf de js/pages/notebook.js) : rose des vents du compteur
+    const regions = {};
+    for (const x of all){
+      if (!x.total) continue;
+      const o = regions[nbRegionOf(x.scene.id)] = regions[nbRegionOf(x.scene.id)] || { got:0, total:0 };
+      o.got += x.got; o.total += x.total;
+    }
+    for (const r of MAP_REGIONS) if (regions[r.id]) Object.assign(regions[r.id], { label:r.label.split(' — ')[0], title:r.label });
     return { got, total, sub:tn(total - got, '{n} restant', '{n} restants') + ' · ' + tn(acc, '{n} faisable', '{n} faisables')
-      + ' · ' + t('{a} / {b} scènes terminées', { a:done, b:scenes }), groups:[], avail:acc };
+      + ' · ' + t('{a} / {b} scènes terminées', { a:done, b:scenes }), groups:[], avail:acc, regions };
   });
   const catCounts = computed(() => {
     const out = Object.fromEntries(CHECK_CATS.map(k => [k.id, { total:0, left:0 }]));

@@ -194,13 +194,10 @@ function streamTemplate(parts){ return `
         <progress-card :stats="checkStats" :unit="t('checks')" title="Checks"></progress-card></div>
       <div v-else-if="w.type==='moment'" class="global-progress sw-progress">
         <div v-if="store.game.cycle.half !== undefined" class="progress-card save-card" :class="store.game.cycle.half % 2 ? 'night' : 'day'">
-          <span class="sc-ic" v-html="store.game.cycle.half % 2 ? ICONS.moon : ICONS.sun"></span>
+          <cycle-dial :hours="store.game.cycle.hours || 0" :clock="store.game.cycle.half >= 0 ? saveClock(store.game.cycle.time) : ''" :before="store.game.cycle.half < 0"></cycle-dial>
           <div class="pc-main">
             <div class="pc-title">Moment du cycle</div>
-            <div class="pc-count"><b>{{store.game.cycle.half >= 0 ? MOMENTS[store.game.cycle.half].long : t('Avant le premier jour')}}</b>
-              <span v-if="store.game.cycle.half >= 0">{{saveClock(store.game.cycle.time)}}</span></div>
-            <div class="sc-bar"><i v-for="(m,i) in MOMENTS" :key="i" :class="[i%2 ? 'n' : 'd', {past:i < store.game.cycle.half, cur:i === store.game.cycle.half}]"></i>
-              <b :style="{left:(store.game.cycle.hours*100/72)+'%'}"></b></div>
+            <div class="pc-count"><b>{{store.game.cycle.half >= 0 ? MOMENTS[store.game.cycle.half].long : t('Avant le premier jour')}}</b></div>
             <div class="pc-sub">d'après la dernière sauvegarde lue</div>
           </div></div>
         <p v-else class="sw-empty">Moment inconnu : il vient de la sauvegarde de 2Ship (auto-tracking).</p></div>

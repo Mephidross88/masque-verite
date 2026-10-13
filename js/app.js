@@ -86,7 +86,7 @@ function useShellEnd(ctx){
 }
 
 const App = {
-  components:{ Seg, ProgressCard, ItemTile, MapView },
+  components:{ Seg, ProgressCard, ItemTile, MapView, CycleDial },
   setup(){
     // pages assemblées dans l'ordre (chacune reçoit ce que les précédentes ont défini ; les rares appels vers une page
     // suivante passent par ctx, voir « défini plus loin »)
@@ -198,7 +198,7 @@ ${ITEM_LIST_TPL}
 };
 
 // langue : gabarits traduits au chargement (js/i18n.js), t() et tn() utilisables dans tous les gabarits
-[App, Seg, ProgressCard, ItemTile, MapView].forEach(c => { c.template = tpl(c.template); });
+[App, Seg, ProgressCard, ItemTile, MapView, CycleDial].forEach(c => { c.template = tpl(c.template); });
 const app = createApp(App);
 app.config.globalProperties.t = t;
 app.config.globalProperties.tn = tn;

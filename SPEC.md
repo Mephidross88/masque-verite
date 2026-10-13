@@ -108,6 +108,10 @@ au code (`js/i18n.js`, dictionnaires `data/i18n/<code>.js`).
 - **Contrôle des données** : une option de 2Ship sans réglage, ou un type de check sans catégorie, est signalé en tête.
 
 ## Checks
+- **Compteur** (en tête des pages, et fenêtre de stream) : checks faits / total, restants, faisables, lieux terminés ; rose des
+  vents par région (celles de la liste des cartes, `nbRegionOf`) — pointes Nord, Est, Sud, Ouest (la géographie de Termina)
+  remplies depuis le cœur selon la part faite (vertes : région finie), cœur : le Centre en anneau autour du pourcentage
+  global ; détail au survol ; ligne « Centre 12/72 · Nord … · Autres … » sous le total.
 - **Checks de la seed** (`checkShuffled`) : la liste du spoiler importé ; sinon les règles de `GeneratePools.cpp` :
   l'option de leur type (`RO_SHUFFLE_…`), boutiques (l'article spécial du Bazar et les deux sacs de bombes de la Boutique de
   Bombes toujours), pas les pots de l'antre de Majora. Les Skulltulas d'or laissées en place restent des checks (2Ship les
@@ -277,8 +281,11 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
 - **Interface** : pastille d'état dans la barre de gauche (en direct d'abord, puis pas de suivi, en pause, suivi, dossier
   illisible, puis l'état du relais) ; fenêtre : « En direct » (marche à suivre, état, interrupteur), « Par la sauvegarde »
   (Autosave à 1 minute, dossier, fichier suivi), moment, dernière lecture, journal.
-- **Suivi en ligne** : carte « Dernière sauvegarde » (« En direct » avec le relais) en tête des pages, à côté du compteur de checks (demi-journée et heure
-  du jeu, soleil ou lune, frise des six demi-journées avec un repère ; clic : fenêtre de l'auto-tracking) ; Journal des
+- **Suivi en ligne** : carte « Dernière sauvegarde » (« En direct » avec le relais) en tête des pages, à côté du compteur de checks (demi-journée, heures
+  restantes avant la chute de la lune ; cadran `CycleDial` : six ronds — 3 soleils, 3 lunes, un par demi-journée — qui défilent
+  sur un arc en demi-cercle, 12 h = 34°, le moment présent sous le repère, le rond en cours agrandi, les passés à gauche
+  estompés, l'heure au centre ;
+  aussi dans la fenêtre de stream ; clic : fenêtre de l'auto-tracking) ; Journal des
   Bombers : trait vertical rouge à cette heure sur toutes les lignes, heure dans l'en-tête (`link.save.hours`) ;
   le temps écoulé avant (depuis le jour 1, 6 h) est assombri et hachuré, barres comprises.
 
