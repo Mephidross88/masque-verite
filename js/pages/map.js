@@ -5,7 +5,7 @@
    data/maps-recipe.js tirée des sources de 2Ship), gardées dans IndexedDB (base masque-verite-maps) ; data/maps-data.js
    (outil en ligne de commande, non versionné), s'il est présent, passe avant. Rien de la ROM n'est publié. */
 
-const MAPS_VER = 8;   // (à augmenter quand le calcul change : les cartes du navigateur sont alors à refaire)
+const MAPS_VER = 9;   // (à augmenter quand le calcul change : les cartes du navigateur sont alors à refaire)
 // cartes en service (window.MAPS_DATA du fichier, sinon celles du navigateur) ; infos : source, date, nom de la ROM
 const mapsData = Vue.shallowRef(window.MAPS_DATA || null);
 const MAPS_INFO = reactive({ source:window.MAPS_DATA ? 'file' : null, at:null, rom:'', old:false });
@@ -222,41 +222,178 @@ function checkPos(id){
   return (mapsData.value && mapsData.value.checks && mapsData.value.checks[id]) || null;
 }
 
-const MAP_BANDS = 10;   // tranches de hauteur (une teinte chacune)
 const mapGeoCache = new WeakMap();
 /* Étages d'une scène (donjons : carte du menu pause) : étage i = hauteurs de [sol de l'étage − 80, sol du suivant − 80[,
    comme MapDisp_GetStoreyY. Nom : 1, 2… ; sous-sols S1, S2… (étage le plus bas : lb). */
 const mapLevelOf = (sc, y) => { const l = sc.lv; if (!l || y == null) return null; let i = 0; while (i + 1 < l.length && y >= l[i + 1] - 80) i++; return i; };
 const mapLevelName = (sc, i) => { const n = i + (sc.lb || 0); return n >= 0 ? String(n + 1) : t('S{n}', { n:-n }); };
-// géométrie d'une scène (à un étage : li) : sol par tranches de hauteur (quantiles : autant de sol dans chacune), autres
-// étages en fond atténué, murs, eau, cadre
+/* ---------- Plan d'une scène : sols posés sur une grille ----------
+   Les sols (triangles vus de dessus, hauteur moyenne) sont posés sur une grille (au plus PLAN_CELLS cases de côté, cases d'au
+   moins PLAN_MIN_CELL unités) : hauteur du sol le plus haut de chaque case. La grille est nettoyée — fermeture (les fentes
+   entre deux sols, pentes trop raides que l'extraction écarte, se referment), petits trous bouchés, miettes retirées — puis :
+   contour lissé (carrés marchants, puis Chaikin) rempli d'une seule teinte ; relief en ombrage doux (lumière du nord-ouest,
+   hauteurs adoucies : les zones plates restent unies, les falaises ressortent) ; eau seulement là où sa surface couvre le
+   sol ; autres étages en fond atténué. */
+const PLAN_CELLS = 420, PLAN_MIN_CELL = 6;
+function planGrid(sc, on){
+  const [x0, z0, x1, z1] = sc.b, cs = Math.max(PLAN_MIN_CELL, Math.max(x1 - x0, z1 - z0) / PLAN_CELLS);
+  const gx = x0 - cs * 3, gz = z0 - cs * 3, nx = Math.ceil((x1 - x0) / cs) + 6, nz = Math.ceil((z1 - z0) / cs) + 6;
+  // (hauteur des sommets si les cartes l'ont, fy : pentes continues ; sinon la hauteur moyenne du triangle)
+  const H = new Float32Array(nx * nz).fill(NaN), f = sc.f, fy = sc.fy && sc.fy.length * 7 === f.length * 3 ? sc.fy : null;
+  const put = (k, y) => { if (!(H[k] >= y)) H[k] = y; };
+  for (let t = 0; t < f.length; t += 7){
+    const y = f[t + 6];
+    if (!on(y)) continue;
+    const ax = f[t], az = f[t + 1], bx = f[t + 2], bz = f[t + 3], cx = f[t + 4], cz = f[t + 5], v = t / 7 * 3;
+    const ya = fy ? fy[v] : y, yb = fy ? fy[v + 1] : y, yc = fy ? fy[v + 2] : y;
+    const d = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz);
+    const ci = v => Math.floor((v - gx) / cs), cj = v => Math.floor((v - gz) / cs);
+    let hit = false;
+    if (d) for (let j = Math.max(0, cj(Math.min(az, bz, cz))); j <= Math.min(nz - 1, cj(Math.max(az, bz, cz))); j++){
+      const pz = gz + (j + 0.5) * cs;
+      for (let i = Math.max(0, ci(Math.min(ax, bx, cx))); i <= Math.min(nx - 1, ci(Math.max(ax, bx, cx))); i++){
+        const px = gx + (i + 0.5) * cs, l1 = ((bz - cz) * (px - cx) + (cx - bx) * (pz - cz)) / d, l2 = ((cz - az) * (px - cx) + (ax - cx) * (pz - cz)) / d;
+        if (l1 < -0.05 || l2 < -0.05 || l1 + l2 > 1.05) continue;
+        put(j * nx + i, l1 * ya + l2 * yb + (1 - l1 - l2) * yc); hit = true;
+      }
+    }
+    // (triangle plus fin qu'une case : la case de son centre)
+    if (!hit){ const i = ci((ax + bx + cx) / 3), j = cj((az + bz + cz) / 3); if (i >= 0 && i < nx && j >= 0 && j < nz) put(j * nx + i, y); }
+  }
+  return { H, nx, nz, cs, gx, gz };
+}
+// grille → masque nettoyé : fermeture (dilatation puis érosion, 8 voisins), trous de moins de minHole cases bouchés, morceaux
+// de moins de minPart cases retirés ; hauteurs des cases ajoutées : moyenne des voisines
+function planMask(G, minHole, minPart){
+  const { H, nx, nz } = G, n = nx * nz, M = new Uint8Array(n);
+  for (let k = 0; k < n; k++) M[k] = H[k] === H[k] ? 1 : 0;
+  const morph = (src, v) => { const out = src.slice();
+    for (let j = 1; j < nz - 1; j++) for (let i = 1; i < nx - 1; i++){ const k = j * nx + i; if (src[k] === v) continue;
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) if (src[k + dj * nx + di] === v){ out[k] = v; dj = 2; break; } }
+    return out; };
+  const C = morph(morph(M, 1), 0);
+  // composantes (4 voisins) : trous (fond hors du bord) et morceaux
+  const lab = new Int32Array(n).fill(-1), stack = [];
+  for (let k0 = 0; k0 < n; k0++){
+    if (lab[k0] >= 0) continue;
+    const v = C[k0], cells = [];
+    let edge = false;
+    lab[k0] = k0; stack.push(k0);
+    while (stack.length){
+      const k = stack.pop(), i = k % nx, j = (k - i) / nx;
+      cells.push(k);
+      if (i === 0 || j === 0 || i === nx - 1 || j === nz - 1) edge = true;
+      for (const q of [i > 0 ? k - 1 : -1, i < nx - 1 ? k + 1 : -1, j > 0 ? k - nx : -1, j < nz - 1 ? k + nx : -1])
+        if (q >= 0 && lab[q] < 0 && C[q] === v){ lab[q] = k0; stack.push(q); }
+    }
+    if (v === 0 && !edge && cells.length < minHole) for (const k of cells) C[k] = 1;
+    if (v === 1 && cells.length < minPart) for (const k of cells) C[k] = 0;
+  }
+  // hauteurs des cases ajoutées (de proche en proche)
+  for (let pass = 0, left = 1; pass < 8 && left; pass++){
+    left = 0;
+    for (let k = 0; k < n; k++){
+      if (!C[k] || H[k] === H[k]) continue;
+      let s = 0, c = 0;
+      for (const q of [k - 1, k + 1, k - nx, k + nx]) if (q >= 0 && q < n && H[q] === H[q]){ s += H[q]; c++; }
+      if (c) H[k] = s / c; else left++;
+    }
+  }
+  for (let k = 0; k < n; k++) if (!C[k]) H[k] = NaN;
+  return C;
+}
+// contours d'un masque (carrés marchants entre centres de cases, puis deux passes de Chaikin) → chemin SVG (règle evenodd)
+function planOutline(M, G){
+  const { nx, nz, cs, gx, gz } = G, adj = new Map();
+  const link = (a, b) => { (adj.get(a) || adj.set(a, []).get(a)).push(b); (adj.get(b) || adj.set(b, []).get(b)).push(a); };
+  // points : milieu d'une arête entre deux centres — horizontale (i, j)–(i+1, j) : 2 × (j × nx + i), verticale (i, j)–(i, j+1) : 2 × (…) + 1
+  const hk = (i, j) => 2 * (j * nx + i), vk = (i, j) => 2 * (j * nx + i) + 1;
+  for (let j = 0; j < nz - 1; j++) for (let i = 0; i < nx - 1; i++){
+    const tl = M[j * nx + i], tr = M[j * nx + i + 1], bl = M[(j + 1) * nx + i], br = M[(j + 1) * nx + i + 1];
+    if (tl === tr && tr === bl && bl === br) continue;
+    const T = hk(i, j), B = hk(i, j + 1), Lf = vk(i, j), R = vk(i + 1, j), e = [];
+    if (tl !== tr) e.push(T);
+    if (tr !== br) e.push(R);
+    if (bl !== br) e.push(B);
+    if (tl !== bl) e.push(Lf);
+    if (e.length === 2) link(e[0], e[1]);
+    else if (tl){ link(T, R); link(Lf, B); }   // (point col : la diagonale pleine reste d'un seul tenant)
+    else { link(T, Lf); link(R, B); }
+  }
+  const pt = p => { const k = p >> 1, i = k % nx, j = (k - i) / nx;
+    return p & 1 ? [gx + (i + 0.5) * cs, gz + (j + 1) * cs] : [gx + (i + 1) * cs, gz + (j + 0.5) * cs]; };
+  const seen = new Set();
+  let d = '';
+  for (const start of adj.keys()){
+    if (seen.has(start)) continue;
+    let loop = [], prev = -1, cur = start;
+    while (cur !== undefined && !seen.has(cur)){
+      seen.add(cur); loop.push(pt(cur));
+      const next = adj.get(cur).find(q => q !== prev && !seen.has(q));
+      prev = cur; cur = next;
+    }
+    if (loop.length < 3) continue;
+    for (let pass = 0; pass < 2; pass++){
+      const out = [];
+      for (let k = 0; k < loop.length; k++){ const a = loop[k], b = loop[(k + 1) % loop.length];
+        out.push([a[0] * 0.75 + b[0] * 0.25, a[1] * 0.75 + b[1] * 0.25], [a[0] * 0.25 + b[0] * 0.75, a[1] * 0.25 + b[1] * 0.75]); }
+      loop = out;
+    }
+    d += 'M' + loop.map(p => Math.round(p[0]) + ' ' + Math.round(p[1])).join('L') + 'Z';
+  }
+  return d;
+}
+// ombrage du relief : image de la grille (une case = un pixel ; le navigateur la lisse), transparente hors du sol
+function planShade(M, G){
+  if (typeof document === 'undefined') return null;
+  const { H, nx, nz, cs } = G, n = nx * nz, S = new Float32Array(n);
+  // hauteurs adoucies (moyenne sur 5 × 5 cases du sol)
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++){
+    const k = j * nx + i;
+    if (!M[k]) continue;
+    let s = 0, c = 0;
+    for (let dj = -2; dj <= 2; dj++) for (let di = -2; di <= 2; di++){ const ii = i + di, jj = j + dj, q = jj * nx + ii;
+      if (ii >= 0 && jj >= 0 && ii < nx && jj < nz && M[q]){ s += H[q]; c++; } }
+    S[k] = s / c;
+  }
+  const cv = document.createElement('canvas');
+  cv.width = nx; cv.height = nz;
+  const g = cv.getContext('2d'), img = g.createImageData(nx, nz), px = img.data;
+  const L = [-0.5, 0.7, -0.5], ln = Math.hypot(...L), flat = L[1] / ln;   // lumière du nord-ouest (−x, −z), en hauteur
+  for (let j = 1; j < nz - 1; j++) for (let i = 1; i < nx - 1; i++){
+    const k = j * nx + i;
+    if (!M[k]) continue;
+    const h = q => M[q] ? S[q] : S[k], dx = (h(k + 1) - h(k - 1)) / (2 * cs), dz = (h(k + nx) - h(k - nx)) / (2 * cs);
+    const nn = Math.hypot(dx, 1, dz), v = ((-dx) * L[0] + L[1] + (-dz) * L[2]) / (nn * ln) - flat;
+    if (v < 0){ px[k * 4 + 3] = Math.min(150, -v * 400); }
+    else { px[k * 4] = px[k * 4 + 1] = px[k * 4 + 2] = 255; px[k * 4 + 3] = Math.min(110, v * 300); }
+  }
+  g.putImageData(img, 0, 0);
+  return cv.toDataURL();
+}
+// plan d'une scène (à un étage : li) : sol (contour), ombrage, eau, autres étages, cadre
+let planClip = 0;
 function mapGeo(sc, li){
   const key = li == null ? -1 : li, byLevel = mapGeoCache.get(sc) || {};
   if (byLevel[key]) return byLevel[key];
-  const f0 = sc.f, paths = Array.from({ length:MAP_BANDS }, () => []), on = y => li == null || mapLevelOf(sc, y) === li;
-  const f = [];
+  const on = y => li == null || mapLevelOf(sc, y) === li;
+  const G = planGrid(sc, on), cs = G.cs, minHole = Math.max(20, Math.round((90 / cs) ** 2));
+  const M = planMask(G, minHole, 6);
+  // eau : cases du sol sous la surface d'une boîte d'eau
+  const W = new Uint8Array(M.length);
+  for (let w = 0; w < sc.water.length; w += 5){
+    const [wx0, wz0, wx1, wz1, wy] = sc.water.slice(w, w + 5);
+    if (li != null && mapLevelOf(sc, wy) !== li && mapLevelOf(sc, wy - 100) !== li) continue;
+    for (let j = Math.max(0, Math.floor((wz0 - G.gz) / cs)); j < Math.min(G.nz, Math.ceil((wz1 - G.gz) / cs)); j++)
+      for (let i = Math.max(0, Math.floor((wx0 - G.gx) / cs)); i < Math.min(G.nx, Math.ceil((wx1 - G.gx) / cs)); i++){
+        const k = j * G.nx + i; if (M[k] && G.H[k] < wy - 4) W[k] = 1; }
+  }
+  // autres étages
   let ghost = '';
-  for (let i = 0; i < f0.length; i += 7){
-    if (on(f0[i + 6])) f.push(...f0.slice(i, i + 7));
-    else ghost += `M${f0[i]} ${f0[i + 1]}L${f0[i + 2]} ${f0[i + 3]}L${f0[i + 4]} ${f0[i + 5]}Z`;
-  }
-  const hs = []; for (let i = 6; i < f.length; i += 7) hs.push(f[i]);
-  hs.sort((x, y) => x - y);
-  const cuts = Array.from({ length:MAP_BANDS - 1 }, (_, k) => hs[Math.floor((k + 1) * hs.length / MAP_BANDS)]);
-  for (let i = 0; i < f.length; i += 7){
-    let b = 0; while (b < cuts.length && f[i + 6] > cuts[b]) b++;
-    paths[b].push(`M${f[i]} ${f[i + 1]}L${f[i + 2]} ${f[i + 3]}L${f[i + 4]} ${f[i + 5]}Z`);
-  }
-  let walls = '';
-  for (let i = 0, j = 0; i < sc.w.length; i += 4, j += 2){
-    if (li != null && !(mapLevelOf(sc, sc.wy[j + 1]) >= li && mapLevelOf(sc, sc.wy[j]) <= li)) continue;
-    walls += `M${sc.w[i]} ${sc.w[i + 1]}L${sc.w[i + 2]} ${sc.w[i + 3]}`;
-  }
-  let water = '';
-  for (let i = 0; i < sc.water.length; i += 5) water += `M${sc.water[i]} ${sc.water[i + 1]}H${sc.water[i + 2]}V${sc.water[i + 3]}H${sc.water[i]}Z`;
+  if (li != null){ const G2 = planGrid(sc, y => !on(y)); ghost = planOutline(planMask(G2, minHole, 6), G2); }
   const [x0, z0, x1, z1] = sc.b, pad = Math.max(x1 - x0, z1 - z0) * 0.04;
-  const g = { bands:paths.map(p => p.join('')), walls, water, ghost, view:[x0 - pad, z0 - pad, x1 - x0 + 2 * pad, z1 - z0 + 2 * pad],
-    unit:Math.max(x1 - x0, z1 - z0) / 110 };
+  const g = { floor:planOutline(M, G), shade:planShade(M, G), shadeBox:[G.gx, G.gz, G.nx * cs, G.nz * cs], water:planOutline(W, G), ghost,
+    clip:'zmap-clip-' + (++planClip), view:[x0 - pad, z0 - pad, x1 - x0 + 2 * pad, z1 - z0 + 2 * pad], unit:Math.max(x1 - x0, z1 - z0) / 110 };
   byLevel[key] = g; mapGeoCache.set(sc, byLevel);
   return g;
 }
@@ -369,7 +506,6 @@ const MapView = {
         this.view = [cx - w / 2, cz - h / 2, w, h];
       });
     },
-    bandColor(i){ return 'var(--map-' + i + ')'; },
     go(m){ if (m.to && !m.self && mapsData.value.scenes[mapBaseOf(m.to)]) this.$emit('goto', m.to); },
     // zoom à la molette (autour du curseur), déplacement en glissant le fond, boutons + / − / tout voir
     toWorld(ev){ const r = this.$refs.svg.getBoundingClientRect(), v = this.vb, k = Math.max(v[2] / r.width, v[3] / r.height);
@@ -409,10 +545,13 @@ const MapView = {
     <div v-else class="zmap-frame">
       <svg ref="svg" :viewBox="vb.join(' ')" class="zmap-svg" :class="{dragging:drag && drag.moved, placing}" @wheel.prevent="wheel"
         @pointerdown="down" @pointermove="move" @pointerup="up" @pointerleave="drag=null">
-        <path v-if="geo.ghost" :d="geo.ghost" class="zmap-ghost" :stroke-width="geo.unit * 0.12"></path>
-        <path v-for="(d,i) in geo.bands" :key="i" :d="d" :fill="bandColor(i)" :stroke="bandColor(i)" :stroke-width="geo.unit * 0.12"></path>
+        <defs><clipPath :id="geo.clip"><path :d="geo.floor" clip-rule="evenodd"></path></clipPath></defs>
+        <path v-if="geo.ghost" :d="geo.ghost" class="zmap-ghost" fill-rule="evenodd"></path>
+        <path :d="geo.floor" class="zmap-floor" fill-rule="evenodd"></path>
+        <image v-if="geo.shade" class="zmap-shade" :href="geo.shade" :x="geo.shadeBox[0]" :y="geo.shadeBox[1]" :width="geo.shadeBox[2]" :height="geo.shadeBox[3]"
+          preserveAspectRatio="none" :clip-path="'url(#' + geo.clip + ')'"></image>
         <path v-if="geo.water" :d="geo.water" class="zmap-water"></path>
-        <path :d="geo.walls" class="zmap-walls" :stroke-width="geo.unit * 0.35"></path>
+        <path :d="geo.floor" class="zmap-edge" :stroke-width="geo.unit * 0.3"></path>
         <g v-if="path" class="zmap-path"><title>{{path.tip}}</title>
           <polyline class="zp-under" :points="pathLine" :stroke-width="unit * 1.5"></polyline>
           <polyline :points="pathLine" :stroke-width="unit * 0.8"></polyline>
@@ -532,7 +671,7 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
         </div>
         <div class="zmap-legend"><span><i class="lg-chk now"></i>Check faisable</span><span><i class="lg-chk"></i>Pas encore</span><span><i class="lg-chk done"></i>Fait</span>
           <span class="muted">{{ui.map.editTool ? t('(outil de placement : tous les checks du jeu, sans filtres)') : t('(clic : cocher)')}}</span></div>
-        <div class="zmap-legend"><span><i class="lg-ground"></i>Sol, du plus bas au plus haut</span><span><i class="lg-water"></i>Eau</span>
+        <div class="zmap-legend"><span><i class="lg-ground"></i>Sol, ombré selon le relief</span><span><i class="lg-water"></i>Eau</span>
           <span><i class="lg-exit"></i>Sortie (clic : voir la carte du lieu d’arrivée)</span><span><i class="lg-stone"></i>Pierre à potins (clic : lue)</span>
           <span v-if="mapPath"><i class="lg-path"></i>{{mapPath.tip}}</span>
           <span v-if="mapLive"><i class="lg-link" :class="'fm-' + mapLive.form"></i>Link, en direct (couleur de sa forme)</span></div>

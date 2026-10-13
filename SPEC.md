@@ -383,7 +383,12 @@ filtre d'incrustation sur le fond vert ; une source « Navigateur » d'OBS a son
   Forteresse de Pierre), Autres (Lune, Chambre des Géants, Fontaines des Fées, début du jeu) ; dans l'ordre du chemin (lieu,
   intérieurs, donjon), puis les grottes de la région (d'après leur trou ; sans trou : leur lieu extérieur d'après la logique),
   homonymes numérotés ; carte absente de la table : Autres ;
-  sol en dix teintes de hauteur (quantiles), murs, eau ; un repère par sortie avec le nom du lieu d'arrivée, clic : sa
+  plan (`mapGeo`) : les sols de l'étage posés sur une grille (au plus 420 cases de côté, d'au moins 6 unités ; hauteur du sol
+  le plus haut, interpolée entre les sommets `fy`), nettoyée (fermeture : les fentes entre deux sols, pentes trop raides
+  que l'extraction écarte, se referment ; trous de moins de 90 × 90 unités bouchés ; miettes retirées) ; sol d'une seule
+  teinte, contour lissé (carrés marchants, Chaikin), relief en ombrage doux (lumière du nord-ouest : zones plates unies,
+  pentes et falaises ombrées) ; eau seulement là où la surface d'une boîte d'eau couvre le sol ; autres étages en fond
+  atténué ; les murs ne sont plus tracés (le contour les remplace) ; un repère par sortie avec le nom du lieu d'arrivée, clic : sa
   carte (← : retour). Molette : zoom ; glisser : déplacer ; + / − / tout le terrain.
 - **Checks à leur place** : position de l'acteur de chaque check dans les listes d'acteurs des salles (en-tête principal),
   d'après des règles tirées de `Rando/ActorBehavior/*.cpp` (`recipe.loc`, comme 2Ship relie ses acteurs à ses checks) :

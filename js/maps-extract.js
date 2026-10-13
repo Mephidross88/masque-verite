@@ -14,7 +14,8 @@
    d'apparition (0x00), collision (0x03 : sommets, polygones, types de surface, eau), liste des sorties (0x13 : numéro de
    l'entrée de chaque sortie). Sorties : polygones de collision dont le type de surface porte un numéro de sortie (zones
    de chargement, et derrière les portes des intérieurs).
-   data.scenes[SCENE_…] = { b:[x0, z0, x1, z1], f:[x1, z1, x2, z2, x3, z3, hauteur, …] (sols, triangles vus de dessus),
+   data.scenes[SCENE_…] = { b:[x0, z0, x1, z1], f:[x1, z1, x2, z2, x3, z3, hauteur, …] (sols, triangles vus de dessus,
+     hauteur moyenne), fy:[y1, y2, y3, …] (hauteur des sommets de chaque sol : pentes continues sur la Carte),
      w:[x1, z1, x2, z2, …] (murs), wy:[ymin, ymax, …], water:[x0, z0, x1, z1, y, …], sp:[[x, y, z], …] (apparitions),
      ex:[[entrée, x, y, z, rayon], …] (sorties), lv:[hauteur, …] (étages, du plus bas au plus haut ; absent : un seul),
      lb:numéro du plus bas (0 : 1er étage, -1 : sous-sol 1…), ho:[[x, y, z, entrée des grottes, données], …] (trous de grotte) }
@@ -100,7 +101,7 @@ async function extractMaps({ rom:bytes, recipe, progress }){
     const s = u32(TABLE + num * 16), e = u32(TABLE + num * 16 + 4);
     if (!sceneHeader(s, e)) return null;
     const cmds = header(s);
-    const out = { b:null, f:[], w:[], wy:[], water:[], sp:[], ex:[] };
+    const out = { b:null, f:[], fy:[], w:[], wy:[], water:[], sp:[], ex:[] };
     // points d'apparition : acteurs de 16 octets (numéro, x, y, z, rotations, paramètres)
     if (cmds[0x00]) for (let i = 0; i < cmds[0x00].n; i++){ const o = s + cmds[0x00].addr + i * 16; out.sp.push([s16(o + 2), s16(o + 4), s16(o + 6)]); }
     // collision
@@ -119,6 +120,7 @@ async function extractMaps({ rom:bytes, recipe, progress }){
       if (ny > 0.2){
         tri.push(v);
         out.f.push(v[0][0], v[0][2], v[1][0], v[1][2], v[2][0], v[2][2], Math.round((v[0][1] + v[1][1] + v[2][1]) / 3));
+        out.fy.push(v[0][1], v[1][1], v[2][1]);
         for (const p of v){ x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); z0 = Math.min(z0, p[2]); z1 = Math.max(z1, p[2]); }
       } else if (Math.abs(ny) < 0.05){
         // mur : trait de son étendue vue de dessus, seulement les vrais murs (au moins 60 unités de haut et de long)
@@ -357,8 +359,9 @@ async function extractMaps({ rom:bytes, recipe, progress }){
       boxes.forEach((b, r) => { if (!b) return; const d = Math.hypot(Math.max(b[0] - x, 0, x - b[2]), Math.max(b[1] - z, 0, z - b[3])); if (d < bd){ bd = d; best = r; } });
       return best;
     };
-    const subs = {}, sub = r => subs[r] = subs[r] || { b:null, f:[], w:[], wy:[], water:[], sp:[], ex:[] }, o = KAK.out;
-    for (let i = 0; i < o.f.length; i += 7) sub(roomOf((o.f[i] + o.f[i + 2] + o.f[i + 4]) / 3, (o.f[i + 1] + o.f[i + 3] + o.f[i + 5]) / 3)).f.push(...o.f.slice(i, i + 7));
+    const subs = {}, sub = r => subs[r] = subs[r] || { b:null, f:[], fy:[], w:[], wy:[], water:[], sp:[], ex:[] }, o = KAK.out;
+    for (let i = 0, j = 0; i < o.f.length; i += 7, j += 3){ const t = sub(roomOf((o.f[i] + o.f[i + 2] + o.f[i + 4]) / 3, (o.f[i + 1] + o.f[i + 3] + o.f[i + 5]) / 3));
+      t.f.push(...o.f.slice(i, i + 7)); t.fy.push(...o.fy.slice(j, j + 3)); }
     for (let i = 0, j = 0; i < o.w.length; i += 4, j += 2){ const t = sub(roomOf((o.w[i] + o.w[i + 2]) / 2, (o.w[i + 1] + o.w[i + 3]) / 2)); t.w.push(...o.w.slice(i, i + 4)); t.wy.push(o.wy[j], o.wy[j + 1]); }
     for (let i = 0; i < o.water.length; i += 5) sub(roomOf((o.water[i] + o.water[i + 2]) / 2, (o.water[i + 1] + o.water[i + 3]) / 2)).water.push(...o.water.slice(i, i + 5));
     for (const e of o.ex) sub(roomOf(e[1], e[3])).ex.push(e);

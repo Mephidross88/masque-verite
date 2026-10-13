@@ -765,7 +765,12 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .zmap-zoom{position:absolute;left:12px;top:12px;display:flex;flex-direction:column;gap:4px}
 .zmap-zoom button{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font-size:16px;line-height:1;cursor:pointer}
 .zmap-zoom button:hover{border-color:var(--gold)}
-.zmap-walls{fill:none;stroke:var(--map-wall);stroke-linecap:round;opacity:.7}
+/* plan (mapGeo) : sol d'une teinte, ombrage du relief, contour */
+.zmap-floor{fill:var(--map-5)}
+.zmap-shade{pointer-events:none}
+.zmap-edge{fill:none;stroke:var(--map-wall);stroke-linejoin:round;opacity:.85}
+:root[data-theme="dark"] .zmap-edge{stroke:#c9d4b4;opacity:.45}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .zmap-edge{stroke:#c9d4b4;opacity:.45} }
 /* chemin à suivre (Bois Perdus) : trait clair cerné de sombre, flèches dans le sens de la marche, rond à l'arrivée */
 .zmap-path{pointer-events:none}
 .zmap-path polyline{fill:none;stroke:#ffd75e;stroke-linecap:round;stroke-linejoin:round}
@@ -857,7 +862,7 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .zmap-legend b{color:var(--text);font-weight:700;min-width:62px}
 .zmap-legend .lg-dot{background:var(--zc);border:1.5px solid #1c1a12;width:9px;height:12px;border-radius:5px 5px 1px 1px}
 .zmap-ghost{fill:var(--text);stroke:var(--text);opacity:.09}
-.zmap-legend .lg-ground{width:34px;height:10px;border-radius:3px;border:0;background:linear-gradient(90deg,var(--map-0),var(--map-5),var(--map-9))}
+.zmap-legend .lg-ground{width:34px;height:10px;border-radius:3px;border:1.5px solid var(--map-wall);background:linear-gradient(135deg,var(--map-6),var(--map-4))}
 .zmap-legend span{display:inline-flex;align-items:center;gap:6px}
 .zmap-legend i{width:12px;height:12px;border-radius:50%;border:2px solid}
 .zmap-legend .lg-here{border-color:var(--ocarina);border-style:dashed}

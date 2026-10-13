@@ -683,7 +683,7 @@
   'Skulltulas d\'or':'Gold Skulltulas',
   'Skulltulas d’or':'Gold Skulltulas',
   'Skulltulas mélangées par maison':'Shuffled Skulltulas per house',
-  'Sol, du plus bas au plus haut':'Ground, from lowest to highest',
+  'Sol, ombré selon le relief':'Ground, shaded by relief',
   'Son acteur n’est pas dans les salles du jeu (il apparaît en cours de partie) : à placer à la main.':'Its actor is not in the game’s rooms (it appears during play): place it by hand.',
   'Sortie (clic : voir la carte du lieu d’arrivée)':'Exit (click: see the map of where it leads)',
   'Spoiler d’une autre version de 2Ship (commit {c}) : l’appli suit la 5.0.1 ({ref}), certains checks ou réglages peuvent différer.':'Spoiler from another 2Ship version (commit {c}): the app follows 5.0.1 ({ref}), some checks or settings may differ.',
