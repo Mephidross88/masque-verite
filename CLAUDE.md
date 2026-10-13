@@ -58,7 +58,8 @@ fonctionnelle, et le mettre à jour quand une règle change.
   7. `js/pages/*.js` : une page (ou partie d'écran) par fichier — `items` (panneau Objets, temples), `checks`, `notebook`, `tracking` (fenêtre de l'auto-tracking)
      (Journal des Bombers : frise des 72 h, une barre par check, d'après `logicFull` / `logicNow` de `checks`), `hints` (Indices : pierres à potins tirées comme `EnGs.cpp`, autres indices,
      révélés à la lecture `game.hints` ; `hintsByCheck` / `hintsByScene` pour Checks, `hintStones` pour la Carte), `dungeons` (Donjons : walkthrough des temples, `data/walkthroughs.js` ; étapes d'un check cochées
-     avec lui, les autres à la main `game.walk`), `map`, `stats` (Statistiques : chronologie, temps de jeu de 2Ship, courbe des checks), `config`. Chacun : gabarits en constantes `…_TPL` (insérés par `${…}` dans celui d'App) et, si
+     avec lui, les autres à la main `game.walk`), `map`, `map-images` (après `map` : fonds de carte exportés en PNG ou .zip,
+     retouchés et réimportés — `MAP_IMAGES`, IndexedDB `masque-verite-map-images`, `useMapImages` ; voir SPEC.md > Carte), `stats` (Statistiques : chronologie, temps de jeu de 2Ship, courbe des checks), `config`. Chacun : gabarits en constantes `…_TPL` (insérés par `${…}` dans celui d'App) et, si
      besoin, logique en `use…(ctx)` : reçoit dans `ctx` les noms des pages assemblées avant elle, renvoie les siens
      (ordre d'assemblage dans `App.setup`). Page pas encore construite : bloc `.soon` (ce qu'elle fera, à quelle étape).
   8. `js/app.js` : la coque — `useShell` (navigation, panneaux côte à côte, thème), `useShellEnd` (sauvegarde, remise à

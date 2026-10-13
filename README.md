@@ -77,6 +77,12 @@ Avec l'appli téléchargée et [Node.js](https://nodejs.org) (18 ou plus), on pe
 node tools/2ship-maps/extract_maps.mjs <ROM de Majora's Mask>
 ```
 
+**Retoucher les cartes** : sous la carte, « Exporter cette carte (PNG) » ou « Exporter toutes les cartes (.zip) » donne le
+fond des lieux en images (sans les checks ni les sorties, que l'appli dessine toujours par-dessus). Modifiez-les dans le
+logiciel de votre choix — sans les recadrer, ni changer leurs proportions — puis « Importer des images… » (PNG ou .zip) :
+chaque image remplace le plan de son lieu (réglage « Fond : Image / Plan »). Gardez le nom des fichiers, il sert à les
+reconnaître si votre logiciel efface les informations de l'image. Les images restent dans ce navigateur.
+
 ## Fenêtre de stream
 
 Bouton « Fenêtre de stream » (barre de gauche) : une page à capturer dans OBS (« Capture de fenêtre » et filtre

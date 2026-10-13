@@ -435,10 +435,11 @@ const MapView = {
     holes:{ type:Array, default:() => [] }, home:{ type:String, default:null }, stones:{ type:Array, default:() => [] },
     compact:Boolean,   // compact : sans boutons de zoom (fenêtre de stream)
     path:{ type:Object, default:null },   // path : chemin à suivre { pts:[[x, z], …], tip } (Bois Perdus)
-    counts:{ type:Object, default:() => ({}) },
-    focus:{ type:Object, default:null },
-    live:{ type:Object, default:null } },   // live : Link dans cette scène (suivi en direct) { x, y, z, deg, form }   // focus : checks mis en lumière { pts:[[x, y, z], …], at } (page Donjons) : étage et cadrage   // counts : checks restants par carte d'intérieur ou de grotte { todo, total, now }
-  emits:['goto', 'check', 'place', 'stone'],
+    counts:{ type:Object, default:() => ({}) },   // counts : checks restants par carte d'intérieur ou de grotte { todo, total, now }
+    focus:{ type:Object, default:null },   // focus : checks mis en lumière { pts:[[x, y, z], …], at } (page Donjons) : étage et cadrage
+    live:{ type:Object, default:null },   // live : Link dans cette scène (suivi en direct) { x, y, z, deg, form }
+    images:Boolean },   // images : fond en image importée, s'il y en a une pour ce lieu et cet étage (js/pages/map-images.js)
+  emits:['goto', 'check', 'place', 'stone', 'level'],   // level : étage affiché (page Carte : export, image du lieu)
   data:() => ({ view:null, drag:null, hover:null, level:null }),
   computed:{
     sc(){ return mapsData.value && mapsData.value.scenes[this.scene] || null; },
@@ -449,6 +450,7 @@ const MapView = {
     lvl(){ return !this.levels ? null : this.level != null ? this.level : this.live ? mapLevelOf(this.sc, this.live.y)
       : mapLevelOf(this.sc, this.sc.sp.length ? this.sc.sp[0][1] : this.sc.lv[0]); },
     liveMark(){ return this.live && this.onLevel(this.live.y) ? this.live : null; },
+    img(){ return this.images ? MAP_IMAGES[mapImgKey(this.scene, this.lvl)] || null : null; },
     onLevel(){ return y => this.lvl == null || mapLevelOf(this.sc, y) === this.lvl; },
     geo(){ return this.sc ? mapGeo(this.sc, this.lvl) : null; },
     shown(){ return this.checks.filter(m => this.onLevel(m.y)); },
@@ -483,6 +485,7 @@ const MapView = {
   },
   watch:{
     scene(){ this.view = null; this.hover = null; this.level = null; },
+    lvl:{ handler(v){ this.$emit('level', v); }, immediate:true },
     // (après le changement de scène) : étage du premier repère, cadrage sur tous, avec une marge
     'focus.at'(){ this.applyFocus(); },
     // carte zoomée : elle se recentre sur Link quand il approche du bord
@@ -545,13 +548,16 @@ const MapView = {
     <div v-else class="zmap-frame">
       <svg ref="svg" :viewBox="vb.join(' ')" class="zmap-svg" :class="{dragging:drag && drag.moved, placing}" @wheel.prevent="wheel"
         @pointerdown="down" @pointermove="move" @pointerup="up" @pointerleave="drag=null">
+        <image v-if="img" class="zmap-img" :href="img.url" :x="img.view[0]" :y="img.view[1]" :width="img.view[2]" :height="img.view[3]" preserveAspectRatio="none"></image>
+        <template v-else>
         <defs><clipPath :id="geo.clip"><path :d="geo.floor" clip-rule="evenodd"></path></clipPath></defs>
         <path v-if="geo.ghost" :d="geo.ghost" class="zmap-ghost" fill-rule="evenodd"></path>
         <path :d="geo.floor" class="zmap-floor" fill-rule="evenodd"></path>
         <image v-if="geo.shade" class="zmap-shade" :href="geo.shade" :x="geo.shadeBox[0]" :y="geo.shadeBox[1]" :width="geo.shadeBox[2]" :height="geo.shadeBox[3]"
           preserveAspectRatio="none" :clip-path="'url(#' + geo.clip + ')'"></image>
-        <path v-if="geo.water" :d="geo.water" class="zmap-water"></path>
+        <path v-if="geo.water" :d="geo.water" class="zmap-water" fill-rule="evenodd"></path>
         <path :d="geo.floor" class="zmap-edge" :stroke-width="geo.unit * 0.3"></path>
+        </template>
         <g v-if="path" class="zmap-path"><title>{{path.tip}}</title>
           <polyline class="zp-under" :points="pathLine" :stroke-width="unit * 1.5"></polyline>
           <polyline :points="pathLine" :stroke-width="unit * 0.8"></polyline>
@@ -631,6 +637,8 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
           <div v-if="link.relay==='live'" class="field map-chk map-follow" title="Suivi en direct : la carte suit Link de lieu en lieu (on peut en regarder une autre, elle revient à Link quand il change de lieu)">
             <label class="check"><input type="checkbox" v-model="ui.map.follow">Suivre Link</label>
             <button v-if="liveMap && liveMap !== ui.map.scene" type="button" class="btn" @click="mapToLink" :title="t('Afficher la carte du lieu où est Link : {lieu}', {lieu:mapSceneName(liveMap)})">Où est Link ?</button></div>
+          <div v-if="mapImgHere" class="field map-chk" :title="t('Fond de ce lieu : votre image ({name}), ou le plan calculé', {name:mapImgHere.name})"><span class="lbl">Fond</span>
+            <seg v-model="ui.map.img" :options="[[true, t('Image')], [false, t('Plan')]]"></seg></div>
           <div v-if="woodsHere" class="field map-chk" title="Chemin du singe à travers les Bois Perdus, différent chaque jour. Auto : le jour de la sauvegarde suivie (auto-tracking), sinon celui du moment choisi sur la page Checks, sinon le jour 1."><span class="lbl">Chemin</span>
             <seg v-model="ui.map.woods" :options="[['auto', t('Auto')], ['1', t('Jour {n}', {n:1})], ['2', t('Jour {n}', {n:2})], ['3', t('Jour {n}', {n:3})], ['off', t('Masqué')]]"></seg></div>
           </div>
@@ -643,7 +651,7 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
         <div v-for="(h,i) in mapHints" :key="'h' + i" class="zmap-hint"><span class="zh-ic" v-html="ICONS.hint"></span>
           <div><b>{{h.title}}</b> — {{h.text}}<span v-if="h.notes" class="zh-notes"><template v-for="(b,j) in h.notes" :key="j"><i v-if="b === '|'" class="zh-sep"></i>
             <img v-else :src="iconSrc(ITEM_BY_KEY['ocarina_button_' + b.toLowerCase()])" :alt="b"></template></span></div></div>
-        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :counts="mapPlaceCounts" :stones="ui.map.stones ? hintStones(mapBase) : []" @stone="toggleHint" :path="mapPath" :focus="mapFocus.scene === mapBase ? mapFocus : null" :live="mapLive" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
+        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :counts="mapPlaceCounts" :stones="ui.map.stones ? hintStones(mapBase) : []" @stone="toggleHint" :path="mapPath" :focus="mapFocus.scene === mapBase ? mapFocus : null" :live="mapLive" :images="ui.map.img" @level="mapLevel = $event" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
           @goto="mapGoto" @check="toggleCheck" @place="mapPlace"></map-view>
         <div v-if="mapEdit" class="zmap-edit">
           <div class="ze-head"><b>Placer les checks sans position</b>
@@ -675,6 +683,15 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
           <span><i class="lg-exit"></i>Sortie (clic : voir la carte du lieu d’arrivée)</span><span><i class="lg-stone"></i>Pierre à potins (clic : lue)</span>
           <span v-if="mapPath"><i class="lg-path"></i>{{mapPath.tip}}</span>
           <span v-if="mapLive"><i class="lg-link" :class="'fm-' + mapLive.form"></i>Link, en direct (couleur de sa forme)</span></div>
+        <div class="maps-img">
+          <button type="button" class="btn" @click="mapImgExportOne" title="Le fond de ce lieu (à cet étage) en image PNG, sans les repères : à retoucher puis importer">Exporter cette carte (PNG)</button>
+          <button type="button" class="btn" :disabled="mapImgJob.busy" @click="mapImgExportAll" title="Le fond de tous les lieux (et de chaque étage) en images PNG, dans un fichier .zip">Exporter toutes les cartes (.zip)</button>
+          <label class="btn import-btn" :class="{disabled:mapImgJob.busy}" title="Images PNG (ou .zip) exportées puis retouchées, sans les recadrer : chacune remplace le plan de son lieu (et de son étage)">Importer des images…<input type="file" accept=".png,.zip,image/png,application/zip" multiple hidden :disabled="mapImgJob.busy" @change="mapImgImport"></label>
+          <button v-if="mapImgHere" type="button" class="btn" @click="mapImgRemoveHere">Retirer l’image de ce lieu</button>
+          <button v-if="mapImgCount" type="button" class="link" @click="mapImgClearAsk">{{t('Retirer toutes les images ({n})', {n:mapImgCount})}}</button>
+          <div v-if="mapImgJob.busy && mapImgJob.part" class="maps-progress"><div class="bar"><i :style="{width:Math.round(mapImgJob.part * 100) + '%'}"></i></div></div>
+          <span v-if="mapImgJob.msg" class="maps-img-msg" :class="{ko:mapImgJob.ko}">{{mapImgJob.msg}}</span>
+        </div>
         <p class="maps-src">{{MAPS_INFO.source === 'file' ? t('Cartes du fichier data/maps-data.js.') : t('Cartes fabriquées dans ce navigateur depuis {rom}.', {rom:MAPS_INFO.rom || 'la ROM'})}}
           <button v-if="MAPS_INFO.source === 'browser'" type="button" class="link" @click="mapsForgetAsk">Oublier ces cartes</button>
           <label class="check maps-tool" title="Outil pour placer à la main les checks sans position, et exporter ces positions (contributeurs)"><input type="checkbox" v-model="ui.map.editTool">Outil de placement des checks</label></p>

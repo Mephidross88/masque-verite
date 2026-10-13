@@ -193,6 +193,11 @@ Page « Donjons » (groupe Progression, id `dungeons`) : un walkthrough des quat
 
 ## Journal des Bombers
 Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours, une barre par check.
+- **Lieu de Link** (suivi en direct, regroupement par scène, `ui.notebook.follow` « Suivre le lieu de Link ») : quand Link
+  change de lieu, le sien se déplie et les autres se replient, son en-tête revient dans la vue (pastille dorée, liseré). Lieu
+  d'une scène du jeu (`nbSceneOf`) : la scène si elle a son lieu ; variante (Marais purifié, printemps, Forteresse
+  inversée) : sa scène d'origine ; intérieur, boutique : le lieu de la plupart de ses checks (`recipe.cs`) ; grotte : celui
+  des checks de sa salle (cartes fabriquées). Ailleurs (sans check) : rien ne change.
 - **Axe** : les 72 heures du cycle (jour 1, 6 h → jour 4, 6 h), en-tête des six demi-journées (soleil / lune) et
   graduations toutes les 6 h ; bandes de fond : jour clair, nuit teintée.
 - **Lignes** : les checks de la seed (non exclus, faisables avec la configuration) à horaire limité, triés par heure de
@@ -346,6 +351,16 @@ filtre d'incrustation sur le fond vert ; une source « Navigateur » d'OBS a son
   jeu (auto-tracking). Une disposition de L'Œil Sheikah importée garde les widgets communs.
 
 ## Carte (js/pages/map.js, js/maps-extract.js)
+- **Fonds en image** (js/pages/map-images.js) : « Exporter cette carte (PNG) » (le lieu à l'étage affiché) ou « Exporter
+  toutes les cartes (.zip) » (chaque lieu, chaque étage : 137 images, environ 50 Mo) — le fond seul (sol, ombrage, eau,
+  contour, autres étages ; couleurs du thème affiché ; transparent hors du sol ; 2 048 pixels sur le grand côté), sans les
+  repères. Chaque PNG porte un bloc tEXt « masque-verite » { map, level, view } et s'appelle `SCENE_…[-salleN][@étage].png`
+  (étage : numéro interne, 0 le plus bas). Le joueur le retouche à sa guise sans le recadrer (taille libre, proportions
+  gardées), puis « Importer des images… » (PNG ou .zip, plusieurs à la fois) : reconnu par son bloc tEXt, sinon par son nom
+  (lieu inconnu, étage inexistant : refusé et signalé) ; gardé dans IndexedDB `masque-verite-map-images` (« carte|étage » →
+  { blob, view, name }) et affiché à la place du plan, calé sur la même zone (`view`), sous les repères (« Fond : Image /
+  Plan », `ui.map.img` ; aussi dans la fenêtre de stream). « Retirer l'image de ce lieu », « Retirer toutes les images ».
+  Rien n'est envoyé ni publié : ces images viennent de la ROM du joueur.
 - **Link en direct** (suivi en direct, `link.live`) : flèche orientée dans la direction où il regarde (`rot`), de la couleur
   de sa forme (comme les pastilles des formes ; Oni : gris), avec un halo, à son étage ; la carte affichée prend son étage
   tant qu'on n'en choisit pas un autre, et se recentre quand il approche du bord (carte zoomée). Sa carte : sa scène (noms

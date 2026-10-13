@@ -31,11 +31,12 @@ function defaults(){
       link:{ enabled:false, slot:'', moment:true, relay:false },
       // map : lieu affiché sur la page Carte, checks affichés (filters : comme la page Checks, all : tous ceux de la seed,
       // off : aucun), pierres à potins affichées, chemin des Bois Perdus (woods : 'auto' jour en cours, '1' à '3', 'off' masqué),
-      // outil de placement des checks affiché
-      map:{ scene:'SCENE_CLOCKTOWER', checks:'filters', stones:true, woods:'auto', editTool:false, follow:true },   // follow : la carte suit Link (suivi en direct)
+      // outil de placement des checks affiché ; follow : la carte suit Link (suivi en direct) ; img : fonds en image importée
+      // (js/pages/map-images.js) plutôt que le plan calculé
+      map:{ scene:'SCENE_CLOCKTOWER', checks:'filters', stones:true, woods:'auto', editTool:false, follow:true, img:true },
       // notebook : page Journal des Bombers (recherche, masquer les faits, aussi les checks sans horaire, regroupement
       // par scène et scènes repliées { scène: true })
-      notebook:{ q:'', hideDone:false, all:false, byScene:true, collapsed:{} },
+      notebook:{ q:'', hideDone:false, all:false, byScene:true, collapsed:{}, follow:true },   // follow : le lieu de Link (suivi en direct) se déplie
       // dungeons : temple affiché sur la page Donjons, étapes faites masquées
       dungeons:{ tab:'woodfall', hideDone:false, sel:'' },
       // moment : demi-journée choisie (-1 : tous ; 0 à 5 : J1, N1, J2, N2, J3, N3), partagée par Checks et le Journal ;

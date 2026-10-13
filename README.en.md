@@ -76,6 +76,12 @@ With the downloaded app and [Node.js](https://nodejs.org) (18 or later), you can
 node tools/2ship-maps/extract_maps.mjs <Majora's Mask ROM>
 ```
 
+**Editing the maps**: below the map, "Export this map (PNG)" or "Export all maps (.zip)" gives the places' backgrounds as
+images (without checks or exits, which the app always draws on top). Edit them in the software of your choice — without
+cropping them or changing their proportions — then "Import images…" (PNG or .zip): each image replaces the plan of its
+place ("Background: Image / Plan" setting). Keep the file names: they are used to recognize the images if your software
+erases their metadata. Images stay in this browser.
+
 ## Stream window
 
 "Stream window" button (left bar): a page to capture in OBS ("Window Capture" and a chroma key filter on the green

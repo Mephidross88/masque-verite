@@ -808,6 +808,15 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .zmap-bar .map-chk{display:flex;align-items:center;gap:8px;margin-left:auto}
 .zmap-bar .map-chk .lbl{font-size:13px;color:var(--muted)}
 .maps-src{font-size:13px;color:var(--muted);margin:8px 0 0}
+/* fonds en image (export, import) */
+.maps-img{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:10px;font-size:13.5px}
+.maps-img .btn{font-size:13.5px}
+.maps-img .link{color:var(--muted);text-decoration:underline;text-underline-offset:3px;background:none;border:0;cursor:pointer;font:inherit}
+.maps-img .maps-progress{flex:1 1 160px}
+.maps-img-msg{color:var(--muted)}
+.maps-img-msg.ko{color:var(--red)}
+.import-btn.disabled{opacity:.5;pointer-events:none}
+.zmap-img{pointer-events:none}
 .maps-src .maps-tool{display:inline-flex;margin-left:14px;font-size:13px;color:var(--muted)}
 .map-groups{margin:0 0 8px}
 .map-groups small{opacity:.7;margin-left:2px}
@@ -1725,6 +1734,9 @@ button.nb-lab:hover{background:var(--surface-2)}
 .nb-scene .chev{display:inline-grid;width:16px;height:16px;flex:none;color:var(--muted);transition:transform .18s}
 .nb-scene .chev svg{width:16px;height:16px}
 .nb-scene.collapsed .chev{transform:rotate(-90deg)}
+/* lieu où est Link (suivi en direct) */
+.nb-scene.here{box-shadow:inset 3px 0 0 var(--gold)}
+.nb-here{flex:none;width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 3px color-mix(in srgb, var(--gold) 30%, transparent);margin-left:6px;animation:zm-pulse 1.6s ease-in-out infinite}
 .nb-count{flex:none;font-size:12.5px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
 .nb-scene .nb-track{min-height:30px}
 .nb-scene .nb-bar{height:8px}

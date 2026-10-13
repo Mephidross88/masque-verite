@@ -29,6 +29,7 @@ const NOTEBOOK_TPL = paneTpl('notebook', `<h1>Journal des Bombers</h1><p class="
           <label class="check" title="N'afficher que les checks faisables avec l'inventaire noté (au moment choisi), et ceux déjà faits"><input type="checkbox" v-model="ui.checks.onlyAvailable">Seulement les faisables</label>
           <label class="check"><input type="checkbox" v-model="ui.notebook.hideDone">Masquer les checks faits</label>
           <label class="check" title="Une section par scène, dans l'ordre du tracker ; la ligne de la scène réunit les horaires de ses checks"><input type="checkbox" v-model="ui.notebook.byScene">Grouper par scène</label>
+          <label v-if="link.relay==='live' && ui.notebook.byScene" class="check" title="Suivi en direct : quand Link change de lieu, le sien se déplie et les autres se replient"><input type="checkbox" v-model="ui.notebook.follow">Suivre le lieu de Link</label>
           <label class="check" title="Lister aussi les checks faisables à toute heure (barre sur tout le cycle)"><input type="checkbox" v-model="ui.notebook.all">Aussi les checks sans horaire</label>
           <label v-if="!s.RO_SHUFFLE_GOLD_SKULLTULAS" class="check" title="Lister aussi les Skulltulas d’or quand elles ne sont pas mélangées (pour les récompenses des Maisons des Araignées) ; elles comptent alors dans la progression"><input type="checkbox" v-model="ui.checks.alwaysGS">Suivre aussi les Skulltulas non mélangées</label>
         </div>
@@ -50,11 +51,12 @@ const NOTEBOOK_TPL = paneTpl('notebook', `<h1>Journal des Bombers</h1><p class="
           </div>
           <template v-for="g in notebookGroups" :key="g.id || '-'">
           <!-- en-tête de scène (regroupement) : nom, faits / total, horaires réunis de ses checks -->
-          <div v-if="g.id" class="nb-row nb-scene" :class="{collapsed:ui.notebook.collapsed[g.id], done:g.done===g.rows.length, can:g.can}"
+          <div v-if="g.id" class="nb-row nb-scene" :data-nb="g.id" :class="{collapsed:ui.notebook.collapsed[g.id], done:g.done===g.rows.length, can:g.can, here:nbLive===g.id}"
             :title="g.can ? t('Tous les checks restants de ce lieu sont faisables') : null">
             <button type="button" class="nb-lab" :aria-expanded="!ui.notebook.collapsed[g.id]" @click="toggleNbScene(g.id)">
               <span class="chev" v-html="ICONS.chevron"></span>
               <span class="nb-name">{{g.label}}</span>
+              <span v-if="nbLive===g.id" class="nb-here" :title="t('Link est ici (suivi en direct)')"></span>
               <span v-if="mapOfScene(g.id)" role="button" class="go-map" :title="t('Voir la carte de {lieu}', {lieu:g.label})" v-html="ICONS.map" @click.stop="openMapOf(g.id)"></span>
               <span class="nb-count" :title="t('{got} faits sur {total}', {got:g.done, total:g.rows.length})">{{g.done}}/{{g.rows.length}}</span></button>
             <div class="nb-track">
@@ -96,6 +98,22 @@ const NOTEBOOK_TPL = paneTpl('notebook', `<h1>Journal des Bombers</h1><p class="
       <!-- annuler le dernier check (comme dans Checks ; une seule fois si les deux pages sont côte à côte) -->
       <div v-if="lastCheck && !shown('checks')" class="toast" role="status">{{lastCheck.text}}
         <button type="button" @click="undoCheck"><span v-html="ICONS.undo"></span>Annuler</button></div>`);
+
+/* lieu du Journal où est Link (suivi en direct) : sa scène si elle a son lieu ; variante (Marais purifié, printemps,
+   Forteresse inversée) : sa scène d'origine ; intérieur, boutique : le lieu de la plupart de ses checks (recipe.cs) ; grotte
+   (une salle de SCENE_KAKUSIANA) : celui des checks de sa salle (cartes fabriquées) */
+const NB_VARIANT_OF = {};
+for (const [o, vs] of Object.entries(MAPS_RECIPE.variants || {})) for (const v of vs) NB_VARIANT_OF[v] = o;
+function nbSceneOf(scene, room){
+  if (!scene) return null;
+  scene = NB_VARIANT_OF[scene] || scene;
+  let ids = (MAPS_RECIPE.cs || {})[scene] || [];
+  if (scene === 'SCENE_KAKUSIANA'){ const m = mapsData.value; ids = m && m.checks ? Object.keys(m.checks).filter(id => m.checks[id][0] === scene + '#' + room) : []; }
+  else if (CHECK_SCENE[scene]) return scene;
+  const n = {};
+  for (const id of ids){ const c = CHECK_BY_ID[id]; if (c) n[c.scene] = (n[c.scene] || 0) + 1; }
+  return Object.keys(n).sort((a, b) => n[b] - n[a])[0] || null;
+}
 
 // graduations de l'axe : toutes les 6 h (6 h, 12 h, 18 h, 0 h…), en heures depuis le jour 1 à 6 h
 const NB_TICKS = Array.from({ length:13 }, (_, k) => ({ at:k * 6, label:((6 + k * 6) % 24) + ' h' }));
@@ -151,8 +169,16 @@ function useNotebookPage(ctx){
     });
   });
   const toggleNbScene = id => { ui.notebook.collapsed[id] = !ui.notebook.collapsed[id]; };
+  // suivi en direct : quand Link change de lieu, le sien se déplie, les autres se replient (ui.notebook.follow) ; son en-tête
+  // revient dans la vue
+  const nbLive = computed(() => link.relay === 'live' && link.live ? nbSceneOf(link.live.scene, link.live.room) : null);
+  watch(nbLive, id => {
+    if (!id || !ui.notebook.follow || !ui.notebook.byScene) return;
+    CHECK_SCENES.forEach(sc => { ui.notebook.collapsed[sc.id] = sc.id !== id; });
+    nextTick(() => { const el = document.querySelector('.nb-scene[data-nb="' + id + '"]'); if (el) el.scrollIntoView({ block:'nearest', behavior:'smooth' }); });
+  });
   function setAllNbScenes(collapsed){ CHECK_SCENES.forEach(sc => { ui.notebook.collapsed[sc.id] = collapsed; }); }
   // heure de la dernière sauvegarde lue (suivi en ligne) : repère vertical sur la frise
   const saveAt = computed(() => linkFollowing() && link.save && link.save.half >= 0 ? link.save.hours : null);
-  return { notebookRows, notebookGroups, toggleNbScene, setAllNbScenes, NB_TICKS, saveAt };
+  return { nbLive, notebookRows, notebookGroups, toggleNbScene, setAllNbScenes, NB_TICKS, saveAt };
 }
