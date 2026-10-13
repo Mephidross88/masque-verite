@@ -27,6 +27,7 @@ To start a game:
 | Page | What for |
 |---|---|
 | **Checks** | The seed's checks, place by place: done, doable now, not yet — and why (missing items, time). A three-day strip per check; the **Time** selector (D1 to N3) shows what is doable at that time. Colored dots show the forms (human, Deku, Goron, Zora) a check can be done with. |
+| **Dungeons** | The four temples room by room, as a checklist: a suggested route, what you need at each step, each dungeon's mechanics (pillar, valves, inverted tower…); steps that are checks get ticked with them. |
 | **Bombers' Notebook** | The whole game on the 72-hour strip: one bar per check, at the hours it is doable, grouped by place; with auto-tracking, the time of the last save (elapsed time is hatched). |
 | **Hints** | Gossip stones and the seed's other hints (boss remains, Great Fairies, bank…): their text shows once the hint is marked read, as in the game. |
 | **Map** | Each place seen from above: exits, checks, gossip stones, temple floors; interiors and grottos from their door; the Woods of Mystery path for each day. |

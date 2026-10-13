@@ -113,7 +113,7 @@ const WHY_TPL = `
 const TL_SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>';
 const TL_MOON = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></svg>';
 // boss à vaincre avant un check (checkBosses de logic.js) : restes du boss en repère
-const BOSS_INFO = { WOODFALL:{ name:'Odolwa', icon:'boss_remains/OdolwasRemains.png' }, SNOWHEAD:{ name:'Goht', icon:'boss_remains/GohtsRemains.png' },
+const BOSS_INFO = { WOODFALL:{ name:'Odolwa', icon:'boss_remains/OdolwasRemains.png' }, SNOWHEAD:{ name:td('Rhork', 'Goht'), icon:'boss_remains/GohtsRemains.png' },
   GREAT_BAY:{ name:'Gyorg', icon:'boss_remains/GyorgsRemains.png' } };
 // formes de Link (points de couleur des checks)
 const FORM_LABEL = { HUMAN:t('Humain'), DEKU:t('Mojo'), GORON:t('Goron'), ZORA:t('Zora') };

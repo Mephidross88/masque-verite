@@ -17,6 +17,7 @@ function useShell(ctx){
   const views = [
     { id:'checks', label:t('Checks'), icon:ICONS.checks, group:t('Progression') },
     { id:'notebook', label:t('Journal des Bombers'), icon:ICONS.notebook, group:t('Progression') },
+    { id:'dungeons', label:t('Donjons'), icon:ICONS.dungeon, group:t('Progression') },
     { id:'hints', label:t('Indices'), icon:ICONS.hint, group:t('Progression') },
     { id:'map', label:t('Carte'), icon:ICONS.map, group:t('Aperçus') },
     { id:'stats', label:t('Statistiques'), icon:ICONS.stats, group:t('Aperçus') },
@@ -90,10 +91,10 @@ const App = {
     // pages assemblées dans l'ordre (chacune reçoit ce que les précédentes ont défini ; les rares appels vers une page
     // suivante passent par ctx, voir « défini plus loin »)
     const ctx = {};
-    for (const use of [useShell, useItemsPanel, useChecksPage, useNotebookPage, useMapPage, useHintsPage, useStatsPage, useConfigPage, useTracking, useShellEnd])
+    for (const use of [useShell, useItemsPanel, useChecksPage, useNotebookPage, useDungeonsPage, useMapPage, useHintsPage, useStatsPage, useConfigPage, useTracking, useShellEnd])
       Object.assign(ctx, use(ctx));
     // (noms globaux utilisés par le gabarit)
-    return { LANG, LANGS, I18N_LANGS, setLang, removeLang, store, ICONS, CI, saveError, CHECK_CATS, CHECK_CAT, CONFIG_TABS, DUNGEONS,
+    return { LANG, LANGS, I18N_LANGS, setLang, removeLang, store, ICONS, CI, saveError, CHECK_CATS, CHECK_CAT, CONFIG_TABS, DUNGEONS, DUNGEON_BY_ID,
       SPIDER_HOUSES, ITEM_BY_KEY, CHECK_SCENE, brokenIcons, ...ctx };
   },
   template:`
@@ -152,6 +153,8 @@ ${SAVE_CARD_TPL}
 ${CHECKS_TPL}
 
 ${NOTEBOOK_TPL}
+
+${WALK_TPL}
 
 ${HINTS_TPL}
 

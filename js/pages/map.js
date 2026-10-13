@@ -280,6 +280,9 @@ const MAP_HINTS = {
     text:t('Le libérer de sa bouteille à l’entrée, puis le suivre sous forme Zora') }],
 };
 
+// checks mis en lumière sur la Carte (page Donjons) : { scene, pts:[[x, y, z], …], at }
+const mapFocus = reactive({ scene:'', pts:[], at:0 });
+
 /* ---------- Carte d'une scène (composant) ----------
    Sol vu de dessus (nord en haut), murs, eau ; un repère par sortie (zone de chargement ou porte), avec le nom de la
    scène d'arrivée ; clic : aller à la carte de cette scène. Molette : zoom autour du curseur ; glisser : déplacer. */
@@ -292,7 +295,8 @@ const MapView = {
     holes:{ type:Array, default:() => [] }, home:{ type:String, default:null }, stones:{ type:Array, default:() => [] },
     compact:Boolean,   // compact : sans boutons de zoom (fenêtre de stream)
     path:{ type:Object, default:null },   // path : chemin à suivre { pts:[[x, z], …], tip } (Bois Perdus)
-    counts:{ type:Object, default:() => ({}) } },   // counts : checks restants par carte d'intérieur ou de grotte { todo, total, now }
+    counts:{ type:Object, default:() => ({}) },
+    focus:{ type:Object, default:null } },   // focus : checks mis en lumière { pts:[[x, y, z], …], at } (page Donjons) : étage et cadrage   // counts : checks restants par carte d'intérieur ou de grotte { todo, total, now }
   emits:['goto', 'check', 'place', 'stone'],
   data:() => ({ view:null, drag:null, hover:null, level:null }),
   computed:{
@@ -333,8 +337,25 @@ const MapView = {
       return out;
     },
   },
-  watch:{ scene(){ this.view = null; this.hover = null; this.level = null; } },
+  watch:{
+    scene(){ this.view = null; this.hover = null; this.level = null; },
+    // (après le changement de scène) : étage du premier repère, cadrage sur tous, avec une marge
+    'focus.at'(){ this.applyFocus(); },
+  },
+  mounted(){ if (this.focus) this.applyFocus(); },   // (carte ouverte à côté par la page Donjons)
   methods:{
+    applyFocus(){
+      const f = this.focus, pts = f && f.pts;
+      if (!pts || !pts.length || !this.sc) return;
+      if (this.sc.lv) this.level = mapLevelOf(this.sc, pts[0][1]);
+      this.$nextTick(() => {
+        if (!this.geo) return;
+        const g = this.geo.view, xs = pts.map(p => p[0]), zs = pts.map(p => p[2]), min = Math.max(g[2], g[3]) * 0.3;
+        const w = Math.max(min, (Math.max(...xs) - Math.min(...xs)) * 1.6), h = Math.max(min * 0.7, (Math.max(...zs) - Math.min(...zs)) * 1.6);
+        const cx = (Math.max(...xs) + Math.min(...xs)) / 2, cz = (Math.max(...zs) + Math.min(...zs)) / 2;
+        this.view = [cx - w / 2, cz - h / 2, w, h];
+      });
+    },
     bandColor(i){ return 'var(--map-' + i + ')'; },
     go(m){ if (m.to && !m.self && mapsData.value.scenes[mapBaseOf(m.to)]) this.$emit('goto', m.to); },
     // zoom à la molette (autour du curseur), déplacement en glissant le fond, boutons + / − / tout voir
@@ -386,6 +407,8 @@ const MapView = {
           <circle :cx="path.pts[path.pts.length - 1][0]" :cy="path.pts[path.pts.length - 1][1]" :r="unit * 1.4"></circle></g>
         <g v-for="m in shown" :key="m.c.id" class="zc zc-check" :class="{done:m.st==='done', now:m.st==='now', approx:placing !== undefined && m.approx && editing}" @pointerdown.stop @click.stop="$emit('check', m.c)">
           <circle :cx="m.x" :cy="m.z" :r="unit * (m.st==='done' ? 0.6 : 0.85)"></circle><title>{{m.tip}}</title></g>
+        <g v-for="(p,i) in (focus && focus.pts) || []" :key="'f' + i" v-show="onLevel(p[1])" class="zf"><circle class="zf-ring" :cx="p[0]" :cy="p[2]" :r="unit * 2.4"></circle>
+          <circle class="zf-ring zf-in" :cx="p[0]" :cy="p[2]" :r="unit * 1.5"></circle></g>
         <g v-for="m in placedShown" :key="'e:' + m.c.id" class="ze-mark" :class="{moving:m.moving}">
           <rect :x="m.x - unit * 0.9" :y="m.z - unit * 0.9" :width="unit * 1.8" :height="unit * 1.8" :rx="unit * 0.3"></rect>
           <title>{{m.c.label}} (placé à la main)</title></g>
@@ -461,7 +484,7 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
         <div v-for="(h,i) in mapHints" :key="'h' + i" class="zmap-hint"><span class="zh-ic" v-html="ICONS.hint"></span>
           <div><b>{{h.title}}</b> — {{h.text}}<span v-if="h.notes" class="zh-notes"><template v-for="(b,j) in h.notes" :key="j"><i v-if="b === '|'" class="zh-sep"></i>
             <img v-else :src="iconSrc(ITEM_BY_KEY['ocarina_button_' + b.toLowerCase()])" :alt="b"></template></span></div></div>
-        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :counts="mapPlaceCounts" :stones="ui.map.stones ? hintStones(mapBase) : []" @stone="toggleHint" :path="mapPath" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
+        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :counts="mapPlaceCounts" :stones="ui.map.stones ? hintStones(mapBase) : []" @stone="toggleHint" :path="mapPath" :focus="mapFocus.scene === mapBase ? mapFocus : null" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
           @goto="mapGoto" @check="toggleCheck" @place="mapPlace"></map-view>
         <div v-if="mapEdit" class="zmap-edit">
           <div class="ze-head"><b>Placer les checks sans position</b>
@@ -560,6 +583,19 @@ function useMapPage(ctx){
   });
   // carte d'un lieu de la page Checks (bouton des pages Checks et Journal) : sa scène, si elle a une carte
   const mapOfScene = id => mapsData.value && mapsData.value.scenes[id] ? id : null;
+  /* checks mis en lumière (page Donjons) : leurs positions, dans la carte où il y en a le plus ; la Carte s'ouvre à côté si
+     l'écran le permet, sinon à la place de la page. → false si aucun n'a de position (cartes pas fabriquées…) */
+  function focusMap(ids){
+    const at = ids.map(checkPos).filter(p => p && mapOfScene(mapBaseOf(p[0])));
+    if (!at.length) return false;
+    const by = {};
+    for (const p of at) (by[p[0]] = by[p[0]] || []).push(p);
+    const scene = Object.keys(by).sort((a, b) => by[b].length - by[a].length)[0];
+    Object.assign(mapFocus, { scene:mapBaseOf(scene), pts:by[scene].map(p => [p[1], p[2], p[3]]), at:Date.now() });
+    ui.map.scene = scene;
+    if (!ctx.shown('map')){ if (ctx.canSplit.value) ctx.openSide('map'); else ctx.go('map'); }
+    return true;
+  }
   function openMapOf(id){ if (!mapOfScene(id)) return; ui.map.scene = id; ctx.go('map'); }
   const normMap = x => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const mapChecks = computed(() => mapGroup.value ? mapChecksAll.value.filter(m => groupOf(m.c) === mapGroup.value) : mapChecksAll.value);
@@ -668,6 +704,6 @@ function useMapPage(ctx){
     mapsJob.busy = false;
   }
   function mapsForgetAsk(){ if (confirm(t('Oublier les cartes gardées dans ce navigateur ?'))) mapsForget(); }
-  return { mapPlaceCounts, mapOfScene, openMapOf, mapBase, mapHoles, mapHome, mapValidate, mapApprox, mapGroup, mapGroups, mapCheckHelp, mapMissing, mapEdit, mapPick, mapPicked, mapToPlace, mapPlacedList, mapPlacedHere, mapPlace, mapEditCount, mapExport, mapClearEdits, mapEdits,
+  return { mapFocus, focusMap, mapPlaceCounts, mapOfScene, openMapOf, mapBase, mapHoles, mapHome, mapValidate, mapApprox, mapGroup, mapGroups, mapCheckHelp, mapMissing, mapEdit, mapPick, mapPicked, mapToPlace, mapPlacedList, mapPlacedHere, mapPlace, mapEditCount, mapExport, mapClearEdits, mapEdits,
     mapChecks, mapsData, MAPS_INFO, woodsHere, woodsPath, mapPath, mapHints, mapScene, mapBack, mapGoto, mapGoBack, mapSceneGroups, mapSceneName, mapsJob, mapsMake, mapsForgetAsk };
 }

@@ -16,6 +16,13 @@ const bitOf = s => 1n << BigInt(s);
 const HALF_DAYS = [[0, 6], [7, 15], [16, 22], [23, 30], [31, 36], [37, 44]];
 const HALF_MASK = HALF_DAYS.map(([a, b]) => { let m = 0n; for (let s = a; s <= b; s++) m |= bitOf(s); return m; });
 const REGION = Object.fromEntries(LOGIC.regions.map(r => [r.id, r]));
+/* Corrections de la logique de 2Ship : conditions qui manquent (à revérifier à la montée de version de 2Ship).
+   - coffre de la lave sous le jardin ouest (Forteresse de Pierre) : il n'apparaît qu'une fois les Armos frappés contre le
+     mur ; âmes des ennemis mélangées : il faut l'âme des Armos (relevé en jeu). */
+const CHECK_FIXES = {
+  RC_STONE_TOWER_TEMPLE_UNDER_WEST_GARDEN_LAVA_CHEST:f => () => f() && (!LS.opt.RO_SHUFFLE_ENEMY_SOULS || L.HaveEnemySoul('ACTOR_EN_AM')),
+};
+for (const r of LOGIC.regions) r.checks = r.checks.map(([rc, f]) => [rc, CHECK_FIXES[rc] ? CHECK_FIXES[rc](f) : f]);
 
 // libellé d'une tranche : « TIME_DAY2_AM_11_30 » → { day:2, night:false, h:11, m:30 }
 const SLICE_INFO = LOGIC.slices.map(n => {

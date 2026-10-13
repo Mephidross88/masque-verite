@@ -14,7 +14,8 @@ function defaults(){
     found:{},    // found : objet trouvé dans chaque check fait, d'après la sauvegarde de 2Ship { RC: RI } (auto-tracking)
     playtime:0, playtimeAt:0,   // temps de jeu de 2Ship à la dernière sauvegarde lue (ms) et heure réelle où il a été lu
     cycle:{},    // cycle : moment de la dernière sauvegarde lue { half (demi-journée, -1 : avant le jour 1), time, hours } (stream)
-    hints:{} };  // hints : indices lus { id de l'indice : true } (page Indices : leur texte n'apparaît qu'une fois lus)
+    hints:{},    // hints : indices lus { id de l'indice : true } (page Indices : leur texte n'apparaît qu'une fois lus)
+    walk:{} };   // walk : étapes des donjons cochées à la main { id de l'étape : true } (page Donjons, data/walkthroughs.js)
   ITEM_GROUPS.forEach(g => g.items.forEach(it => { game.items[it.key] = it.kind === 'bool' ? false : 0; }));
   DUNGEONS.forEach(d => { game.dungeons[d.id] = { map:false, compass:false, bossKey:false, keys:0, fairies:0 }; });
   return {
@@ -35,6 +36,8 @@ function defaults(){
       // notebook : page Journal des Bombers (recherche, masquer les faits, aussi les checks sans horaire, regroupement
       // par scène et scènes repliées { scène: true })
       notebook:{ q:'', hideDone:false, all:false, byScene:true, collapsed:{} },
+      // dungeons : temple affiché sur la page Donjons, étapes faites masquées
+      dungeons:{ tab:'woodfall', hideDone:false, sel:'' },
       // moment : demi-journée choisie (-1 : tous ; 0 à 5 : J1, N1, J2, N2, J3, N3), partagée par Checks et le Journal ;
       // onlyAvailable : seulement les faisables
       checks:{ q:'', hideDone:false, hideDoneZones:false, showExcluded:false, onlyAvailable:false, moment:-1, alwaysGS:false, hiddenCats:{}, collapsed:{} } },

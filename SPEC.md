@@ -161,6 +161,36 @@ au code (`js/i18n.js`, dictionnaires `data/i18n/<code>.js`).
 - Checks faits d'après la sauvegarde (auto-tracking) : objet trouvé à la suite du libellé (`game.found`), aussi dans le
   Journal des Bombers.
 
+## Donjons (js/pages/dungeons.js, data/walkthroughs.js)
+Page « Donjons » (groupe Progression, id `dungeons`) : un walkthrough des quatre temples, en liste à cocher.
+- **Contenu** (`data/walkthroughs.js`, écrit à la main, français et anglais) : salles dans l'ordre d'un guide du jeu de base
+  (Zelda's Palace), étapes avec, entre parenthèses, ce qu'il faut avoir (conditions de la logique de 2Ship). Dynamique des
+  donjons en étapes : eau purifiée par les torches (Bois-Cascade), dalles et pilier central à frapper en Goron (Pic des
+  Neiges), vannes jaune, rouges et vertes et sens de la roue à aubes (Grande Baie), forteresse et salles retournées (Pierre).
+  Dans le randomizer, les coffres contiennent d'autres objets (« petite clé dans le jeu de base ») et l'on peut arriver avec
+  des clés ou des objets d'avance : l'ordre n'est qu'une route conseillée (note en tête de page). Quand un objet d'avance ouvre un
+  raccourci, la route le prend dès le premier passage, avec la condition et le chemin de repli : Bois-Cascade, avec l'arc,
+  l'étage de la salle de l'eau mène tout de suite au Dinolfos, au Gekko et aux torches (labyrinthe et salle sombre ensuite,
+  pour leurs checks) ; Grande Baie, avec les Flèches de Glace et de Feu et le Grappin, tout le
+  temple sans le Wart (Gekko depuis la salle de la boussole, vannes vertes et rouges ; le Wart en fin, à tout moment ; sans les
+  flèches, le faire d'abord). Pic des Neiges, avec les Flèches de Feu : glace des portes, corniches, coffre du pont,
+  salle des piliers et haut de la salle de la carte dès le premier passage (premier Wizzrobe à tout moment ; sans elles, le
+  faire d'abord). Forteresse de Pierre, avec les Flèches de Lumière : soleil de l'entrée, blocs du soleil du bassin, coffre sous
+  l'eau (avec les Flèches de Glace) dès le premier passage, et elles remplacent le Bouclier Miroir (Maître Garo à tout moment ;
+  sans elles, passage obligé).
+  Le contenu d'origine des coffres est noté « … dans le jeu de base ». Tous les coffres, fées
+  perdues, grenouilles et boss des temples ont leur étape (161 étapes, 100 liées à un check).
+- **Onglets** : un par temple (couleur du temple, fée perdue en icône), étapes faites / total ; `ui.dungeons.tab`.
+- **Étapes** : celle d'un check de la seed (`rc`) est cochée avec lui (`toggleCheck` de la page Checks : bandeau Annuler ;
+  auto-tracking) — mise en avant en vert si le check est faisable maintenant, estompée sinon, nom du check à droite ; les
+  autres (énigmes, interrupteurs, ou check hors de la seed) se cochent à la main (`game.walk`). « Masquer les étapes faites »
+  (`ui.dungeons.hideDone`) ; « Tout décocher (nouveau cycle) » : les étapes à la main du temple, jamais les checks.
+- **Sur la carte** : clic sur le texte d'une étape (`ui.dungeons.sel`), ou icône de carte d'une salle : ses checks mis en
+  lumière sur la Carte (`focusMap` de `map.js`, `mapFocus` → prop `focus` de MapView : anneaux dorés qui pulsent, étage du
+  premier, cadrage sur tous). Étape sans check : ceux de sa salle ; l'Ode de l'Appel est écartée (pas de place dans le
+  temple). Carte où il y en a le plus ; ouverte à côté si l'écran le permet (`openSide`), sinon à la place de la page.
+  Rien si les cartes ne sont pas fabriquées.
+
 ## Journal des Bombers
 Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours, une barre par check.
 - **Axe** : les 72 heures du cycle (jour 1, 6 h → jour 4, 6 h), en-tête des six demi-journées (soleil / lune) et
@@ -411,7 +441,9 @@ filtre d'incrustation sur le fond vert ; une source « Navigateur » d'OBS a son
   ni de 16 h à 19 h (`z_en_jgame_tsn.c` ; 2Ship : la première plage). Heure exacte de quelques checks, plus fine que les tranches
   (`EXACT_HOURS` : texte, frises et Journal en repère ponctuel ; moments limités à la tranche qui la contient) : invasion
   du Ranch Romani, nuit 1 à 2 h 30 (`z_en_invadepoh.c`) ; vieille dame de Bourg-Clocher Nord, nuit 1 à minuit (Sakon parti
-  à 0 h 20, `z_en_suttari.c`). Les autres horaires du code (portes : `z_en_door.c`,
+  à 0 h 20, `z_en_suttari.c`). **Corrections de la logique** (`CHECK_FIXES`, conditions qui manquent dans 2Ship, à revérifier à la
+  montée de version ; elles changent « faisable ») : coffre de la lave sous le jardin ouest (Forteresse de Pierre), âme des
+  Armos si les âmes sont mélangées (le coffre n'apparaît qu'une fois les Armos frappés contre le mur ; relevé en jeu). Les autres horaires du code (portes : `z_en_door.c`,
   personnages) sont déjà dans la logique de 2Ship (relevé du 2026-10-10). « Faisable » n'en dépend pas.
 - **Formes** (`checkForms`, affichage) : la logique de 2Ship ne suit pas la forme de Link. Pour chaque check, sa propre
   condition (pas le chemin) est évaluée tout obtenu avec ce que chaque forme peut utiliser : humain (tout sauf les masques

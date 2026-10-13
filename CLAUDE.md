@@ -2,7 +2,7 @@
 
 Tracker d'objets et de checks, avec frise des trois jours (Journal des Bombers), pour le randomizer de 2 Ship 2 Harkinian 5.0.1 « Battler Bravo » (commit
 `8a24047`), dans la continuité de L'Œil Sheikah (même auteur, `c:/Jeux/Zelda/Ocarina of Time/oeil-sheikah` : la coque,
-l'i18n et les outils en viennent). Modules (menu, par groupe) : Progression — Checks, Journal des Bombers (id `notebook`), Indices (id `hints`) ;
+l'i18n et les outils en viennent). Modules (menu, par groupe) : Progression — Checks, Journal des Bombers (id `notebook`), Donjons (id `dungeons`), Indices (id `hints`) ;
 Aperçus — Carte (id `map`), Statistiques (id `stats`) ; Configuration ; plus le panneau Objets.
 Application 100 % client, sans build : ouvrir `index.html` dans un navigateur suffit.
 Interface et textes en français.
@@ -55,7 +55,8 @@ fonctionnelle, et le mettre à jour quand une règle change.
      par `app.js` avec `ITEMS_TPL` / `DUNGEONS_TPL`) et éditeur (`useStream(STREAM_MODE, app)` dans `useShellEnd`).
   7. `js/pages/*.js` : une page (ou partie d'écran) par fichier — `items` (panneau Objets, temples), `checks`, `notebook`, `tracking` (fenêtre de l'auto-tracking)
      (Journal des Bombers : frise des 72 h, une barre par check, d'après `logicFull` / `logicNow` de `checks`), `hints` (Indices : pierres à potins tirées comme `EnGs.cpp`, autres indices,
-     révélés à la lecture `game.hints` ; `hintsByCheck` / `hintsByScene` pour Checks, `hintStones` pour la Carte), `map`, `stats` (Statistiques : chronologie, temps de jeu de 2Ship, courbe des checks), `config`. Chacun : gabarits en constantes `…_TPL` (insérés par `${…}` dans celui d'App) et, si
+     révélés à la lecture `game.hints` ; `hintsByCheck` / `hintsByScene` pour Checks, `hintStones` pour la Carte), `dungeons` (Donjons : walkthrough des temples, `data/walkthroughs.js` ; étapes d'un check cochées
+     avec lui, les autres à la main `game.walk`), `map`, `stats` (Statistiques : chronologie, temps de jeu de 2Ship, courbe des checks), `config`. Chacun : gabarits en constantes `…_TPL` (insérés par `${…}` dans celui d'App) et, si
      besoin, logique en `use…(ctx)` : reçoit dans `ctx` les noms des pages assemblées avant elle, renvoie les siens
      (ordre d'assemblage dans `App.setup`). Page pas encore construite : bloc `.soon` (ce qu'elle fera, à quelle étape).
   8. `js/app.js` : la coque — `useShell` (navigation, panneaux côte à côte, thème), `useShellEnd` (sauvegarde, remise à
@@ -71,6 +72,8 @@ fonctionnelle, et le mettre à jour quand une règle change.
 - `style.css` : styles (repris de L'Œil Sheikah), variables de thème dans `:root` (clair + sombre). Des règles des pages
   pas encore portées (Carte, stream…) y sont gardées pour la suite ; retirer celles qui ne serviront pas.
 - `data/i18n/en.js` : dictionnaire anglais.
+- `data/walkthroughs.js` : walkthrough des quatre temples (`window.WALKTHROUGHS`), **écrit à la main** (français et anglais) :
+  salles dans l'ordre d'un guide du jeu de base, conditions d'après la logique de 2Ship ; une étape cite son check (`rc`).
 - `tools/2ship-checks/` : génération des données (mode d'emploi : son `README.md`) — `fetch_sources.mjs` (sources de 2Ship
   au commit voulu dans `src/`, non versionné), `sources.mjs` (lecture commune : checks, objets, options, scènes, régions de
   la logique, énumérations, numéros d'entrée), `extract_checks.mjs` (→ `data/checks-data.js`), `translate.mjs` (noms

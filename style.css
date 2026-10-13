@@ -1182,6 +1182,49 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .fm-goron{background:#b5651d}
 .fm-zora{background:#3d9be0}
 .check-item.done .ci-forms,.nb-row.done .ci-forms{opacity:.45}
+/* page Donjons : onglets des temples (couleur du temple), étapes à cocher (check faisable en vert, pas encore estompé,
+   étape à la main en pointillés) */
+.dg-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.dg-tabs button{display:inline-flex;align-items:center;gap:8px;padding:7px 14px 7px 8px;border:1px solid var(--line);border-left:4px solid var(--dg);
+  border-radius:10px;background:var(--surface);color:var(--text);font:inherit;font-size:14.5px;cursor:pointer}
+.dg-tabs button img{width:26px;height:26px;object-fit:contain}
+.dg-tabs button small{color:var(--muted);font-size:12.5px}
+.dg-tabs button.on{background:color-mix(in srgb,var(--dg) 16%,var(--surface));border-color:var(--dg);font-weight:700}
+.dg-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-bottom:8px}
+.dg-bar .btn{margin-left:auto}
+.dg-bar .check{color:var(--text)}
+.dg-legend{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.dg-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:6px}
+.dg-dot.now{background:var(--green)}
+.dg-dot.later{background:var(--line)}
+.dg-dot.manual{border:1.5px dashed var(--muted)}
+.dg-note{font-size:13px;color:var(--muted);margin:0 0 12px}
+.dg-sec{margin-bottom:12px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.dg-sec h2{margin:0 0 6px;font-family:var(--serif);font-size:17px}
+.dg-sec h2 small{font-family:var(--sans);font-size:12.5px;font-weight:400;color:var(--muted)}
+.dg-steps{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.dg-step{display:flex;align-items:flex-start;gap:10px;padding:5px 6px;border-radius:8px;line-height:1.4}
+.dg-step .dg-mark{flex:none;width:20px;height:20px;padding:0;margin-top:1px;border:0;background:none;color:var(--line);cursor:pointer}
+.dg-step .dg-mark svg{width:20px;height:20px}
+.dg-step.manual .dg-mark{color:var(--muted);opacity:.7}
+.dg-step.now{background:color-mix(in srgb,var(--green) 10%,transparent)}
+.dg-step.now .dg-mark{color:var(--green)}
+.dg-step.later .dg-text{color:var(--muted)}
+.dg-step.done .dg-mark{color:var(--green)}
+.dg-step.done .dg-text{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 60%,transparent)}
+.dg-text{flex:1;min-width:0}
+.dg-text.link{cursor:pointer}
+.dg-text.link:hover{text-decoration:underline;text-decoration-color:var(--gold)}
+.dg-text.sel{font-weight:600;color:var(--gold-deep)}
+.dg-sec h2{display:flex;align-items:center;gap:6px}
+button.go-map{padding:0;border:0;background:none;font:inherit;line-height:0}
+/* checks mis en lumière sur la Carte (page Donjons) : anneaux dorés qui pulsent */
+.zf{pointer-events:none}
+.zf-ring{fill:none;stroke:var(--gold);stroke-width:3px;vector-effect:non-scaling-stroke;animation:zm-pulse 1.2s ease-in-out infinite}
+.zf-ring.zf-in{stroke:#fff;stroke-width:2px;animation-delay:.6s}
+.dg-check{flex:none;display:inline-flex;align-items:center;gap:4px;max-width:40%;font-size:12.5px;color:var(--muted);text-align:right}
+.dg-check .cat-svg{width:14px;height:14px;flex:none}
+.dg-check .cat-svg svg{width:14px;height:14px}
 /* boss à vaincre avant le check : restes du boss, petits */
 .ci-boss{flex:none;display:inline-flex;align-items:center;gap:1px;align-self:center}
 .ci-boss img{width:18px;height:18px;object-fit:contain}
