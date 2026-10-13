@@ -1,24 +1,24 @@
-/* ---------- Auto-tracking : bouton de la barre de gauche et fenêtre (lecture de la sauvegarde de 2Ship, js/link.js) ----------
+/* ---------- Auto-tracking : bouton de la barre de gauche et fenêtre (sauvegarde de 2Ship ou relais en direct, js/link.js) ----------
    Script classique (pas de module) chargé avant js/app.js : gabarits en constantes, insérés dans celui d'App. */
 
 // barre de gauche : état du suivi, ouvre la fenêtre
 const LINK_BTN_TPL = `
-      <button type="button" class="link-btn" :class="LINK_CLASS[link.status]" @click="modal='link'" :title="t('Auto-tracking : {etat}', {etat:LINK_LABEL[link.status]})">
-        <span class="link-ic" v-html="ICONS.live"></span><i></i><span class="link-label">{{LINK_LABEL[link.status]}}</span></button>`;
+      <button type="button" class="link-btn" :class="linkBadge.cls" @click="modal='link'" :title="t('Auto-tracking : {etat}', {etat:linkBadge.label})">
+        <span class="link-ic" v-html="ICONS.live"></span><i></i><span class="link-label">{{linkBadge.label}}</span></button>`;
 
-// en tête des pages, à côté du compteur de checks (suivi en ligne) : jour et heure de la dernière sauvegarde, frise des
-// trois jours avec son repère ; clic : fenêtre de l'auto-tracking
+// en tête des pages, à côté du compteur de checks (suivi en ligne) : jour et heure de la dernière sauvegarde (ou du jeu, en
+// direct), frise des trois jours avec son repère ; clic : fenêtre de l'auto-tracking
 const SAVE_CARD_TPL = `
-      <button v-if="link.status==='on' && link.save" type="button" class="progress-card save-card" :class="link.save.half % 2 ? 'night' : 'day'"
-        :title="t('Dernière sauvegarde lue : {file} à {at}', {file:link.file, at:linkAt})" @click="modal='link'">
+      <button v-if="linkFollowing() && link.save" type="button" class="progress-card save-card" :class="[link.save.half % 2 ? 'night' : 'day', {live:link.relay==='live'}]"
+        :title="link.relay==='live' ? t('Partie en cours, lue en direct') : t('Dernière sauvegarde lue : {file} à {at}', {file:link.file, at:linkAt})" @click="modal='link'">
         <span class="sc-ic" v-html="link.save.half % 2 ? ICONS.moon : ICONS.sun"></span>
         <div class="pc-main">
-          <div class="pc-title">Dernière sauvegarde</div>
+          <div class="pc-title">{{link.relay==='live' ? t('En direct') : t('Dernière sauvegarde')}}</div>
           <div class="pc-count"><b>{{link.save.half >= 0 ? MOMENTS[link.save.half].long : t('Avant le premier jour')}}</b>
             <span v-if="link.save.half >= 0">{{link.save.clock}}</span></div>
           <div class="sc-bar"><i v-for="(m,i) in MOMENTS" :key="i" :class="[i%2 ? 'n' : 'd', {past:i < link.save.half, cur:i === link.save.half}]"></i>
             <b :style="{left:(link.save.hours*100/72)+'%'}"></b></div>
-          <div class="pc-sub">{{t('lue à {at}', {at:linkAt})}} · {{link.file}}</div>
+          <div class="pc-sub">{{link.relay==='live' ? link.file : t('lue à {at}', {at:linkAt}) + ' · ' + link.file}}</div>
         </div>
       </button>`;
 
@@ -26,8 +26,23 @@ const LINK_MODAL_TPL = `
       <template v-else-if="modal==='link'">
         <header><h3>Auto-tracking</h3><button @click="modal=null" aria-label="Fermer" v-html="ICONS.close"></button></header>
         <div class="body link-modal">
-          <p style="margin-top:0">Suit votre partie en lisant la sauvegarde de 2Ship : checks faits, objets trouvés, prix des
-            boutiques, moment du cycle. Lecture seule : l’appli ne modifie jamais vos fichiers.</p>
+          <p style="margin-top:0">Suit votre partie : checks faits, objets trouvés, prix des boutiques, moment du cycle. Lecture
+            seule : rien n’est jamais modifié, ni le jeu ni vos fichiers.</p>
+          <h4 class="link-h">En direct <small>Windows</small></h4>
+          <p class="link-p">Un petit relais lit la partie dans la mémoire du jeu : chaque check est coché dès qu’il est fait, sans
+            attendre une sauvegarde, et le Journal suit l’heure du jeu.</p>
+          <ol class="link-steps">
+            <li>Lancez le relais : <a :href="RELAY_DL" target="_blank" rel="noopener">téléchargez-le</a> (Windows), ou double-cliquez
+              sur <code>lancer-relais.bat</code> à la racine du projet (avec <a href="https://bun.sh" target="_blank" rel="noopener">Bun</a>).
+              Gardez sa fenêtre ouverte pendant la partie.</li>
+            <li>Activez le suivi en direct : l’appli s’y connecte, et attend le jeu s’il n’est pas encore lancé.</li>
+          </ol>
+          <div class="link-status" :class="RELAY_CLASS[link.relay]"><i></i><b>{{RELAY_LABEL[link.relay]}}</b>
+            <label class="check"><input type="checkbox" v-model="ui.link.relay">Suivi en direct</label></div>
+          <div v-if="link.relayMsg" class="msg ko">{{link.relayMsg}}</div>
+          <div v-if="ui.link.relay && link.blocked" class="msg ko">Le navigateur bloque l’accès au relais pour ce site : autorisez
+            l’accès aux appareils du réseau local (icône à gauche de l’adresse), puis rechargez la page.</div>
+          <h4 class="link-h">Par la sauvegarde</h4>
           <ol class="link-steps">
             <li>Dans 2Ship, menu Enhancements &gt; Saving : activez <b>Autosave</b> et réglez l’intervalle sur <b>1 minute</b>.
               Le jeu sauvegarde aussi au Chant du temps et aux statues de hibou.</li>
@@ -67,13 +82,19 @@ const LINK_MODAL_TPL = `
 `;
 
 // pastille de l'état (couleurs de style.css)
-const LINK_CLASS = { off:'', perm:'relay', on:'game', error:'busy' };
+const LINK_CLASS = { off:'', perm:'relay', on:'game', error:'busy', live:'game' };
+const RELAY_CLASS = { off:'', connecting:'connecting', busy:'busy', wait:'relay', error:'busy', idle:'relay', live:'game' };
 // objet trouvé dans un check fait (d'après la sauvegarde)
 const foundLabel = id => { const ri = store.game.found[id]; return ri ? (ITEM_DATA[ri] ? ITEM_DATA[ri].label : ri) : ''; };
 
 function useTracking(ctx){
+  // état affiché dans la barre de gauche : en direct d'abord, puis le suivi de la sauvegarde, puis l'état du relais
+  const linkBadge = computed(() => link.relay === 'live' ? { cls:'game', label:LINK_LABEL.live }
+    : link.status !== 'off' || !store.ui.link.relay ? { cls:LINK_CLASS[link.status], label:LINK_LABEL[link.status] }
+    : { cls:RELAY_CLASS[link.relay], label:RELAY_LABEL[link.relay] });
+  if (!STREAM_MODE) watch(() => store.ui.link.relay, on => on ? relayStart() : relayStop());
   const linkAt = computed(() => link.at ? link.at.toLocaleTimeString(LANG === 'fr' ? 'fr-FR' : LANG, { hour:'2-digit', minute:'2-digit', second:'2-digit' }) : '');
   // autre seed : remise à zéro (resetGame, défini plus loin dans useShellEnd) puis lecture de cette sauvegarde
   function linkAdoptReset(){ ctx.resetGame(); linkAdopt(); }
-  return { link, LINK_LABEL, LINK_CLASS, LINK_CAN, SAVE_FILES, linkAt, linkPick, linkResume, linkStop, linkPickFile, linkAdoptReset, foundLabel };
+  return { link, linkBadge, linkFollowing, RELAY_LABEL, RELAY_CLASS, RELAY_DL, LINK_LABEL, LINK_CLASS, LINK_CAN, SAVE_FILES, linkAt, linkPick, linkResume, linkStop, linkPickFile, linkAdoptReset, foundLabel };
 }

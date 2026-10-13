@@ -153,6 +153,6 @@ function useNotebookPage(ctx){
   const toggleNbScene = id => { ui.notebook.collapsed[id] = !ui.notebook.collapsed[id]; };
   function setAllNbScenes(collapsed){ CHECK_SCENES.forEach(sc => { ui.notebook.collapsed[sc.id] = collapsed; }); }
   // heure de la dernière sauvegarde lue (suivi en ligne) : repère vertical sur la frise
-  const saveAt = computed(() => link.status === 'on' && link.save && link.save.half >= 0 ? link.save.hours : null);
+  const saveAt = computed(() => linkFollowing() && link.save && link.save.half >= 0 ? link.save.hours : null);
   return { notebookRows, notebookGroups, toggleNbScene, setAllNbScenes, NB_TICKS, saveAt };
 }

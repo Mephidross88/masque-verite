@@ -283,6 +283,9 @@ const MAP_HINTS = {
 // checks mis en lumière sur la Carte (page Donjons) : { scene, pts:[[x, y, z], …], at }
 const mapFocus = reactive({ scene:'', pts:[], at:0 });
 
+// forme de Link (save.playerForm, PlayerTransformation) → classe de couleur (fm-…, comme les pastilles des formes)
+const LIVE_FORM = ['fierce', 'goron', 'zora', 'deku', 'human'];
+
 /* ---------- Carte d'une scène (composant) ----------
    Sol vu de dessus (nord en haut), murs, eau ; un repère par sortie (zone de chargement ou porte), avec le nom de la
    scène d'arrivée ; clic : aller à la carte de cette scène. Molette : zoom autour du curseur ; glisser : déplacer. */
@@ -296,7 +299,8 @@ const MapView = {
     compact:Boolean,   // compact : sans boutons de zoom (fenêtre de stream)
     path:{ type:Object, default:null },   // path : chemin à suivre { pts:[[x, z], …], tip } (Bois Perdus)
     counts:{ type:Object, default:() => ({}) },
-    focus:{ type:Object, default:null } },   // focus : checks mis en lumière { pts:[[x, y, z], …], at } (page Donjons) : étage et cadrage   // counts : checks restants par carte d'intérieur ou de grotte { todo, total, now }
+    focus:{ type:Object, default:null },
+    live:{ type:Object, default:null } },   // live : Link dans cette scène (suivi en direct) { x, y, z, deg, form }   // focus : checks mis en lumière { pts:[[x, y, z], …], at } (page Donjons) : étage et cadrage   // counts : checks restants par carte d'intérieur ou de grotte { todo, total, now }
   emits:['goto', 'check', 'place', 'stone'],
   data:() => ({ view:null, drag:null, hover:null, level:null }),
   computed:{
@@ -304,7 +308,10 @@ const MapView = {
     // étage affiché (donjons) : choisi, sinon celui de l'entrée (premier point d'apparition)
     levels(){ return this.sc && this.sc.lv ? this.sc.lv.map((_, i) => ({ i, name:mapLevelName(this.sc, i),
       todo:this.checks.filter(m => m.st !== 'done' && mapLevelOf(this.sc, m.y) === i).length })).reverse() : null; },
-    lvl(){ return !this.levels ? null : this.level != null ? this.level : mapLevelOf(this.sc, this.sc.sp.length ? this.sc.sp[0][1] : this.sc.lv[0]); },
+    // (Link dans la scène : son étage, tant qu'on n'en choisit pas un autre)
+    lvl(){ return !this.levels ? null : this.level != null ? this.level : this.live ? mapLevelOf(this.sc, this.live.y)
+      : mapLevelOf(this.sc, this.sc.sp.length ? this.sc.sp[0][1] : this.sc.lv[0]); },
+    liveMark(){ return this.live && this.onLevel(this.live.y) ? this.live : null; },
     onLevel(){ return y => this.lvl == null || mapLevelOf(this.sc, y) === this.lvl; },
     geo(){ return this.sc ? mapGeo(this.sc, this.lvl) : null; },
     shown(){ return this.checks.filter(m => this.onLevel(m.y)); },
@@ -341,6 +348,12 @@ const MapView = {
     scene(){ this.view = null; this.hover = null; this.level = null; },
     // (après le changement de scène) : étage du premier repère, cadrage sur tous, avec une marge
     'focus.at'(){ this.applyFocus(); },
+    // carte zoomée : elle se recentre sur Link quand il approche du bord
+    liveMark(m){
+      const v = this.view;
+      if (!m || !v || this.drag) return;
+      if (m.x < v[0] + v[2] * 0.1 || m.x > v[0] + v[2] * 0.9 || m.z < v[1] + v[3] * 0.1 || m.z > v[1] + v[3] * 0.9) this.view = [m.x - v[2] / 2, m.z - v[3] / 2, v[2], v[3]];
+    },
   },
   mounted(){ if (this.focus) this.applyFocus(); },   // (carte ouverte à côté par la page Donjons)
   methods:{
@@ -431,6 +444,10 @@ const MapView = {
             <rect :x="m.x + unit * 1.1" :y="m.z + unit * 0.4" :width="unit * 2.4" :height="unit * 2" :rx="unit * 0.4"></rect>
             <text :x="m.x + unit * 2.3" :y="m.z + unit * 1.4" dominant-baseline="central" :font-size="unit * 1.4">{{m.cnt.todo}}</text></g>
         </g>
+        <g v-if="liveMark" class="zl" :class="'fm-' + liveMark.form" :transform="'translate(' + liveMark.x + ' ' + liveMark.z + ') rotate(' + liveMark.deg + ')'">
+          <circle class="zl-halo" :r="unit * 3.6"></circle>
+          <path :d="'M0 ' + unit * 3 + 'L' + unit * -2.1 + ' ' + unit * -2 + 'L0 ' + unit * -0.9 + 'L' + unit * 2.1 + ' ' + unit * -2 + 'Z'"></path>
+          <title>{{t('Link (en direct)')}}</title></g>
       </svg>
       <div v-if="levels" class="zmap-levels"><button v-for="l in levels" :key="l.i" type="button" :class="{on:l.i===lvl}" @click="level=l.i"
         :title="t('Étage {n}', {n:l.name}) + (l.todo ? ' — ' + tn(l.todo, '{n} check à faire', '{n} checks à faire') : '')">{{l.name}}<i v-if="l.todo">{{l.todo}}</i></button></div>
@@ -472,6 +489,9 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
             <seg v-model="ui.map.checks" :options="[['filters', t('Checks')], ['all', t('Tous')], ['off', t('Aucun')]]"></seg></div>
           <div class="field map-chk map-stones" title="Pierres à potins sur la carte (clic sur l'une d'elles : lue / non lue)"><span class="lbl">Pierres à potins</span>
             <seg v-model="ui.map.stones" :options="[[true, t('Affichées')], [false, t('Masquées')]]"></seg></div>
+          <div v-if="link.relay==='live'" class="field map-chk map-follow" title="Suivi en direct : la carte suit Link de lieu en lieu (on peut en regarder une autre, elle revient à Link quand il change de lieu)">
+            <label class="check"><input type="checkbox" v-model="ui.map.follow">Suivre Link</label>
+            <button v-if="liveMap && liveMap !== ui.map.scene" type="button" class="btn" @click="mapToLink" :title="t('Afficher la carte du lieu où est Link : {lieu}', {lieu:mapSceneName(liveMap)})">Où est Link ?</button></div>
           <div v-if="woodsHere" class="field map-chk" title="Chemin du singe à travers les Bois Perdus, différent chaque jour. Auto : le jour de la sauvegarde suivie (auto-tracking), sinon celui du moment choisi sur la page Checks, sinon le jour 1."><span class="lbl">Chemin</span>
             <seg v-model="ui.map.woods" :options="[['auto', t('Auto')], ['1', t('Jour {n}', {n:1})], ['2', t('Jour {n}', {n:2})], ['3', t('Jour {n}', {n:3})], ['off', t('Masqué')]]"></seg></div>
           </div>
@@ -484,7 +504,7 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
         <div v-for="(h,i) in mapHints" :key="'h' + i" class="zmap-hint"><span class="zh-ic" v-html="ICONS.hint"></span>
           <div><b>{{h.title}}</b> — {{h.text}}<span v-if="h.notes" class="zh-notes"><template v-for="(b,j) in h.notes" :key="j"><i v-if="b === '|'" class="zh-sep"></i>
             <img v-else :src="iconSrc(ITEM_BY_KEY['ocarina_button_' + b.toLowerCase()])" :alt="b"></template></span></div></div>
-        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :counts="mapPlaceCounts" :stones="ui.map.stones ? hintStones(mapBase) : []" @stone="toggleHint" :path="mapPath" :focus="mapFocus.scene === mapBase ? mapFocus : null" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
+        <map-view :scene="mapBase" :holes="mapHoles" :home="mapHome" :counts="mapPlaceCounts" :stones="ui.map.stones ? hintStones(mapBase) : []" @stone="toggleHint" :path="mapPath" :focus="mapFocus.scene === mapBase ? mapFocus : null" :live="mapLive" :checks="mapChecks" :placing="mapEdit && mapPicked.length > 0" :editing="mapEdit" :placed="mapEdit ? mapPlacedHere : []"
           @goto="mapGoto" @check="toggleCheck" @place="mapPlace"></map-view>
         <div v-if="mapEdit" class="zmap-edit">
           <div class="ze-head"><b>Placer les checks sans position</b>
@@ -514,7 +534,8 @@ const MAP_TPL = paneTpl('map', `<h1>Carte</h1><p class="lede">Chaque lieu de Ter
           <span class="muted">{{ui.map.editTool ? t('(outil de placement : tous les checks du jeu, sans filtres)') : t('(clic : cocher)')}}</span></div>
         <div class="zmap-legend"><span><i class="lg-ground"></i>Sol, du plus bas au plus haut</span><span><i class="lg-water"></i>Eau</span>
           <span><i class="lg-exit"></i>Sortie (clic : voir la carte du lieu d’arrivée)</span><span><i class="lg-stone"></i>Pierre à potins (clic : lue)</span>
-          <span v-if="mapPath"><i class="lg-path"></i>{{mapPath.tip}}</span></div>
+          <span v-if="mapPath"><i class="lg-path"></i>{{mapPath.tip}}</span>
+          <span v-if="mapLive"><i class="lg-link" :class="'fm-' + mapLive.form"></i>Link, en direct (couleur de sa forme)</span></div>
         <p class="maps-src">{{MAPS_INFO.source === 'file' ? t('Cartes du fichier data/maps-data.js.') : t('Cartes fabriquées dans ce navigateur depuis {rom}.', {rom:MAPS_INFO.rom || 'la ROM'})}}
           <button v-if="MAPS_INFO.source === 'browser'" type="button" class="link" @click="mapsForgetAsk">Oublier ces cartes</button>
           <label class="check maps-tool" title="Outil pour placer à la main les checks sans position, et exporter ces positions (contributeurs)"><input type="checkbox" v-model="ui.map.editTool">Outil de placement des checks</label></p>
@@ -543,6 +564,26 @@ function useMapPage(ctx){
     const day = ui.map.woods !== 'auto' ? +ui.map.woods : half >= 0 ? Math.floor(half / 2) + 1 : half === -1 ? 1 : m >= 0 ? Math.floor(m / 2) + 1 : 1;
     return { day, pts:[WOODS_DOOR, ...WOODS_PATHS[day].map(woodsXZ)], tip:t('Chemin du jour {n}', { n:day }) };
   });
+  /* Link en direct (relais, link.live) : sa carte — sa scène ; grotte : sa salle (salle partagée par plusieurs grottes : celle
+     affichée, sinon la première) — et son repère sur la carte affichée, orienté, de la couleur de sa forme. La carte suit Link
+     de lieu en lieu (ui.map.follow) : on peut en regarder une autre, elle revient à Link quand il change de lieu. */
+  const liveMap = computed(() => {
+    const L = link.live, m = mapsData.value;
+    if (!L || !L.scene || !m) return null;
+    const base = L.scene === 'SCENE_KAKUSIANA' ? L.scene + '#' + L.room : L.scene;
+    if (!m.scenes[base]) return null;
+    const keys = GROTTO_MAPS.value.roomKeys[base];
+    return !keys ? base : mapBaseOf(ui.map.scene) === base ? ui.map.scene : base + '|' + keys[0];
+  });
+  const mapLive = computed(() => {
+    const L = link.live;
+    if (!L || !L.pos || !liveMap.value || mapBaseOf(liveMap.value) !== mapBase.value) return null;
+    return { x:L.pos[0], y:L.pos[1], z:L.pos[2], deg:-(L.rot || 0) * 360 / 65536, form:LIVE_FORM[L.form] || 'human' };
+  });
+  const liveBase = computed(() => liveMap.value && mapBaseOf(liveMap.value));
+  const mapToLink = () => { if (liveMap.value) mapScene.value = liveMap.value; };
+  watch(liveBase, b => { if (b && ui.map.follow && b !== mapBase.value) mapToLink(); });
+  watch(() => ui.map.follow, on => { if (on && liveBase.value && liveBase.value !== mapBase.value) mapToLink(); });
   const mapHoles = computed(() => (GROTTO_MAPS.value.holes[mapBase.value] || []).map(h => ({ ...h, label:mapSceneName(h.to) })));
   const mapHome = computed(() => (GROTTO_MAPS.value.byId[ui.map.scene] || {}).home || null);
   // choix du lieu : par région (MAP_REGIONS), lieux dans l'ordre du chemin puis grottes de la région (d'après leur trou)
@@ -704,6 +745,6 @@ function useMapPage(ctx){
     mapsJob.busy = false;
   }
   function mapsForgetAsk(){ if (confirm(t('Oublier les cartes gardées dans ce navigateur ?'))) mapsForget(); }
-  return { mapFocus, focusMap, mapPlaceCounts, mapOfScene, openMapOf, mapBase, mapHoles, mapHome, mapValidate, mapApprox, mapGroup, mapGroups, mapCheckHelp, mapMissing, mapEdit, mapPick, mapPicked, mapToPlace, mapPlacedList, mapPlacedHere, mapPlace, mapEditCount, mapExport, mapClearEdits, mapEdits,
+  return { mapLive, liveMap, mapToLink, mapFocus, focusMap, mapPlaceCounts, mapOfScene, openMapOf, mapBase, mapHoles, mapHome, mapValidate, mapApprox, mapGroup, mapGroups, mapCheckHelp, mapMissing, mapEdit, mapPick, mapPicked, mapToPlace, mapPlacedList, mapPlacedHere, mapPlace, mapEditCount, mapExport, mapClearEdits, mapEdits,
     mapChecks, mapsData, MAPS_INFO, woodsHere, woodsPath, mapPath, mapHints, mapScene, mapBack, mapGoto, mapGoBack, mapSceneGroups, mapSceneName, mapsJob, mapsMake, mapsForgetAsk };
 }

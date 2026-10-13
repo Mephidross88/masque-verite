@@ -143,6 +143,10 @@ svg{display:block}
 .link-steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
 .link-modal code{background:var(--surface-2);border:1px solid var(--line);border-radius:5px;padding:0 5px;font-size:13px}
 .link-modal .check{color:var(--text)}
+.link-h{margin:6px 0 -4px;font-size:15px;color:var(--text)}
+.link-h small{margin-left:6px;font-weight:400;font-size:12px;color:var(--muted)}
+.link-p{margin:0}
+.link-status .check{margin-left:auto}
 .link-opts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;font-size:14px;color:var(--muted)}
 .link-url{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
 .link-url .sel{flex:1;min-height:36px;padding:6px 10px}
@@ -1181,6 +1185,18 @@ html.stream-mode,html.stream-mode body{background:transparent;overflow:hidden}
 .fm-deku{background:#7cb342}
 .fm-goron{background:#b5651d}
 .fm-zora{background:#3d9be0}
+.fm-fierce{background:#c9ccd6}
+/* Link en direct sur la Carte : flèche orientée, couleur de sa forme */
+.zl{pointer-events:none}
+.zl path{fill:#e8c79a;stroke:#1b1b1f;stroke-width:2px;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.zl.fm-deku path{fill:#7cb342}
+.zl.fm-goron path{fill:#b5651d}
+.zl.fm-zora path{fill:#3d9be0}
+.zl.fm-fierce path{fill:#c9ccd6}
+.zl,.zl.fm-human,.zl.fm-deku,.zl.fm-goron,.zl.fm-zora,.zl.fm-fierce{background:none}
+.zl-halo{fill:#fff;stroke:#1b1b1f;stroke-width:1.5px;vector-effect:non-scaling-stroke;opacity:.7;animation:zm-pulse 1.6s ease-in-out infinite}
+.lg-link{display:inline-block;width:10px;height:10px;border-radius:50%;border:1.5px solid #1b1b1f;margin-right:6px;vertical-align:-1px}
+.map-follow{display:flex;align-items:center;gap:10px}
 .check-item.done .ci-forms,.nb-row.done .ci-forms{opacity:.45}
 /* page Donjons : onglets des temples (couleur du temple), étapes à cocher (check faisable en vert, pas encore estompé,
    étape à la main en pointillés) */

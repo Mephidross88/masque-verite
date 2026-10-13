@@ -51,6 +51,18 @@ boutiques, jour et heure du cycle, temps de jeu. Elle ne modifie jamais vos fich
 
 Une sauvegarde d'une autre seed que la partie notée est ignorée et signalée (« Remettre à zéro et suivre »).
 
+**En direct (Windows)** : un petit relais lit la partie dans la mémoire du jeu (lecture seule) — chaque check est coché
+dès qu'il est fait, sans attendre une sauvegarde, et le Journal suit l'heure du jeu.
+
+1. Lancez le relais : `masque-verite-relais-windows.exe` (releases du projet sur GitHub ; au premier lancement, Windows
+   peut afficher « Windows a protégé votre ordinateur » : « Informations complémentaires », puis « Exécuter quand
+   même »), ou double-cliquez sur `lancer-relais.bat` si [Bun](https://bun.sh) est installé. Gardez sa fenêtre ouverte.
+2. Dans la fenêtre Auto-tracking de l'appli, activez « Suivi en direct ». Le relais trouve seul le jeu et son fichier de
+   symboles (`debug/2ship.pdb`, livré avec 2Ship), qui lui indique où se trouve la partie dans la mémoire.
+
+En direct, la page Carte montre aussi Link (flèche de la couleur de sa forme) et suit ses déplacements de lieu en lieu
+(« Suivre Link »).
+
 ## Cartes (facultatif)
 
 Les cartes sont tirées de **votre propre ROM** de Majora's Mask (N64, version américaine — celle que 2Ship a demandée à

@@ -47,7 +47,9 @@ fonctionnelle, et le mettre à jour quand une règle change.
      `STREAM_MODE` (fenêtre de stream : relit le store via l'événement `storage`, ne sauvegarde rien, ne date rien).
   5b. `js/link.js` : auto-tracking par la sauvegarde de 2Ship — `link` (état, journal), `readSave(json)` (sauvegarde →
      checks faits, objets, prix, options, moment), `linkApply` (→ partie notée, jamais en arrière), suivi du dossier `saves`
-     (`linkPick`, `linkResume`, `linkStop` ; File System Access API, poignée dans IndexedDB), `linkPickFile`, `linkAdopt`.
+     (`linkPick`, `linkResume`, `linkStop` ; File System Access API, poignée dans IndexedDB), `linkPickFile`, `linkAdopt` ;
+     suivi en direct par le relais (`relayStart` / `relayStop`, option `ui.link.relay`, `link.relay` / `link.live`,
+     `RELAY_URL` port 43391, `RELAY_DL`), `linkFollowing()` (partie suivie, sauvegarde ou direct).
   6. `js/components.js` : composants Vue réutilisables (`Seg`, `ProgressCard`, `ItemTile`), `brokenIcons`, et
      `paneTpl(id, en-tête, corps)`, gabarit commun d'une page (section, barre du second panneau, en-tête).
   6b. `js/stream.js` : fenêtre de stream (`index.html?stream`, reprise de L'Œil Sheikah) — types de widgets (`STREAM_TYPES`,
@@ -83,9 +85,14 @@ fonctionnelle, et le mettre à jour quand une règle change.
   versionné**, tiré de la ROM). `data/maps-recipe.js` : **fichier généré** par `tools/2ship-maps/gen_maps_recipe.mjs` depuis
   les sources de 2Ship (rien de la ROM ; les cartes donnent aussi les pierres à potins, `stones`) et `tools/2ship-maps/positions-manuelles.json` (checks placés à la main sur la Carte,
   exportés par son outil de placement ; à relancer après l'avoir mis à jour). Ne jamais versionner ni publier de données tirées de la ROM.
+- `tools/2ship-live/` : relais du suivi en direct (Windows, Bun) — `relay.mjs` (lit la mémoire de 2ship.exe en lecture
+  seule, flux SSE vers l'appli), `pdb.mjs` (lecteur de PDB : adresses et types, d'après le `debug/2ship.pdb` livré avec
+  2Ship), `memory.mjs` (kernel32 par `bun:ffi`), `build_relay.mjs` (exécutable autonome → `dist/`), `RELEASE.md`
+  (notes de la release) ; lancé par `lancer-relais.bat` (racine, CRLF imposé par `.gitattributes`). Voir SPEC.md >
+  Auto-tracking.
 - `tools/i18n/check.mjs`, `tools/lint/no_undef.mjs` : contrôles (voir leur en-tête).
 - `.github/workflows/` : `pages.yml` (appli en ligne, fichiers de l'appli seulement), `checks.yml` (syntaxe, noms non
-  définis, traductions `--strict`).
+  définis, traductions `--strict`), `relay.yml` (exécutable du relais, publié à l'envoi d'une étiquette `relais-v…`).
 
 ## Contraintes
 - Pas d'outil de build, pas de modules ES, pas de dépendance hors CDN. Doit marcher en `file://` et en ligne.

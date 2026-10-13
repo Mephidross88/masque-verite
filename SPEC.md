@@ -35,7 +35,7 @@ commit, `commitHash`).
   clés…). L'appli doit distinguer ce qui est acquis pour toujours de ce qui est à refaire.
 - **Pas de réseau** : 2Ship n'a pas d'Anchor. L'auto-tracking lit la sauvegarde du jeu (`saves/*.json`, voir
   Auto-tracking), donc seulement quand le jeu sauvegarde : Chant du temps, statues de hibou, option Autosave (toutes les
-  1 à 60 minutes ; pas à chaque check en 5.0.1).
+  1 à 60 minutes ; pas à chaque check en 5.0.1) ; ou, en direct, la mémoire du jeu par un relais local (Windows).
 
 ## Langue
 Comme dans l'Œil Sheikah : interface en français (langue source), anglais livré, autres langues ajoutables sans toucher
@@ -242,9 +242,31 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   - temps de jeu de 2Ship (`filePlaytime`, `game.playtime`) et chronologie datée (voir Statistiques).
 - **Autre seed** que la partie notée (avec des checks faits) : ignorée et signalée (`link.foreign`), « Remettre à zéro et
   suivre ». Autre version de 2Ship : avertissement (commit) ou refus (nombre de checks différent).
-- **Interface** : pastille d'état dans la barre de gauche (pas de suivi, en pause, suivi, dossier illisible) ; fenêtre :
-  marche à suivre (Autosave à 1 minute), dossier, fichier suivi, moment, dernière lecture, journal.
-- **Suivi en ligne** : carte « Dernière sauvegarde » en tête des pages, à côté du compteur de checks (demi-journée et heure
+- **En direct** (option `ui.link.relay`, Windows) : relais local `tools/2ship-live/relay.mjs` (Bun, ou exécutable autonome
+  `masque-verite-relais-windows.exe` des releases ; `lancer-relais.bat`), qui lit la mémoire de `2ship.exe` en lecture
+  seule (ReadProcessMemory, quatre fois par seconde). Adresses et disposition des champs : le PDB livré avec 2Ship
+  (`debug/2ship.pdb`, trouvé à côté de l'exécutable en cours ; `--pdb=` sinon), lu au lancement du jeu
+  (`tools/2ship-live/pdb.mjs` : variables globales `gSaveContext`, `gPlayState` et types) et vérifié contre l'exécutable
+  (GUID + âge de son enregistrement RSDS) : une autre version de 2Ship est suivie tant que les noms des champs ne changent
+  pas. Partie suivie : fichier chargé (`fileNum` 0 à 2, `gameMode` normal, `gPlayState` présent) du randomizer
+  (`saveType`).
+  - Flux SSE `http://127.0.0.1:43391/events` (une seule page à la fois, origines : fichier local, localhost, GitHub
+    Pages ; `--origin=`) : `state` (jeu absent, accès refusé, PDB introuvable ou différent, fichier chargé ou non) ;
+    `save` : la partie sous la forme du JSON de sauvegarde de 2Ship (champs lus par `readSave`, sérialisés d'après les
+    types du PDB), envoyée quand elle change (pas pour l'heure) — drapeaux de coffre = sauvegarde | cycle
+    (`cycleSceneFlags`) | scène en cours (`actorCtx.sceneFlags` : le jeu ne les recopie qu'en sortant de la scène),
+    pour cocher les Skulltulas non mélangées aussitôt ; `live` : jour, heure, nuit, forme, scène, salle, position de Link,
+    temps de jeu, quand ils changent.
+  - Appli : `save` → `readSave` → `linkApply` comme une sauvegarde (sans « rien de nouveau »), `live` → `link.save` et
+    `link.live` (repère du Journal, carte « En direct ») ; moment, `game.cycle` et temps de jeu notés au plus toutes les
+    10 s (ou au changement de demi-journée). Tant qu'une partie est suivie en direct, le dossier `saves` n'est plus relu.
+  - États (`link.relay`) : arrêté, relais injoignable (nouvelle tentative auto ; appli en ligne : accès au réseau local
+    refusé par le navigateur, `link.blocked`), occupé (autre page), en attente du jeu, jeu illisible (`link.relayMsg`),
+    aucune partie du randomizer chargée, en direct.
+- **Interface** : pastille d'état dans la barre de gauche (en direct d'abord, puis pas de suivi, en pause, suivi, dossier
+  illisible, puis l'état du relais) ; fenêtre : « En direct » (marche à suivre, état, interrupteur), « Par la sauvegarde »
+  (Autosave à 1 minute, dossier, fichier suivi), moment, dernière lecture, journal.
+- **Suivi en ligne** : carte « Dernière sauvegarde » (« En direct » avec le relais) en tête des pages, à côté du compteur de checks (demi-journée et heure
   du jeu, soleil ou lune, frise des six demi-journées avec un repère ; clic : fenêtre de l'auto-tracking) ; Journal des
   Bombers : trait vertical rouge à cette heure sur toutes les lignes, heure dans l'en-tête (`link.save.hours`) ;
   le temps écoulé avant (depuis le jour 1, 6 h) est assombri et hachuré, barres comprises.
@@ -324,6 +346,12 @@ filtre d'incrustation sur le fond vert ; une source « Navigateur » d'OBS a son
   jeu (auto-tracking). Une disposition de L'Œil Sheikah importée garde les widgets communs.
 
 ## Carte (js/pages/map.js, js/maps-extract.js)
+- **Link en direct** (suivi en direct, `link.live`) : flèche orientée dans la direction où il regarde (`rot`), de la couleur
+  de sa forme (comme les pastilles des formes ; Oni : gris), avec un halo, à son étage ; la carte affichée prend son étage
+  tant qu'on n'en choisit pas un autre, et se recentre quand il approche du bord (carte zoomée). Sa carte : sa scène (noms
+  de `SceneId`, ceux des cartes) ; grotte : `SCENE_KAKUSIANA#salle` (salle partagée : la grotte affichée, sinon la
+  première). « Suivre Link » (`ui.map.follow`, affiché en direct) : la carte passe à celle de Link quand il change de
+  lieu (on peut en regarder une autre entre-temps) ; « Où est Link ? » : y revenir.
 - **Portes des intérieurs et trous des grottes** : badge des checks restants du lieu derrière (`mapPlaceCounts`) — vert :
   au moins un faisable, rouge : aucun, gris : tout fait ; mêmes checks que les repères (réglage « Checks »). Intérieurs :
   scènes que 2Ship rattache à leur extérieur (boutiques, maisons, fontaines… : `HINT_PARENT`). Salle commune à plusieurs

@@ -50,6 +50,18 @@ hour of the cycle, play time. It never changes your files, and nothing is sent.
 
 A save from another seed than the tracked game is ignored and reported ("Reset and follow").
 
+**Live (Windows)**: a small relay reads the game from its memory (read-only) — each check is ticked as soon as it's done,
+without waiting for a save, and the Notebook follows the game's clock.
+
+1. Start the relay: `masque-verite-relais-windows.exe` (the project's GitHub releases; on first launch, Windows may show
+   "Windows protected your PC": "More info", then "Run anyway"), or double-click `lancer-relais.bat` if
+   [Bun](https://bun.sh) is installed. Keep its window open.
+2. In the app's Auto-tracking window, turn on "Live tracking". The relay finds the game and its symbol file
+   (`debug/2ship.pdb`, shipped with 2Ship) on its own, which tells it where the game data sits in memory.
+
+When live, the Map page also shows Link (an arrow in the color of his form) and follows him from place to place
+(“Follow Link”).
+
 ## Maps (optional)
 
 Maps are made from **your own** Majora's Mask ROM (N64, US version — the one 2Ship asked for at installation; `.z64` or

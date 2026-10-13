@@ -8,7 +8,10 @@
    (autres navigateurs). Rien n'est jamais écrit dans les fichiers du jeu.
    Report (linkApply) : jamais en arrière — un check fait reste fait, un objet noté reste noté (le panneau peut avoir plus
    que la sauvegarde) ; la partie notée suit une seule seed (finalSeed) : une autre sauvegarde est signalée (link.foreign).
-   Seul ce que le jeu a déjà montré est affiché : l'objet trouvé dans un check fait (game.found), les prix des boutiques. */
+   Seul ce que le jeu a déjà montré est affiché : l'objet trouvé dans un check fait (game.found), les prix des boutiques.
+   Suivi en direct (option ui.link.relay) : le relais local tools/2ship-live/relay.mjs lit la mémoire du jeu et transmet la
+   partie en cours sous la même forme que la sauvegarde (même lecture, readSave), plus le moment et la position de Link ;
+   tant qu'il suit une partie, le dossier saves n'est plus relu (ses sauvegardes sont plus anciennes). */
 
 const LINK_ORDER = CHECKS_DATA.order;
 const LINK_COMMIT = '8a24047';
@@ -19,7 +22,9 @@ const SAVE_FILES = ['file1.json', 'file2.json', 'file3.json'];
 // save : moment de la dernière sauvegarde lue { half (0 à 5, -1 : avant le jour 1), clock (« 6 h 01 »), hours (heures depuis le
 // jour 1 à 6 h, 0 à 72 : repère du Journal des Bombers) }
 const link = reactive({ status:'off', dir:'', file:'', at:null, when:'', save:null, seed:0, foreign:null, warn:'', log:[] });
-const LINK_LABEL = { off:t('Pas de suivi'), perm:t('Suivi en pause'), on:t('Suivi de la sauvegarde'), error:t('Dossier illisible') };
+const LINK_LABEL = { off:t('Pas de suivi'), perm:t('Suivi en pause'), on:t('Suivi de la sauvegarde'), error:t('Dossier illisible'), live:t('Suivi en direct') };
+// partie suivie, par la sauvegarde ou en direct (relais)
+const linkFollowing = () => link.status === 'on' || link.relay === 'live';
 function linkLog(text){
   link.log.unshift({ t:new Date().toLocaleTimeString(LANG === 'fr' ? 'fr-FR' : LANG, { hour:'2-digit', minute:'2-digit', second:'2-digit' }), text });
   if (link.log.length > 60) link.log.length = 60;
@@ -109,8 +114,9 @@ function mergeGame(src){
   return n;
 }
 
-/* Sauvegarde lue → partie notée. adopt : suivre cette seed même si la partie notée en suit une autre (après remise à zéro). */
-function linkApply(sv, file, adopt){
+/* Sauvegarde lue → partie notée. adopt : suivre cette seed même si la partie notée en suit une autre (après remise à zéro) ;
+   live : partie lue en direct (relais : pas de « rien de nouveau » à chaque changement sans intérêt pour le suivi) */
+function linkApply(sv, file, adopt, live){
   const g = store.game, s = store.settings, first = !link.at;
   link.file = file; link.at = new Date(); link.seed = sv.seed;
   link.warn = sv.commit && sv.commit !== LINK_COMMIT ? t('Sauvegarde d’une autre version de 2Ship (commit {c}) : l’appli suit la 5.0.1 ({ref}).', { c:sv.commit, ref:LINK_COMMIT })
@@ -137,13 +143,13 @@ function linkApply(sv, file, adopt){
   timelineSkip = true;
   try { mergeGame(saveGame(sv, true)); } finally { timelineSkip = false; }
   timelineQuiet = fresh; timelinePlay = sv.playtime || null; timelineAt = half >= 0 ? [half, sv.time] : null;
-  try { linkReport(sv); } finally { timelineQuiet = false; timelinePlay = null; timelineAt = null; }
+  try { linkReport(sv, live); } finally { timelineQuiet = false; timelinePlay = null; timelineAt = null; }
   if (sv.playtime > g.playtime){ g.playtime = sv.playtime; g.playtimeAt = Date.now(); }
   // moment du cycle
   if (store.ui.link.moment) store.ui.checks.moment = half >= 0 ? half : -1;
 }
 // checks faits, objets trouvés, prix, panneau Objets
-function linkReport(sv){
+function linkReport(sv, live){
   const g = store.game;
   let checks = 0;
   for (const [rc, ri] of Object.entries(sv.obtained)){
@@ -166,7 +172,7 @@ function linkReport(sv){
   // jetons non mélangés : le compte de la sauvegarde tel quel (il retombe à zéro au Chant du temps)
   if (!store.settings.RO_SHUFFLE_GOLD_SKULLTULAS && sv.tokens) for (const [k, v] of Object.entries(sv.tokens)) if (g.tokens[k] !== v) g.tokens[k] = v;
   if (items) linkLog(tn(items, '{n} objet noté', '{n} objets notés'));
-  if (!checks && !items) linkLog(t('Sauvegarde relue : rien de nouveau ({when}).', { when:link.when }));
+  if (!checks && !items && !live) linkLog(t('Sauvegarde relue : rien de nouveau ({when}).', { when:link.when }));
 }
 
 /* ---------- Dossier saves (File System Access API) ---------- */
@@ -209,7 +215,7 @@ function linkStart(){
 }
 let linkBusy = false;
 async function linkPoll(){
-  if (linkBusy || !linkDir) return;
+  if (linkBusy || !linkDir || link.relay === 'live') return;
   linkBusy = true;
   try {
     // fichier suivi : celui choisi, sinon la sauvegarde modifiée le plus récemment
@@ -260,3 +266,90 @@ if (!STREAM_MODE && LINK_CAN && store.ui.link.enabled && typeof indexedDB !== 'u
     if (p === 'granted') linkStart(); else link.status = 'perm';
   }).catch(() => {});
 }
+
+/* ---------- Suivi en direct : relais local (tools/2ship-live/relay.mjs) ----------
+   Flux SSE du relais (une seule page à la fois : « busy » pour les autres). link.relay : off | connecting (relais injoignable,
+   nouvelle tentative auto) | busy | wait (relais lancé, jeu absent) | error (PDB introuvable ou d'une autre version, accès
+   refusé : link.relayMsg) | idle (jeu lancé, aucune partie du randomizer chargée) | live. link.live : dernier moment et
+   position reçus { day, time, night, form (PlayerTransformation : 0 Oni, 1 Goron, 2 Zora, 3 Mojo, 4 humain), scene, sceneNum,
+   room, pos:[x, y, z], rot (orientation, 0x10000 = un tour, 0 : vers +z), playtime }. */
+const APP_ONLINE = /^https?:$/.test(globalThis.location?.protocol);
+// (tests sur un autre port : index.html?relay=43491, avec relay.mjs --web=43491)
+const RELAY_URL = 'http://127.0.0.1:' + ((/[?&]relay=(\d+)/.exec(globalThis.location?.search || '') || [])[1] || 43391);
+const RELAY_DL = 'https://github.com/Mephidross88/masque-verite/releases/latest';
+const RELAY_LABEL = { off:t('Arrêté'), connecting:t('Relais injoignable'), busy:t('Relais déjà utilisé par une autre page'),
+  wait:t('En attente du jeu'), error:t('Jeu illisible'), idle:t('Aucune partie du randomizer chargée'), live:t('En direct') };
+Object.assign(link, { relay:'off', relayMsg:'', live:null, blocked:false });
+let relaySource = null, relayRetry = null, relayKept = 0;
+function relayStart(){
+  relayStop();
+  link.relay = 'connecting';
+  const es = relaySource = new EventSource(RELAY_URL + '/events');
+  es.onopen = () => { link.blocked = false; };
+  es.onmessage = ev => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; } relayHandle(m); };
+  es.onerror = () => {
+    // (relais occupé : il ferme aussitôt la connexion, le navigateur réessaie ; l'état « occupé » reste affiché)
+    if (link.relay === 'busy' && es.readyState !== 2) return;
+    if (link.relay !== 'connecting') linkLog(t('Relais injoignable, nouvelle tentative…'));
+    link.relay = 'connecting'; link.live = null;
+    relayCheckBlocked();
+    // le navigateur réessaie seul après une coupure, mais abandonne sur une réponse anormale : on relance alors
+    if (es.readyState === 2 && relaySource === es){ clearTimeout(relayRetry); relayRetry = setTimeout(() => { if (store.ui.link.relay && relaySource === es) relayStart(); }, 5000); }
+  };
+}
+function relayStop(){
+  clearTimeout(relayRetry);
+  if (relaySource){ relaySource.close(); relaySource = null; }
+  link.relay = 'off'; link.relayMsg = ''; link.live = null; link.blocked = false;
+}
+// Appli en ligne : Chrome demande l'autorisation d'accéder aux adresses locales (permission « loopback-network », ou
+// « local-network-access » avant Chrome 145 environ) ; refusée, le relais reste injoignable sans autre indice
+function relayCheckBlocked(){
+  if (!APP_ONLINE || !navigator.permissions) return;
+  const ask = n => navigator.permissions.query({ name:n }).then(r => r.state, () => null);
+  Promise.all(['loopback-network', 'local-network-access'].map(ask)).then(st => { link.blocked = st.find(x => x) === 'denied' && link.relay === 'connecting'; });
+}
+function relayHandle(m){
+  if (m.type === 'busy'){
+    if (link.relay !== 'busy') linkLog(t('Relais déjà utilisé par une autre page, nouvelle tentative…'));
+    link.relay = 'busy'; return;
+  }
+  if (m.type === 'hello' || m.type === 'state'){
+    const was = link.relay;
+    link.relayMsg = '';
+    if (m.game === 'wait') link.relay = 'wait';
+    else if (m.game === 'ok') link.relay = m.file >= 0 && m.rando ? 'live' : 'idle';
+    else {
+      link.relay = 'error';
+      link.relayMsg = m.game === 'nopdb' ? t('Fichier de symboles introuvable : {pdb} (livré avec 2Ship, dossier debug).', { pdb:m.pdb })
+        : m.game === 'mismatch' ? t('Le fichier de symboles {pdb} n’est pas celui de cette version de 2Ship.', { pdb:m.pdb })
+        : m.game === 'denied' ? t('Accès au jeu refusé : lancez le relais comme le jeu (en administrateur ou non).')
+        : t('Mémoire du jeu illisible : {msg}', { msg:m.msg || '' });
+    }
+    if (link.relay !== 'live') link.live = null;
+    if (link.relay !== was) linkLog(m.type === 'hello' ? t('Relais connecté — {etat}', { etat:RELAY_LABEL[link.relay] }) : RELAY_LABEL[link.relay]);
+    return;
+  }
+  if (m.type === 'save'){
+    const sv = readSave(m.save);
+    if (sv) linkApply(sv, t('fichier {n}, en direct', { n:m.file + 1 }), false, true);
+    return;
+  }
+  if (m.type === 'live') relayLive(m);
+}
+// moment et position en direct : repère du Journal, carte « En direct » ; dans la partie notée (sauvegardée) au plus toutes
+// les 10 s, ou au changement de demi-journée
+function relayLive(m){
+  link.live = m; link.at = new Date();
+  const half = saveHalfDay(m), g = store.game;
+  link.when = half >= 0 ? halfDayLabel(half) + ', ' + saveClock(m.time) : t('Avant le premier jour');
+  link.save = { half, clock:saveClock(m.time), hours:saveHours(m) };
+  const now = Date.now();
+  if (g.cycle.half !== half || now - relayKept > 10000){
+    relayKept = now;
+    g.cycle = { half, time:m.time, hours:link.save.hours };
+    if (store.ui.link.moment && store.ui.checks.moment !== half) store.ui.checks.moment = half >= 0 ? half : -1;
+    if (m.playtime > g.playtime){ g.playtime = m.playtime; g.playtimeAt = now; }
+  }
+}
+if (!STREAM_MODE && store.ui.link.relay && typeof EventSource !== 'undefined') relayStart();

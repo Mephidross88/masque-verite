@@ -27,12 +27,12 @@ function defaults(){
     game,
     ui:{ view:'checks', split:'', itemsFolded:false, navFolded:false, theme:'auto', configTab:'logic',
       // link : auto-tracking par la sauvegarde de 2Ship (js/link.js) — suivi activé, emplacement suivi ('' : le plus récent,
-      // sinon 'file1.json'…), moment repris de la sauvegarde
-      link:{ enabled:false, slot:'', moment:true },
+      // sinon 'file1.json'…), moment repris de la sauvegarde ; relay : suivi en direct par le relais (tools/2ship-live)
+      link:{ enabled:false, slot:'', moment:true, relay:false },
       // map : lieu affiché sur la page Carte, checks affichés (filters : comme la page Checks, all : tous ceux de la seed,
       // off : aucun), pierres à potins affichées, chemin des Bois Perdus (woods : 'auto' jour en cours, '1' à '3', 'off' masqué),
       // outil de placement des checks affiché
-      map:{ scene:'SCENE_CLOCKTOWER', checks:'filters', stones:true, woods:'auto', editTool:false },
+      map:{ scene:'SCENE_CLOCKTOWER', checks:'filters', stones:true, woods:'auto', editTool:false, follow:true },   // follow : la carte suit Link (suivi en direct)
       // notebook : page Journal des Bombers (recherche, masquer les faits, aussi les checks sans horaire, regroupement
       // par scène et scènes repliées { scène: true })
       notebook:{ q:'', hideDone:false, all:false, byScene:true, collapsed:{} },
@@ -93,7 +93,7 @@ if (!STREAM_MODE){
     const g = store.game;
     if (snap.game !== g || timelineSkip){ snap = timelineSnap(g); return; }   // partie remplacée (remise à zéro, import), ajustement
     if (!Array.isArray(g.timeline)) g.timeline = [];
-    const now = Date.now(), live = link.status === 'on' && g.playtimeAt && now - g.playtimeAt < 600000;
+    const now = Date.now(), live = linkFollowing() && g.playtimeAt && now - g.playtimeAt < 600000;
     const e0 = timelineQuiet ? { t:null, p:null, c:null }
       : { t:now, p:timelinePlay ?? (live ? g.playtime + now - g.playtimeAt : null), c:timelineAt };
     const tl = g.timeline;
