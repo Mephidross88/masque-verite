@@ -50,8 +50,24 @@ const NOTEBOOK_TPL = paneTpl('notebook', `<h1>Journal des Bombers</h1><p class="
             </div>
           </div>
           <template v-for="g in notebookGroups" :key="g.id || '-'">
+          <!-- en-tête de région (comme la liste des cartes) : nom, faits / total ; repliée, les horaires réunis de ses checks -->
+          <div v-if="g.head" class="nb-row nb-region" :class="{collapsed:ui.notebook.regions[g.region], here:nbLiveRegion===g.region}">
+            <button type="button" class="nb-lab" :title="g.head.title" :aria-expanded="!ui.notebook.regions[g.region]" @click="toggleNbRegion(g.region)">
+              <span class="chev" v-html="ICONS.chevron"></span>
+              <span class="nb-name">{{g.head.label}}</span>
+              <span v-if="nbLiveRegion===g.region" class="nb-here" :title="t('Link est ici (suivi en direct)')"></span>
+              <span class="nb-count" :title="t('{got} faits sur {total}', {got:g.head.done, total:g.head.total})">{{g.head.done}}/{{g.head.total}}</span></button>
+            <div class="nb-track">
+              <span v-for="(m,i) in MOMENTS" :key="i" class="nb-bg" :class="[i%2 ? 'n' : 'd', {mo:ui.checks.moment===i, lock:!owned[i]}]"
+                :style="{left:(i*100/6)+'%', width:(100/6)+'%'}"></span>
+              <span v-for="(b,j) in (ui.notebook.regions[g.region] ? g.head.full : [])" :key="'f'+j" class="nb-bar" :style="{left:(b[0]*100/72)+'%', width:((b[1]-b[0])*100/72)+'%'}"></span>
+              <span v-for="(b,j) in (ui.notebook.regions[g.region] ? g.head.now : [])" :key="'n'+j" class="nb-bar now" :style="{left:(b[0]*100/72)+'%', width:((b[1]-b[0])*100/72)+'%'}"></span>
+              <span v-if="saveAt !== null" class="nb-past" :style="{width:(saveAt*100/72)+'%'}"></span>
+              <span v-if="saveAt !== null" class="nb-save" :style="{left:(saveAt*100/72)+'%'}"></span>
+            </div>
+          </div>
           <!-- en-tête de scène (regroupement) : nom, faits / total, horaires réunis de ses checks -->
-          <div v-if="g.id" class="nb-row nb-scene" :data-nb="g.id" :class="{collapsed:ui.notebook.collapsed[g.id], done:g.done===g.rows.length, can:g.can, here:nbLive===g.id}"
+          <div v-if="g.id && !ui.notebook.regions[g.region]" class="nb-row nb-scene" :data-nb="g.id" :class="{collapsed:ui.notebook.collapsed[g.id], done:g.done===g.rows.length, can:g.can, here:nbLive===g.id}"
             :title="g.can ? t('Tous les checks restants de ce lieu sont faisables') : null">
             <button type="button" class="nb-lab" :aria-expanded="!ui.notebook.collapsed[g.id]" @click="toggleNbScene(g.id)">
               <span class="chev" v-html="ICONS.chevron"></span>
@@ -69,7 +85,7 @@ const NOTEBOOK_TPL = paneTpl('notebook', `<h1>Journal des Bombers</h1><p class="
             </div>
           </div>
           <!-- une ligne par check -->
-          <div v-for="r in (g.id && ui.notebook.collapsed[g.id] ? [] : g.rows)" :key="r.c.id" class="nb-row"
+          <div v-for="r in (g.id && (ui.notebook.collapsed[g.id] || ui.notebook.regions[g.region]) ? [] : g.rows)" :key="r.c.id" class="nb-row"
             :class="{done:store.game.checks[r.c.id], avail:!store.game.checks[r.c.id] && canNow(r.c), locked:!store.game.checks[r.c.id] && !canNow(r.c), sub:g.id}">
             <div class="nb-lab">
               <button type="button" class="nb-main" :title="r.c.label + ' — ' + r.scene + (r.text ? ' · ' + r.text : '')" @click="toggleCheck(r.c)">
@@ -101,10 +117,12 @@ const NOTEBOOK_TPL = paneTpl('notebook', `<h1>Journal des Bombers</h1><p class="
 
 /* lieu du Journal où est Link (suivi en direct) : sa scène si elle a son lieu ; variante (Marais purifié, printemps,
    Forteresse inversée) : sa scène d'origine ; intérieur, boutique : le lieu de la plupart de ses checks (recipe.cs) ; grotte
-   (une salle de SCENE_KAKUSIANA) : celui des checks de sa salle (cartes fabriquées) */
+   (une salle de SCENE_KAKUSIANA) : celui des checks de sa salle (cartes fabriquées), le lieu d'où vient Link (prev) d'abord */
+// région d'un lieu (liste des cartes, MAP_REGIONS de js/pages/map.js) ; Autel du Pic Isolé (SCENE_KAKUSIANA) : centre
+const nbRegionOf = id => MAP_REGION_OF[id] || (id === 'SCENE_KAKUSIANA' ? 'centre' : 'autres');
 const NB_VARIANT_OF = {};
 for (const [o, vs] of Object.entries(MAPS_RECIPE.variants || {})) for (const v of vs) NB_VARIANT_OF[v] = o;
-function nbSceneOf(scene, room){
+function nbSceneOf(scene, room, prev){
   if (!scene) return null;
   scene = NB_VARIANT_OF[scene] || scene;
   let ids = (MAPS_RECIPE.cs || {})[scene] || [];
@@ -112,6 +130,9 @@ function nbSceneOf(scene, room){
   else if (CHECK_SCENE[scene]) return scene;
   const n = {};
   for (const id of ids){ const c = CHECK_BY_ID[id]; if (c) n[c.scene] = (n[c.scene] || 0) + 1; }
+  // (salle partagée par plusieurs grottes — grottes à vaches, à coffre — : celle du lieu d'où l'on vient, on y entre toujours
+  // par son trou)
+  if (prev && n[prev]) return prev;
   return Object.keys(n).sort((a, b) => n[b] - n[a])[0] || null;
 }
 
@@ -157,28 +178,47 @@ function useNotebookPage(ctx){
     const left = x.list.filter(c => !s.excluded[c.id] && !store.game.checks[c.id]);
     return [x.scene.id, left.length > 0 && left.every(c => logicNow.value.checks[c.id] && logicNow.value.checks[c.id].ok)];
   })));
+  /* par région (celles de la liste des cartes, lieux dans l'ordre du chemin ; Autel du Pic Isolé : au centre, avec la Plaine
+     Termina), la première scène de chaque région portant l'en-tête de la région (head) */
   const notebookGroups = computed(() => {
     const rows = notebookRows.value;
     if (!ui.notebook.byScene) return [{ id:'', rows }];
-    const by = {};
+    const by = {}, rank = {};
     rows.forEach(r => (by[r.c.scene] = by[r.c.scene] || []).push(r));
-    return CHECK_SCENES.filter(x => by[x.id]).map(x => {
+    MAP_REGIONS.forEach((reg, i) => reg.list.forEach((sc, j) => { rank[sc] = i * 1000 + j; }));
+    const tracker = Object.fromEntries(CHECK_SCENES.map((x, i) => [x.id, i]));
+    const at = id => rank[id] ?? (id === 'SCENE_KAKUSIANA' ? rank.SCENE_00KEIKOKU + 0.5 : MAP_REGIONS.length * 1000 + tracker[id]);
+    const groups = CHECK_SCENES.filter(x => by[x.id]).sort((a, b) => at(a.id) - at(b.id)).map(x => {
       const list = by[x.id], open = list.filter(r => !store.game.checks[r.c.id]);
-      return { id:x.id, label:x.label, rows:list, done:list.length - open.length, can:!!sceneCan.value[x.id],
+      return { id:x.id, label:x.label, region:nbRegionOf(x.id), rows:list, done:list.length - open.length, can:!!sceneCan.value[x.id],
         full:unite(list.flatMap(r => r.full)), now:unite(open.flatMap(r => r.now)) };
     });
+    groups.forEach((g, i) => {
+      if (i && groups[i - 1].region === g.region) return;
+      const mine = groups.filter(x => x.region === g.region), reg = MAP_REGIONS.find(r => r.id === g.region), all = mine.flatMap(x => x.rows);
+      g.head = { label:reg ? reg.label.split(' — ')[0] : t('Autres'), title:reg ? reg.label : t('Autres'), done:mine.reduce((s, x) => s + x.done, 0), total:all.length,
+        full:unite(all.flatMap(r => r.full)), now:unite(all.filter(r => !store.game.checks[r.c.id]).flatMap(r => r.now)) };
+    });
+    return groups;
   });
+  const toggleNbRegion = id => { ui.notebook.regions[id] = !ui.notebook.regions[id]; };
   const toggleNbScene = id => { ui.notebook.collapsed[id] = !ui.notebook.collapsed[id]; };
   // suivi en direct : quand Link change de lieu, le sien se déplie, les autres se replient (ui.notebook.follow) ; son en-tête
   // revient dans la vue
-  const nbLive = computed(() => link.relay === 'live' && link.live ? nbSceneOf(link.live.scene, link.live.room) : null);
+  // (lieu d'où vient Link : celui de la dernière scène hors des grottes)
+  let nbFrom = null;
+  const nbLive = computed(() => link.relay === 'live' && link.live ? nbSceneOf(link.live.scene, link.live.room, nbFrom) : null);
+  const nbLiveRegion = computed(() => nbLive.value ? nbRegionOf(nbLive.value) : null);
   watch(nbLive, id => {
+    if (id && link.live && link.live.scene !== 'SCENE_KAKUSIANA') nbFrom = id;
     if (!id || !ui.notebook.follow || !ui.notebook.byScene) return;
     CHECK_SCENES.forEach(sc => { ui.notebook.collapsed[sc.id] = sc.id !== id; });
+    ui.notebook.regions = Object.fromEntries(MAP_REGIONS.map(r => [r.id, r.id !== nbRegionOf(id)]));
     nextTick(() => { const el = document.querySelector('.nb-scene[data-nb="' + id + '"]'); if (el) el.scrollIntoView({ block:'nearest', behavior:'smooth' }); });
   });
-  function setAllNbScenes(collapsed){ CHECK_SCENES.forEach(sc => { ui.notebook.collapsed[sc.id] = collapsed; }); }
+  // tout déplier : régions et lieux ; tout replier : les lieux (les régions restent ouvertes : vue d'ensemble)
+  function setAllNbScenes(collapsed){ CHECK_SCENES.forEach(sc => { ui.notebook.collapsed[sc.id] = collapsed; }); ui.notebook.regions = {}; }
   // heure de la dernière sauvegarde lue (suivi en ligne) : repère vertical sur la frise
   const saveAt = computed(() => linkFollowing() && link.save && link.save.half >= 0 ? link.save.hours : null);
-  return { nbLive, notebookRows, notebookGroups, toggleNbScene, setAllNbScenes, NB_TICKS, saveAt };
+  return { nbLive, nbLiveRegion, notebookRows, notebookGroups, toggleNbScene, toggleNbRegion, setAllNbScenes, NB_TICKS, saveAt };
 }

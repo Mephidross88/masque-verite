@@ -197,7 +197,13 @@ Remplace le Routeur de l'Œil Sheikah : une frise chronologique des trois jours,
   change de lieu, le sien se déplie et les autres se replient, son en-tête revient dans la vue (pastille dorée, liseré). Lieu
   d'une scène du jeu (`nbSceneOf`) : la scène si elle a son lieu ; variante (Marais purifié, printemps, Forteresse
   inversée) : sa scène d'origine ; intérieur, boutique : le lieu de la plupart de ses checks (`recipe.cs`) ; grotte : celui
-  des checks de sa salle (cartes fabriquées). Ailleurs (sans check) : rien ne change.
+  des checks de sa salle (cartes fabriquées) — salle partagée par plusieurs grottes (à vaches, à coffre) : le lieu d'où vient
+  Link, s'il y a des checks (on y entre toujours par son trou). Ailleurs (sans check) : rien ne change. La région de Link se
+  déplie aussi, les autres se replient.
+- **Régions** (regroupement par scène) : celles de la liste des cartes (Centre, Sud, Nord, Ouest, Est, Autres ; `MAP_REGIONS`),
+  lieux dans l'ordre du chemin (Autel du Pic Isolé : au centre, après la Plaine Termina) ; en-tête repliable (`ui.notebook.regions`)
+  avec faits / total et, repliée, les horaires réunis de ses checks. « Tout déplier » : régions et lieux ; « Tout replier » :
+  les lieux (régions ouvertes).
 - **Axe** : les 72 heures du cycle (jour 1, 6 h → jour 4, 6 h), en-tête des six demi-journées (soleil / lune) et
   graduations toutes les 6 h ; bandes de fond : jour clair, nuit teintée.
 - **Lignes** : les checks de la seed (non exclus, faisables avec la configuration) à horaire limité, triés par heure de

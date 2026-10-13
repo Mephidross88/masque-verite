@@ -1734,6 +1734,13 @@ button.nb-lab:hover{background:var(--surface-2)}
 .nb-scene .chev{display:inline-grid;width:16px;height:16px;flex:none;color:var(--muted);transition:transform .18s}
 .nb-scene .chev svg{width:16px;height:16px}
 .nb-scene.collapsed .chev{transform:rotate(-90deg)}
+/* régions (regroupement du Journal) */
+.nb-region{background:color-mix(in srgb, var(--gold) 10%, var(--surface-2));border-top:1px solid var(--line)}
+.nb-region .nb-lab{font-family:var(--display, inherit);font-weight:700;font-size:14.5px;letter-spacing:.02em;text-transform:uppercase;color:var(--gold-deep)}
+.nb-region .chev{display:inline-grid;width:16px;height:16px;flex:none;color:var(--muted);transition:transform .18s}
+.nb-region .chev svg{width:16px;height:16px}
+.nb-region.collapsed .chev{transform:rotate(-90deg)}
+.nb-region.here{box-shadow:inset 3px 0 0 var(--gold)}
 /* lieu où est Link (suivi en direct) */
 .nb-scene.here{box-shadow:inset 3px 0 0 var(--gold)}
 .nb-here{flex:none;width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 3px color-mix(in srgb, var(--gold) 30%, transparent);margin-left:6px;animation:zm-pulse 1.6s ease-in-out infinite}

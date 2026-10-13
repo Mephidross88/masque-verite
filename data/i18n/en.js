@@ -150,6 +150,7 @@
   'Auto-tracking : {etat}':'Auto-tracking: {etat}',
   'Autosave':'Autosave',
   'Autre couleur':'Other color',
+  'Autres':'Other',
   'Autres — Lune, fontaines, début du jeu':'Other — Moon, fountains, start of the game',
   'Avant':'Before',
   'Avant le premier jour':'Before the first day',
